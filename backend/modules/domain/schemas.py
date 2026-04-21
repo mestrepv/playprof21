@@ -48,6 +48,41 @@ class ClassroomJoinOut(BaseModel):
     display_name: str
 
 
+# ── Activity results (Fase 7) ───────────────────────────────────────────────
+
+class ActivityResultIn(BaseModel):
+    activity_id: uuid.UUID
+    score: int = Field(ge=0)
+    max_score: int = Field(ge=0)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class ActivityResultOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    activity_id: uuid.UUID
+    user_id: uuid.UUID
+    score: int
+    max_score: int
+    is_best: bool
+    attempted_at: datetime
+
+
+class TrailNode(BaseModel):
+    """Activity + resultado do aluno + status pra UI Duolingo."""
+    activity: ActivityOut
+    position: int
+    status: Literal["locked", "available", "completed"]
+    best_score: int | None
+    best_max_score: int | None
+    stars: int  # 0..3
+
+
+class TrailProgress(BaseModel):
+    trail: TrailOut
+    nodes: list[TrailNode]
+
+
 # ── Activity ────────────────────────────────────────────────────────────────
 
 ACTIVITY_KINDS = {"quiz", "external-link", "simulator", "animation"}

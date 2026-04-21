@@ -157,8 +157,7 @@ function contentMeta(ae: AssignmentExpanded): {
       title: ae.activity.title,
       bg: '#E6F1FB',
       fg: '#0C447C',
-      href: null,
-      placeholder: 'runtime na Fase 7',
+      href: `/student/activity/${encodeURIComponent(ae.activity.id)}`,
     }
   }
   if (ae.trail) {
@@ -167,8 +166,7 @@ function contentMeta(ae: AssignmentExpanded): {
       title: ae.trail.title,
       bg: '#E1F5EE',
       fg: '#085041',
-      href: null,
-      placeholder: 'runtime na Fase 7',
+      href: `/student/trail/${encodeURIComponent(ae.trail.id)}`,
     }
   }
   if (ae.interactive_lesson) {

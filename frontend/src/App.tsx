@@ -20,8 +20,10 @@ import { IndexPage } from './modules/lab/preview/IndexPage'
 import { PreviewPage } from './modules/lab/preview/PreviewPage'
 import { JoinPage } from './modules/live/JoinPage'
 import { SessionPage } from './modules/live/SessionPage'
+import { ActivityPage } from './modules/student/ActivityPage'
 import { StudentDashboard } from './modules/student/StudentDashboard'
 import { StudentJoinPage } from './modules/student/StudentJoinPage'
+import { TrailPage } from './modules/student/TrailPage'
 import { LibraryPage } from './modules/teacher/LibraryPage'
 import { TeacherPage } from './modules/teacher/TeacherPage'
 
@@ -40,6 +42,8 @@ export function App() {
           <Route path="/lab/join" element={<JoinPage />} />
           <Route path="/student/join" element={<StudentJoinPage />} />
           <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/student/trail/:id" element={<TrailPage />} />
+          <Route path="/student/activity/:id" element={<ActivityPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

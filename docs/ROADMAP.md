@@ -209,26 +209,33 @@ com Google entra como iteração futura.
 
 ## Fase 7 — Runtime de trilha assíncrona
 
-**Status:** ⬜ pendente
+**Status:** ✅ MVP concluído em 2026-04-21 (quiz funcional ponta-a-ponta; registry TSX de simulator/animation fica pra 7.1)
 
 Objetivo: aluno abre trilha atribuída e faz as atividades em sequência.
-UI inspirada em Duolingo: nós em onda, locked/available/completed,
-estrelas por score/max.
+Nós lock/available/completed com estrelas.
 
 ### Backend
 
-- [ ] `POST /api/activity-results {activity_id, score, max_score, payload}` — grava resultado, calcula `is_best`
-- [ ] `GET /api/student/trails/{trail_id}/progress` — retorna activities ordenadas + melhor resultado por activity
-- [ ] `GET /api/student/trails/{trail_id}` resolve as activities pro aluno (via enrollment na turma que atribui a trilha)
+- [x] `POST /api/student/activity-results {activity_id, score, max_score}` — grava result, recalcula `is_best`
+- [x] `GET /api/student/trails/{id}` — retorna `TrailProgress` com activities ordenadas + best result + status + stars
+- [x] `GET /api/student/activities/{id}` — resolve uma activity pro aluno (se está em trilha que ele tem acesso)
+- [x] Autorização: aluno via enrollment → classroom → assignment → trail; dono da trail passa direto (preview)
+- [x] Regras: `completed` = score ≥ 50% do max; `stars` = 3 (≥100%), 2 (≥75%), 1 (>0), 0. Próximo nó desbloqueia quando anterior completou.
 
 ### Frontend
 
-- [ ] Renderer real de `Activity.kind='quiz'` — exibe stem/options, valida correctIndex, devolve `score`
-- [ ] Infra `Activity.kind='animation'` e `'simulator'` — registry de componentes TSX por `activityId` (paradigma AI-first, igual o `missionId` do module_lab)
-- [ ] `/student/trail/:id` — nós em sequência estilo Duolingo: locked/available/completed, 1-3 estrelas
-- [ ] `/student/activity/:id` — executa o renderer + `onComplete(score)` → grava result → volta pra trilha
+- [x] `QuizRenderer` real (`Activity.kind='quiz'`): valida localmente, revela correto/errado, onComplete devolve score
+- [x] `ActivityRunner` despacha por kind. `external-link` abre em nova aba; `simulator`/`animation` mostram placeholder "registrar TSX" (7.1)
+- [x] `/student/trail/:id` — nós stacked vertical com lock/available/completed, estrelas 0-3
+- [x] `/student/activity/:id?trail=:tid` — executa runner, grava result, volta pra trilha
+- [x] Dashboard `/student` agora linka trilhas/atividades direto pras novas páginas
 
-**Estimativa:** 2-3 dias.
+### 7.1 — fica pra depois
+
+- Registry de componentes TSX por `activityId` (paradigma AI-first, espelho do `missionId` do module_lab) pra `kind='animation'` e `'simulator'` virarem executáveis
+- Tela mais visual (onda Duolingo, avatar, animações) — stacked vertical basta pra usar
+
+**Smoke validado:** aluno join → trilha carrega com 1º nó available, 2º locked → completa quiz → 1º vira completed com 3 estrelas → 2º vira available. Autorização bloqueia aluno de outra turma (404).
 
 ---
 
