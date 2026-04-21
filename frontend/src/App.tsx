@@ -24,6 +24,7 @@ import { SessionPage } from './modules/live/SessionPage'
 import { StudentDashboard } from './modules/student/StudentDashboard'
 import { StudentJoinPage } from './modules/student/StudentJoinPage'
 import { TrailPage } from './modules/student/TrailPage'
+import { ClassroomPage } from './modules/teacher/ClassroomPage'
 import { LibraryPage } from './modules/teacher/LibraryPage'
 import { TeacherPage } from './modules/teacher/TeacherPage'
 
@@ -37,6 +38,7 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/teacher" element={<TeacherPage />} />
+          <Route path="/teacher/classroom/:id" element={<ClassroomPage />} />
           <Route path="/teacher/library" element={<LibraryPage />} />
           <Route path="/lab/session/:sid" element={<SessionPage />} />
           <Route path="/lab/join" element={<JoinPage />} />

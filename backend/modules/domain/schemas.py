@@ -30,6 +30,32 @@ class ClassroomOut(BaseModel):
     created_at: datetime
 
 
+class ClassroomStats(BaseModel):
+    """Stats agregadas pra página da turma (4 cards)."""
+    total_students: int
+    total_activities: int  # total de assignments (qualquer content_type)
+    assignments_by_type: dict[str, int]  # breakdown: activity/trail/interactive_lesson
+    attempts_total: int  # activity_results is_best=true dos alunos matriculados nas activities alcançáveis
+    attempts_expected: int  # sum(activities_in_trail_assignments) * total_students + activity_assignments_diretos * total_students
+    attempts_pct: float  # attempts_total / attempts_expected × 100, 0 se denominador zero
+    energy_total: int  # sum(score) dos activity_results is_best filtrados
+
+
+class StudentStat(BaseModel):
+    user_id: uuid.UUID
+    display_name: str
+    attempts_count: int
+    attempts_expected: int
+    attempts_pct: float
+    energy: int
+
+
+class EnrollmentMember(BaseModel):
+    user_id: uuid.UUID
+    display_name: str
+    joined_at: datetime
+
+
 class ClassroomCodeOut(BaseModel):
     code: str
 

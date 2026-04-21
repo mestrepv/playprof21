@@ -44,6 +44,9 @@
   --p21-purple-soft: #eeedfe;
   --p21-purple-ink: #3c3489;
 
+  --p21-stat-blue: #378add;       /* azul mais claro — stat Alunos + hero gradient */
+  --p21-stat-pink: #d4537e;       /* rosa/coral — stat Tentativas */
+
   --p21-amber: #e8a53a;           /* estrelas */
   --p21-teal: #0f6e56;            /* acerto/completed */
   --p21-teal-soft: #e1f5ee;

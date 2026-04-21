@@ -20,6 +20,7 @@ dist/
 # ide
 .vscode/
 .idea/
+.claude/
 
 # misc
 *.log

@@ -67,3 +67,63 @@ export interface AssignmentExpanded {
   trail: Trail | null
   interactive_lesson: InteractiveLesson | null
 }
+
+// ── Stats da turma (Fase 7.3) ──────────────────────────────────────────────
+
+export interface ClassroomStats {
+  total_students: number
+  total_activities: number
+  assignments_by_type: { activity: number; trail: number; interactive_lesson: number }
+  attempts_total: number
+  attempts_expected: number
+  attempts_pct: number
+  energy_total: number
+}
+
+export interface EnrollmentMember {
+  user_id: string
+  display_name: string
+  joined_at: string
+}
+
+export interface StudentStat {
+  user_id: string
+  display_name: string
+  attempts_count: number
+  attempts_expected: number
+  attempts_pct: number
+  energy: number
+}
+
+// ── Feed ───────────────────────────────────────────────────────────────────
+
+export interface PostAuthor {
+  id: string
+  display_name: string
+}
+
+export interface FeedPost {
+  id: string
+  classroom_id: string
+  author: PostAuthor
+  content: string
+  created_at: string
+  updated_at: string
+  comment_count: number
+  like_count: number
+  user_liked: boolean
+}
+
+export interface FeedPostsPage {
+  posts: FeedPost[]
+  total: number
+  has_more: boolean
+}
+
+export interface FeedComment {
+  id: string
+  post_id: string
+  author: PostAuthor
+  content: string
+  created_at: string
+}

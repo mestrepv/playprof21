@@ -23,19 +23,84 @@ import {
   type InteractiveLesson,
   type Trail,
 } from './types'
-import {
-  classCard,
-  dangerBtn,
-  headerRow,
-  inputSmall,
-  kindBadge,
-  link,
-  linkBtn,
-  list,
-  small,
-  smallPrimary,
-  unbutton,
-} from './TeacherPage'
+
+// Estilos locais (movidos do TeacherPage antigo que foi refatorado).
+const classCard: React.CSSProperties = {
+  background: 'var(--p21-surface)',
+  border: '1px solid var(--p21-border)',
+  borderRadius: 'var(--p21-radius-md)',
+  padding: 14,
+}
+const dangerBtn: React.CSSProperties = {
+  width: 28,
+  height: 28,
+  borderRadius: 14,
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--p21-coral-ink)',
+  fontSize: 18,
+  lineHeight: 1,
+  cursor: 'pointer',
+  flexShrink: 0,
+}
+const headerRow: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'baseline',
+  marginBottom: 'var(--p21-sp-4)',
+  flexWrap: 'wrap',
+  gap: 12,
+}
+const inputSmall: React.CSSProperties = {
+  padding: '10px 12px',
+  border: '2px solid var(--p21-border-strong)',
+  borderRadius: 'var(--p21-radius-sm)',
+  fontSize: 16,
+  fontFamily: 'inherit',
+  background: 'var(--p21-surface)',
+  minHeight: 44,
+}
+const kindBadge: React.CSSProperties = {
+  fontSize: 11,
+  fontFamily: 'var(--p21-font-mono)',
+  padding: '2px 8px',
+  borderRadius: 4,
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+  flexShrink: 0,
+}
+const link: React.CSSProperties = { color: 'var(--p21-blue)' }
+const unbutton: React.CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  padding: 0,
+  cursor: 'pointer',
+  font: 'inherit',
+  color: 'inherit',
+}
+const linkBtn: React.CSSProperties = {
+  ...unbutton,
+  color: 'var(--p21-blue)',
+  fontSize: 14,
+  textDecoration: 'underline',
+}
+const list: React.CSSProperties = { listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'grid', gap: 10 }
+const small: React.CSSProperties = {
+  fontSize: 'var(--p21-text-xs)',
+  color: 'var(--p21-ink-3)',
+  fontFamily: 'var(--p21-font-mono)',
+}
+const smallPrimary: React.CSSProperties = {
+  padding: '0 14px',
+  borderRadius: 'var(--p21-radius-sm)',
+  border: 'none',
+  background: 'var(--p21-primary)',
+  color: '#FFF',
+  fontSize: 16,
+  fontWeight: 600,
+  cursor: 'pointer',
+  minHeight: 40,
+}
 
 type Tab = 'activities' | 'trails' | 'lessons'
 

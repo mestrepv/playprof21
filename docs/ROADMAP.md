@@ -244,6 +244,30 @@ Nós lock/available/completed com estrelas.
 - Registry de componentes TSX por `activityId` pra `kind='animation'` e `'simulator'` virarem executáveis
 - Tela em "onda" Duolingo com SVG/curvas; hoje é stacked vertical
 
+### 7.3 — Página dedicada da turma + feed (concluída 2026-04-21)
+
+Inspirada na turma-detail do legado play.prof21. Substitui o expand inline por página dedicada `/teacher/classroom/:id`.
+
+**Backend:**
+- [x] Módulo `backend/modules/feed/` com `FeedPost`, `FeedComment`, `FeedPostLike` (PK composta)
+- [x] Rotas: `GET/POST /api/classrooms/{cid}/posts`, `DELETE /api/posts/{pid}`, `GET/POST /api/posts/{pid}/comments`, `DELETE /.../{cid}`, `POST /api/posts/{pid}/like` (toggle)
+- [x] Acesso: dono ou matriculado; cross-turma → 404
+- [x] Novos endpoints em `domain/routes.py`: `GET /api/classrooms/{cid}/stats` (total_students, total_activities, attempts_pct, energy_total), `GET /enrollments`, `GET /stats/students`
+- [x] Stats descompõe trilhas em activities alcançáveis pra calcular `attempts_expected = sum(activities_in_trails) + direct_activities × total_students`
+
+**Frontend:**
+- [x] `/teacher` vira lista de cards clicáveis (sem expand inline); cada card navega pra página da turma
+- [x] `ClassroomPage`: Hero azul gradiente com nome + código copiável + botão voltar
+- [x] `StatsRow`: 4 stat cards clicáveis (Alunos/Atividades/Tentativas/Energia Média) com ícones coloridos — azul, roxo, rosa, verde — grid `auto-fit minmax(160px, 1fr)`
+- [x] `TabsBar` pillbox com 4 tabs: Feed | Trilhas | Aulas | Desempenho; labels somem <480px
+- [x] `FeedTab`: composer, posts com avatar+tempo relativo, curtir (toggle otimístico), comentar, apagar (autor ou dono), paginação "ver mais"
+- [x] `AssignmentsTab` compartilhado pras tabs Trilhas/Aulas — botão "+ atribuir" abre picker filtrado; aulas têm "iniciar ao vivo ▶"
+- [x] `PerformanceTab` placeholder vazio elegante
+- [x] `StatDrawer` lateral (desktop) / bottom-sheet (mobile ≤640px): 4 variantes exibindo lista de alunos / breakdown de atividades / ranking de tentativas / ranking de energia
+- [x] `components/ui/icons.tsx` com lib de SVGs inline; `classroom/timeAgo.ts` helper de tempo relativo em PT
+
+**Smoke validado:** stats backend retorna números corretos (3 alunos, 1 assignment, 16.7% tentativas quando 1 de 6 possíveis cumprida); feed CRUD completo; isolamento cross-turma 404; typecheck limpo; navegação `/teacher` → `/teacher/classroom/:id` funciona.
+
 **Smoke validado:** aluno join → tab Trilhas mostra trilhas disponíveis com 1ª available, resto locked → clica → runner linear → responde 5 quizzes em sequência → tela-resumo com 3★ → volta → trilha vira completed, próxima desbloqueia. Visual consistente entre páginas com paleta prof21.
 
 ---

@@ -21,6 +21,8 @@ from modules.auth.routes import router as auth_router
 from modules.domain import models as _domain_models  # noqa: F401
 from modules.domain.routes import router as domain_router
 from modules.domain.student_routes import router as student_router
+from modules.feed import models as _feed_models  # noqa: F401
+from modules.feed.routes import router as feed_router
 from modules.lab.routes import router as lab_router
 from modules.live import models as _live_models  # noqa: F401
 from modules.live.routes import router as live_router
@@ -55,6 +57,7 @@ app.include_router(lab_router)
 app.include_router(auth_router)
 app.include_router(domain_router)
 app.include_router(student_router)
+app.include_router(feed_router)
 app.include_router(live_router)
 
 

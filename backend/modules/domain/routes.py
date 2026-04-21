@@ -36,7 +36,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -70,9 +70,12 @@ from .schemas import (
     ClassroomJoinIn,
     ClassroomJoinOut,
     ClassroomOut,
+    ClassroomStats,
+    EnrollmentMember,
     InteractiveLessonIn,
     InteractiveLessonOut,
     InteractiveLessonPatch,
+    StudentStat,
     TrailActivityIn,
     TrailIn,
     TrailOut,
@@ -246,6 +249,178 @@ def delete_classroom(cid: uuid.UUID, user: User = Depends(require_teacher), db: 
     db.delete(c)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/api/classrooms/{cid}/stats", response_model=ClassroomStats)
+def get_classroom_stats(
+    cid: uuid.UUID,
+    user: User = Depends(require_teacher),
+    db: Session = Depends(get_db),
+) -> ClassroomStats:
+    _own_classroom(db, cid, user)
+
+    # Matrículas da turma
+    enrolled_user_ids = list(
+        db.scalars(select(Enrollment.user_id).where(Enrollment.classroom_id == cid)).all()
+    )
+    total_students = len(enrolled_user_ids)
+
+    # Assignments da turma, agrupados por tipo
+    assigns = list(
+        db.execute(
+            select(Assignment.content_type, Assignment.content_id)
+            .where(Assignment.classroom_id == cid)
+        ).all()
+    )
+    total_activities = len(assigns)
+    by_type: dict[str, int] = {"activity": 0, "trail": 0, "interactive_lesson": 0}
+    trail_ids: list[uuid.UUID] = []
+    direct_activity_ids: list[uuid.UUID] = []
+    for ct, content_id in assigns:
+        by_type[ct] = by_type.get(ct, 0) + 1
+        if ct == "trail":
+            trail_ids.append(content_id)
+        elif ct == "activity":
+            direct_activity_ids.append(content_id)
+
+    # Activities alcançáveis (via trails atribuídas + activities atribuídas diretas)
+    reachable_activity_ids: set[uuid.UUID] = set(direct_activity_ids)
+    activities_per_trail: dict[uuid.UUID, list[uuid.UUID]] = {tid: [] for tid in trail_ids}
+    if trail_ids:
+        rows = db.execute(
+            select(TrailActivity.trail_id, TrailActivity.activity_id).where(
+                TrailActivity.trail_id.in_(trail_ids)
+            )
+        ).all()
+        for tid, aid in rows:
+            activities_per_trail.setdefault(tid, []).append(aid)
+            reachable_activity_ids.add(aid)
+
+    activities_in_trails = sum(len(v) for v in activities_per_trail.values())
+    expected_per_student = activities_in_trails + len(direct_activity_ids)
+    attempts_expected = expected_per_student * total_students
+
+    # Tentativas + energia (is_best, users matriculados, activities alcançáveis)
+    attempts_total = 0
+    energy_total = 0
+    if reachable_activity_ids and enrolled_user_ids:
+        row = db.execute(
+            select(
+                func.count(ActivityResult.id),
+                func.coalesce(func.sum(ActivityResult.score), 0),
+            ).where(
+                ActivityResult.is_best.is_(True),
+                ActivityResult.user_id.in_(enrolled_user_ids),
+                ActivityResult.activity_id.in_(reachable_activity_ids),
+            )
+        ).one()
+        attempts_total = int(row[0] or 0)
+        energy_total = int(row[1] or 0)
+
+    pct = (attempts_total / attempts_expected * 100.0) if attempts_expected > 0 else 0.0
+
+    return ClassroomStats(
+        total_students=total_students,
+        total_activities=total_activities,
+        assignments_by_type=by_type,
+        attempts_total=attempts_total,
+        attempts_expected=attempts_expected,
+        attempts_pct=round(pct, 1),
+        energy_total=energy_total,
+    )
+
+
+@router.get("/api/classrooms/{cid}/enrollments", response_model=list[EnrollmentMember])
+def list_classroom_enrollments(
+    cid: uuid.UUID,
+    user: User = Depends(require_teacher),
+    db: Session = Depends(get_db),
+) -> list[EnrollmentMember]:
+    _own_classroom(db, cid, user)
+    rows = list(
+        db.execute(
+            select(User.id, User.display_name, Enrollment.joined_at)
+            .join(Enrollment, Enrollment.user_id == User.id)
+            .where(Enrollment.classroom_id == cid)
+            .order_by(Enrollment.joined_at.asc())
+        ).all()
+    )
+    return [EnrollmentMember(user_id=uid, display_name=dn, joined_at=ja) for uid, dn, ja in rows]
+
+
+@router.get("/api/classrooms/{cid}/stats/students", response_model=list[StudentStat])
+def list_classroom_student_stats(
+    cid: uuid.UUID,
+    user: User = Depends(require_teacher),
+    db: Session = Depends(get_db),
+) -> list[StudentStat]:
+    _own_classroom(db, cid, user)
+
+    # Matrículas + display name
+    member_rows = list(
+        db.execute(
+            select(User.id, User.display_name)
+            .join(Enrollment, Enrollment.user_id == User.id)
+            .where(Enrollment.classroom_id == cid)
+        ).all()
+    )
+    if not member_rows:
+        return []
+    user_ids = [uid for uid, _ in member_rows]
+
+    # Activities alcançáveis via assignments
+    assigns = list(
+        db.execute(
+            select(Assignment.content_type, Assignment.content_id).where(Assignment.classroom_id == cid)
+        ).all()
+    )
+    trail_ids = [cid2 for ct, cid2 in assigns if ct == "trail"]
+    direct_activity_ids = [cid2 for ct, cid2 in assigns if ct == "activity"]
+    reachable: set[uuid.UUID] = set(direct_activity_ids)
+    if trail_ids:
+        rows = db.scalars(
+            select(TrailActivity.activity_id).where(TrailActivity.trail_id.in_(trail_ids))
+        ).all()
+        reachable.update(rows)
+
+    expected = len(reachable)
+
+    # Stats por aluno
+    counts: dict[uuid.UUID, tuple[int, int]] = {uid: (0, 0) for uid, _ in member_rows}
+    if reachable:
+        rows = db.execute(
+            select(
+                ActivityResult.user_id,
+                func.count(ActivityResult.id),
+                func.coalesce(func.sum(ActivityResult.score), 0),
+            )
+            .where(
+                ActivityResult.is_best.is_(True),
+                ActivityResult.user_id.in_(user_ids),
+                ActivityResult.activity_id.in_(reachable),
+            )
+            .group_by(ActivityResult.user_id)
+        ).all()
+        for uid, cnt, total_score in rows:
+            counts[uid] = (int(cnt or 0), int(total_score or 0))
+
+    out: list[StudentStat] = []
+    for uid, dn in member_rows:
+        cnt, energy = counts[uid]
+        pct = (cnt / expected * 100.0) if expected > 0 else 0.0
+        out.append(
+            StudentStat(
+                user_id=uid,
+                display_name=dn,
+                attempts_count=cnt,
+                attempts_expected=expected,
+                attempts_pct=round(pct, 1),
+                energy=energy,
+            )
+        )
+    # Ordena por energia desc — padrão útil pra ranking
+    out.sort(key=lambda s: (-s.energy, -s.attempts_pct, s.display_name))
+    return out
 
 
 @router.get("/api/classrooms/{cid}/assignments", response_model=list[AssignmentExpanded])
