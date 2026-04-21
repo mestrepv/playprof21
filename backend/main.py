@@ -21,6 +21,9 @@ from modules.auth.routes import router as auth_router
 from modules.domain import models as _domain_models  # noqa: F401
 from modules.domain.routes import router as domain_router
 from modules.lab.routes import router as lab_router
+from modules.live import models as _live_models  # noqa: F401
+from modules.live.routes import router as live_router
+from modules.live.websocket import session_ws
 
 
 @asynccontextmanager
@@ -50,6 +53,19 @@ app.add_middleware(
 app.include_router(lab_router)
 app.include_router(auth_router)
 app.include_router(domain_router)
+app.include_router(live_router)
+
+
+@app.websocket("/ws/lab/session/{sid}")
+async def _ws_session(ws: WebSocket, sid: str, token: str | None = None, anon_id: str | None = None, display_name: str | None = None):
+    """Wrapper — FastAPI precisa do decorator aqui; delega pra session_ws."""
+    import uuid as _uuid
+    try:
+        sid_uuid = _uuid.UUID(sid)
+    except ValueError:
+        await ws.close(code=4400)
+        return
+    await session_ws(ws, sid_uuid, token=token, anon_id=anon_id, display_name=display_name)
 
 
 @app.get("/health")

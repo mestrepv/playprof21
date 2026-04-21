@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../auth/AuthContext'
 import { SlideShell } from '../lab/components/SlideShell'
@@ -142,6 +142,19 @@ function AssignmentsPanel({
   token: string
   onError: (e: unknown) => void
 }) {
+  const navigate = useNavigate()
+  const startLive = async (interactiveLessonId: string) => {
+    try {
+      const s = await apiJson<{ id: string }>('/api/lab/sessions', {
+        token,
+        method: 'POST',
+        json: { interactive_lesson_id: interactiveLessonId },
+      })
+      navigate(`/lab/session/${s.id}?role=master`)
+    } catch (e) {
+      onError(e)
+    }
+  }
   const [items, setItems] = useState<AssignmentExpanded[]>([])
   const [bank, setBank] = useState<{ activities: Activity[]; trails: Trail[]; lessons: InteractiveLesson[] } | null>(
     null,
@@ -201,9 +214,27 @@ function AssignmentsPanel({
             <li key={ae.assignment.id} style={assignRow}>
               <span style={{ ...kindBadge, background: meta.bg, color: meta.fg }}>{meta.label}</span>
               <span style={{ flex: 1, fontWeight: 500 }}>{meta.title}</span>
+              {ae.interactive_lesson && (
+                <button
+                  onClick={() => startLive(ae.interactive_lesson!.id)}
+                  style={{
+                    ...small,
+                    border: '1px solid var(--color-lab-accent)',
+                    color: 'var(--color-lab-accent)',
+                    background: '#FFF',
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                  title="criar sessão ao vivo e abrir como mestre"
+                >
+                  iniciar ao vivo ▶
+                </button>
+              )}
               {meta.href && (
                 <Link to={meta.href} style={{ ...small, color: 'var(--color-lab-accent)', textDecoration: 'none' }}>
-                  abrir →
+                  preview
                 </Link>
               )}
               <button onClick={() => detach(ae.assignment.id)} style={dangerBtn} aria-label="remover atribuição">

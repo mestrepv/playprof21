@@ -119,29 +119,40 @@ Schema via `create_all` no lifespan. Sync de colunas fica pra quando aparecer ne
 
 ## Fase 4 — Runtime de aula ao vivo
 
-**Status:** ⬜ pendente
+**Status:** ✅ concluída em 2026-04-21 (mínimo viável; quiz/score ficam pra Fase 4.1 junto com mission TSX)
 
 Objetivo: aula síncrona mestre↔alunos. Mestre avança slides, todos veem juntos.
 
 ### Backend
 
-- [ ] Modelos: `session` (sessão de aula), `membership` (quem entrou), `event` (telemetria), `score`
-- [ ] WebSocket `/ws/lab/session/{session_id}` (port do `connection_manager.py` do module_lab)
-- [ ] Handlers: `setSlide`, `setActivity`, `setInteractionMode`, `quiz.*`, `event`
-- [ ] Rota `POST /api/lab/sessions` — criar sessão (retorna session_id + código)
-- [ ] Rota `GET /api/lab/sessions/{id}` — snapshot pra reconectar
+- [x] Modelos: `live_sessions`, `live_memberships` (user OR anon_id), `live_events` (append-only telemetria). `quiz_state`/`answers`/`scores` ficam pra 4.1
+- [x] WebSocket `/ws/lab/session/{id}?token=<jwt>&anon_id=<uuid>&display_name=<nome>` — auth dupla (JWT ou anônimo)
+- [x] Handlers: `setSlide`, `setInteractionMode`, `event`, `ping`, `endSession`. `setActivity`/`quiz.*` entram com missions na 4.1
+- [x] `POST /api/lab/sessions` (master cria, exige ownership da InteractiveLesson)
+- [x] `GET /api/lab/sessions/{id}` (snapshot público — server envia inicial no handshake, REST é fallback pra reconexão)
+- [x] `GET /api/lab/sessions/{id}/manifest` (carrega o manifest em disco do slug da InteractiveLesson)
+- [x] `ConnectionManager` singleton in-process (broadcast com `exclude`/`only_role`)
 
 ### Frontend
 
-- [ ] Portar adapter (mock + websocket) e `AdapterProvider`
-- [ ] Portar `SessionProvider` e hooks (`useSessionState`, `useSession`)
-- [ ] Portar `SlideRouter`, `MasterActivityControls`, `InteractionModeBadge`, `ScoreBoard`
-- [ ] Portar `MissionSlide` + stub de registry de missões por game
-- [ ] Role gate: `master` vs `player` via URL param ou JWT
+- [x] `SessionAdapter` WebSocket (pending queue, reconexão exponencial 1s→30s cap, emitter por subscribe)
+- [x] `SessionPage` (`/lab/session/:sid?role=master|player`): carrega snapshot+manifest, gate de nome pro player, role-check ao receber snapshot
+- [x] Reuso do `SlideRenderer` da Fase 2 (text/video já renderizam; mission/quiz/custom continuam placeholder)
+- [x] HUD fixo no rodapé com ←/→/encerrar pro master; contador pro player
+- [x] Botão "iniciar ao vivo ▶" em cada assignment tipo `interactive_lesson` na `TeacherPage` — cria a sessão e abre como master
+- [x] Atalhos de teclado master: ← / → / Space / PgUp/PgDn / Home / End
+- [x] `anon_id` persistido em `localStorage` (aluno reconecta mantendo membership)
+- [x] Mock adapter: **não** implementado — WebSocket direto funciona local e remoto
 
-**Estimativa:** 2-3 dias.
+### Fora do escopo (4.1 ou depois)
 
-**Critério de aceite:** professor abre sessão em duas abas (master + player), avança slide no master, player sincroniza em tempo real.
+- Mission TSX (precisa registry de componentes por game)
+- Quiz live (open/close/answer/distribution)
+- Score + master override
+- `MasterActivityControls`, `InteractionModeBadge`, `ScoreBoard`
+- Mock adapter pra dev offline
+
+**Critério de aceite atingido:** smoke via Python `websockets` com 2 conexões paralelas — master conecta (snapshot), player conecta (snapshot + participantUpdate no master), master `setSlide index=3` → player recebe `slideChange index=3` status=live, `setInteractionMode` propaga, player tentando `setSlide` recebe `error code=forbidden`. No browser: botão "iniciar ao vivo" em assignment de aula interativa cria sessão e abre runtime.
 
 ---
 
