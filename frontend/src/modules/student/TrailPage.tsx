@@ -54,6 +54,7 @@ function TrailView({ trailId, token }: { trailId: string; token: string }) {
           <TrailNodeCard
             key={node.activity.id}
             node={node}
+            trailId={data.trail.id}
             index={i}
             displayIndex={i + 1}
           />
@@ -65,10 +66,12 @@ function TrailView({ trailId, token }: { trailId: string; token: string }) {
 
 function TrailNodeCard({
   node,
+  trailId,
   index,
   displayIndex,
 }: {
   node: TrailProgress['nodes'][number]
+  trailId: string
   index: number
   displayIndex: number
 }) {
@@ -129,7 +132,7 @@ function TrailNodeCard({
   return (
     <li>
       <Link
-        to={`/student/activity/${encodeURIComponent(activity.id)}`}
+        to={`/student/activity/${encodeURIComponent(activity.id)}?trail=${encodeURIComponent(trailId)}`}
         style={{ textDecoration: 'none', color: 'inherit' }}
       >
         {content}
