@@ -33,37 +33,35 @@ Objetivo: provar que os 3 serviços sobem, conversam e respondem.
 
 ## Fase 2 — Portar pipeline de conteúdo do module_lab
 
-**Status:** ⬜ pendente
+**Status:** ✅ concluída em 2026-04-21
 
 Objetivo: renderizar uma aula `.md` do disco. Nada de sessão, auth ou
 banco ainda — só leitura de arquivos e render markdown.
 
 ### Backend
 
-- [ ] Portar `content_loader.py` do module_lab (parse frontmatter + YAML + validação de schema por tipo: text/video/quiz/mission/custom)
-- [ ] Portar `validate.py` CLI
-- [ ] Adaptar `rewrite_asset_urls` (markdown `![]()` + HTML `<img>`)
-- [ ] Rota `GET /api/lab/games` — lista aulas
-- [ ] Rota `GET /api/lab/games/{slug}` — retorna manifest
-- [ ] Rota `GET /api/lab/assets/{slug}/{path:path}` — serve imagens/SVGs com path traversal protection
+- [x] Portar `content_loader.py` do module_lab (parse frontmatter + YAML + validação de schema por tipo: text/video/quiz/mission/custom)
+- [x] Portar `validate.py` CLI (`docker compose exec api python -m modules.lab.validate`)
+- [x] Adaptar `rewrite_asset_urls` (markdown `![]()` + HTML `<img>`) — novo prefix `/api/lab/assets/`
+- [x] Rota `GET /api/lab/games` — lista aulas
+- [x] Rota `GET /api/lab/games/{slug}` — retorna manifest
+- [x] Rota `GET /api/lab/assets/{slug}/{path:path}` — serve imagens/SVGs com path traversal protection
 
 ### Frontend
 
-- [ ] Portar `TextSlide.tsx` (remark-gfm + rehype-raw + KaTeX)
-- [ ] Portar `VideoSlide.tsx` (YouTube embed)
-- [ ] Portar `SlideShell.tsx` + tokens CSS + helpers.css
-- [ ] Portar `Math` component (KaTeX)
-- [ ] Página de preview `/lab/preview/:slug` (sem sessão, adapter mock)
-- [ ] Registry de componentes por game (ex.: `src/modules/lab/games/atlas/components.ts`)
+- [x] Portar `TextSlide.tsx` (remark-gfm + rehype-raw + KaTeX)
+- [x] Portar `VideoSlide.tsx` (YouTube + Vimeo embed)
+- [x] Portar `SlideShell.tsx` + tokens CSS + helpers.css (escopo `[data-lab-root]`)
+- [x] Portar `Math` component (KaTeX)
+- [x] Página de preview `/lab/preview/:slug` (sem sessão, adapter mock, atalhos ←/→/Space/Home/End)
+- [x] `SlideRenderer` despacha por `type`; mission/quiz/custom ficam como placeholder pra Fase 3-4
 
 ### Conteúdo
 
-- [ ] Copiar `atlas-v1` e `seminario-tese` do module_lab como seeds
-- [ ] `validate.py` passa OK nos dois
+- [x] Copiar `atlas-v1` e `seminario-tese` do module_lab como seeds
+- [x] `validate.py` carrega os 2 jogos (10 + 16 slides). 6 erros esperados de `missionId` — componentes TSX só chegam na Fase 4
 
-**Estimativa:** 1-2 dias.
-
-**Critério de aceite:** abrir `http://localhost:5174/lab/preview/seminario-tese` e navegar pelos 16 slides com Set → / Ctrl+← funcionando.
+**Critério de aceite atingido:** `/api/lab/games/seminario-tese` devolve os 16 slides, asset rewrite funciona, path traversal bloqueado. Preview em `http://localhost:5174/lab/preview/seminario-tese` com navegação por teclado (←/→/Space/Home/End).
 
 ---
 

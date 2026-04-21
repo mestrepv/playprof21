@@ -38,7 +38,8 @@ Tipos de slide suportados (herdados do `module_lab` do rpgia):
 Veja [docs/ROADMAP.md](docs/ROADMAP.md) como fonte de verdade. Resumo rápido:
 
 - **Fase 1** ✅ concluída (setup Docker + smoke test) — commit `7c5e95f`
-- **Fase 2** ⬜ próximo passo: portar `content_loader` + `TextSlide` do module_lab
+- **Fase 2** ✅ concluída (pipeline `.md`, preview em `/lab/preview/:slug`)
+- **Fase 3** ⬜ próximo passo: schema de domínio + auth
 - Demais fases documentadas em `docs/ROADMAP.md`
 
 **Para retomar:** leia `docs/ROADMAP.md`, identifique a Fase ⬜ mais próxima,

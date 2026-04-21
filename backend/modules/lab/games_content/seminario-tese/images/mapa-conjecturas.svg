@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 820" width="100%" style="max-width:700px;height:auto">
+<defs>
+<marker id="ma4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<!-- ═══ CAMADA 1: Conjectura de alto nível ═══ -->
+<rect x="40" y="16" width="620" height="70" rx="12" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<rect x="56" y="26" width="160" height="20" rx="10" fill="#534AB7"/>
+<text x="136" y="36" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">CONJECTURA DE ALTO NÍVEL</text>
+<text x="350" y="60" text-anchor="middle" dominant-baseline="central" fill="#3C3489" font-size="11" font-style="italic">"Um RPG Digital estruturado por práticas investigativas autênticas pode operar</text>
+<text x="350" y="74" text-anchor="middle" dominant-baseline="central" fill="#3C3489" font-size="11" font-style="italic">como jogo epistêmico e artefato de mediação simbólica em contextos de difusão científica."</text>
+<line x1="350" y1="86" x2="350" y2="108" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 2: Incorporação ═══ -->
+<rect x="40" y="110" width="620" height="130" rx="12" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<rect x="56" y="120" width="110" height="20" rx="10" fill="#185FA5"/>
+<text x="111" y="130" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">INCORPORAÇÃO</text>
+<text x="178" y="130" dominant-baseline="central" fill="#0C447C" font-size="10">Materialização da conjectura em elementos concretos do artefato</text>
+<line x1="56" y1="148" x2="646" y2="148" stroke="#185FA5" stroke-width="0.5" opacity="0.15"/>
+<rect x="56" y="156" width="186" height="70" rx="8" fill="#fff" stroke="#185FA5" stroke-width="0.5" opacity="0.6"/>
+<rect x="64" y="162" width="60" height="16" rx="8" fill="#185FA5" opacity="0.8"/>
+<text x="94" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">primária</text>
+<text x="64" y="188" fill="#0C447C" font-size="10" font-weight="500">Estrutura de Tarefa</text>
+<text x="64" y="202" fill="#185FA5" font-size="9">Missões por práticas</text>
+<text x="64" y="214" fill="#185FA5" font-size="9">investigativas + epistemic frames</text>
+<rect x="254" y="156" width="186" height="70" rx="8" fill="#fff" stroke="#185FA5" stroke-width="0.5" opacity="0.6"/>
+<rect x="262" y="162" width="54" height="16" rx="8" fill="#185FA5" opacity="0.5"/>
+<text x="289" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">suporte</text>
+<text x="262" y="188" fill="#0C447C" font-size="10" font-weight="500">Ferramentas e Materiais</text>
+<text x="262" y="202" fill="#185FA5" font-size="9">Simuladores, feedbacks,</text>
+<text x="262" y="214" fill="#185FA5" font-size="9">narrativa ficcional</text>
+<rect x="452" y="156" width="194" height="70" rx="8" fill="#fff" stroke="#185FA5" stroke-width="0.5" opacity="0.6"/>
+<rect x="460" y="162" width="54" height="16" rx="8" fill="#185FA5" opacity="0.5"/>
+<text x="487" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">suporte</text>
+<text x="460" y="188" fill="#0C447C" font-size="10" font-weight="500">Estrutura de Participação</text>
+<text x="460" y="202" fill="#185FA5" font-size="9">Mecânicas de cooperação,</text>
+<text x="460" y="214" fill="#185FA5" font-size="9">consenso grupal</text>
+<line x1="350" y1="240" x2="350" y2="262" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 3: Conjecturas de Design ═══ -->
+<rect x="40" y="264" width="620" height="240" rx="12" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+<rect x="56" y="274" width="150" height="20" rx="10" fill="#993C1D"/>
+<text x="131" y="284" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">CONJECTURAS DE DESIGN</text>
+<text x="218" y="284" dominant-baseline="central" fill="#712B13" font-size="10">"Se [incorporação], então [processo mediador] emergirá"</text>
+<line x1="56" y1="302" x2="646" y2="302" stroke="#993C1D" stroke-width="0.5" opacity="0.15"/>
+<rect x="56" y="310" width="296" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="62" y="316" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="78" y="323" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD1</text>
+<text x="100" y="323" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">NdC como construção humana</text>
+<text x="62" y="342" fill="#993C1D" font-size="9">Se missões apresentam ciência como processo →</text>
+<text x="62" y="354" fill="#993C1D" font-size="9">participantes questionam visões absolutistas</text>
+<rect x="364" y="310" width="282" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="370" y="316" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="386" y="323" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD2</text>
+<text x="408" y="323" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Prática investigativa</text>
+<text x="370" y="342" fill="#993C1D" font-size="9">Se missões usam dados reais do LHC →</text>
+<text x="370" y="354" fill="#993C1D" font-size="9">participantes mobilizam skills investigativas</text>
+<rect x="56" y="374" width="296" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="62" y="380" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="78" y="387" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD3</text>
+<text x="100" y="387" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Ficção científica como contexto</text>
+<text x="62" y="406" fill="#993C1D" font-size="9">Se narrativa envolve sem substituir →</text>
+<text x="62" y="418" fill="#993C1D" font-size="9">transição fluida entre frames sem perda de rigor</text>
+<rect x="364" y="374" width="282" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="370" y="380" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="386" y="387" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD4</text>
+<text x="408" y="387" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Cooperação e argumentação</text>
+<text x="370" y="406" fill="#993C1D" font-size="9">Se mecânicas exigem consenso grupal →</text>
+<text x="370" y="418" fill="#993C1D" font-size="9">participantes negociam sentidos coletivamente</text>
+<rect x="56" y="438" width="296" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="62" y="444" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="78" y="451" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD5</text>
+<text x="100" y="451" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Erro como recurso epistêmico</text>
+<text x="62" y="470" fill="#993C1D" font-size="9">Se feedback trata erro como informação →</text>
+<text x="62" y="482" fill="#993C1D" font-size="9">participantes revisam hipóteses sem abandono</text>
+<rect x="364" y="438" width="282" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="370" y="444" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="386" y="451" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD6</text>
+<text x="408" y="451" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Modelagem dos fenômenos</text>
+<text x="370" y="470" fill="#993C1D" font-size="9">Se tarefas exigem construir representações →</text>
+<text x="370" y="482" fill="#993C1D" font-size="9">participantes produzem modelos explicativos</text>
+<line x1="350" y1="504" x2="350" y2="526" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 4: Processos Mediadores ═══ -->
+<rect x="40" y="528" width="620" height="130" rx="12" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<rect x="56" y="538" width="150" height="20" rx="10" fill="#0F6E56"/>
+<text x="131" y="548" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">PROCESSOS MEDIADORES</text>
+<text x="218" y="548" dominant-baseline="central" fill="#085041" font-size="10">Interações observáveis que indicam funcionamento</text>
+<line x1="56" y1="566" x2="646" y2="566" stroke="#0F6E56" stroke-width="0.5" opacity="0.15"/>
+<text x="64" y="584" fill="#085041" font-size="10">M1</text>
+<text x="84" y="584" fill="#0F6E56" font-size="10">Participantes mobilizam habilidades investigativas (skills)</text>
+<text x="64" y="600" fill="#085041" font-size="10">M2</text>
+<text x="84" y="600" fill="#0F6E56" font-size="10">Participantes articulam justificativas em decisões (knowledge)</text>
+<text x="64" y="616" fill="#085041" font-size="10">M3</text>
+<text x="84" y="616" fill="#0F6E56" font-size="10">Participantes negociam sentidos em grupo (values)</text>
+<text x="64" y="632" fill="#085041" font-size="10">M4</text>
+<text x="84" y="632" fill="#0F6E56" font-size="10">Participantes assumem postura investigativa (identity)</text>
+<text x="64" y="648" fill="#085041" font-size="10">M5</text>
+<text x="84" y="648" fill="#0F6E56" font-size="10">Transição fluida entre frame ficcional e investigativo (epistemology)</text>
+<line x1="350" y1="658" x2="350" y2="680" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 5: Validação ═══ -->
+<rect x="40" y="682" width="620" height="120" rx="12" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<rect x="56" y="692" width="180" height="20" rx="10" fill="#854F0B"/>
+<text x="146" y="702" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">VALIDAÇÃO DOS PRINCÍPIOS</text>
+<text x="248" y="702" dominant-baseline="central" fill="#633806" font-size="10">Para cada PD1–PD6, determinar status</text>
+<line x1="56" y1="720" x2="646" y2="720" stroke="#854F0B" stroke-width="0.5" opacity="0.15"/>
+<rect x="56" y="728" width="186" height="60" rx="8" fill="#fff" stroke="#854F0B" stroke-width="0.5" opacity="0.5"/>
+<rect x="64" y="734" width="80" height="16" rx="8" fill="#0F6E56"/>
+<text x="104" y="742" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">CONFIRMADO</text>
+<text x="64" y="762" fill="#633806" font-size="9">Incorporação gera processos</text>
+<text x="64" y="774" fill="#633806" font-size="9">mediadores esperados</text>
+<rect x="254" y="728" width="186" height="60" rx="8" fill="#fff" stroke="#854F0B" stroke-width="0.5" opacity="0.5"/>
+<rect x="262" y="734" width="74" height="16" rx="8" fill="#854F0B"/>
+<text x="299" y="742" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">REFINADO</text>
+<text x="262" y="762" fill="#633806" font-size="9">Funciona sob condições</text>
+<text x="262" y="774" fill="#633806" font-size="9">específicas (documentar)</text>
+<rect x="452" y="728" width="194" height="60" rx="8" fill="#fff" stroke="#854F0B" stroke-width="0.5" opacity="0.5"/>
+<rect x="460" y="734" width="74" height="16" rx="8" fill="#993C1D"/>
+<text x="497" y="742" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">REFUTADO</text>
+<text x="460" y="762" fill="#633806" font-size="9">Incorporação não gera</text>
+<text x="460" y="774" fill="#633806" font-size="9">processos esperados</text>
+<text x="16" y="440" text-anchor="middle" dominant-baseline="central" fill="#b4b2a9" font-size="9" transform="rotate(-90 16 440)">Rastreabilidade: teoria → incorporação → conjectura → processo → evidência</text>
+<line x1="28" y1="110" x2="28" y2="790" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 4"/>
+</svg>

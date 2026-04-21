@@ -1,0 +1,140 @@
+/*
+ * helpers.css — classes utilitárias disponíveis dentro de slides markdown
+ * (via rehype-raw).
+ *
+ * Escopadas em [data-lab-root] pra não vazar.
+ *
+ * Portado de module_lab do rpgia; data-module-lab-root renomeado pra data-lab-root.
+ */
+
+[data-lab-root] {
+  /* Paleta semântica — cards e tags */
+  --lab-purple-bg: #EEEDFE;
+  --lab-purple-border: #534AB7;
+  --lab-purple-title: #3C3489;
+  --lab-purple-text: #534AB7;
+
+  --lab-teal-bg: #E1F5EE;
+  --lab-teal-border: #0F6E56;
+  --lab-teal-title: #085041;
+  --lab-teal-text: #0F6E56;
+
+  --lab-coral-bg: #FAECE7;
+  --lab-coral-border: #993C1D;
+  --lab-coral-title: #712B13;
+  --lab-coral-text: #993C1D;
+
+  --lab-amber-bg: #FAEEDA;
+  --lab-amber-border: #854F0B;
+  --lab-amber-title: #633806;
+  --lab-amber-text: #854F0B;
+
+  --lab-blue-bg: #E6F1FB;
+  --lab-blue-border: #185FA5;
+  --lab-blue-title: #0C447C;
+  --lab-blue-text: #185FA5;
+
+  --lab-gray-bg: #F1EFE8;
+  --lab-gray-border: #888780;
+  --lab-gray-title: #444441;
+  --lab-gray-text: #5F5E5A;
+}
+
+/* ── Tags coloridas (inline badges) ────────────────────────────────────── */
+[data-lab-root] .tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 0.75em;
+  font-weight: 500;
+  border: 1px solid;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+[data-lab-root] .tag.purple { background: var(--lab-purple-bg); color: var(--lab-purple-title); border-color: var(--lab-purple-border); }
+[data-lab-root] .tag.teal   { background: var(--lab-teal-bg);   color: var(--lab-teal-title);   border-color: var(--lab-teal-border);   }
+[data-lab-root] .tag.coral  { background: var(--lab-coral-bg);  color: var(--lab-coral-title);  border-color: var(--lab-coral-border);  }
+[data-lab-root] .tag.amber  { background: var(--lab-amber-bg);  color: var(--lab-amber-title);  border-color: var(--lab-amber-border);  }
+[data-lab-root] .tag.blue   { background: var(--lab-blue-bg);   color: var(--lab-blue-title);   border-color: var(--lab-blue-border);   }
+[data-lab-root] .tag.gray   { background: var(--lab-gray-bg);   color: var(--lab-gray-title);   border-color: var(--lab-gray-border);   }
+
+/* ── Grids de 2/3 colunas ──────────────────────────────────────────────── */
+[data-lab-root] .grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+[data-lab-root] .grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  [data-lab-root] .grid2,
+  [data-lab-root] .grid3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Cards coloridos ───────────────────────────────────────────────────── */
+[data-lab-root] .card {
+  border-radius: 10px;
+  padding: 14px 18px;
+  border: 1px solid;
+}
+[data-lab-root] .card.purple { background: var(--lab-purple-bg); border-color: var(--lab-purple-border); color: var(--lab-purple-text); }
+[data-lab-root] .card.teal   { background: var(--lab-teal-bg);   border-color: var(--lab-teal-border);   color: var(--lab-teal-text);   }
+[data-lab-root] .card.coral  { background: var(--lab-coral-bg);  border-color: var(--lab-coral-border);  color: var(--lab-coral-text);  }
+[data-lab-root] .card.amber  { background: var(--lab-amber-bg);  border-color: var(--lab-amber-border);  color: var(--lab-amber-text);  }
+[data-lab-root] .card.blue   { background: var(--lab-blue-bg);   border-color: var(--lab-blue-border);   color: var(--lab-blue-text);   }
+[data-lab-root] .card.gray   { background: var(--lab-gray-bg);   border-color: var(--lab-gray-border);   color: var(--lab-gray-text);   }
+
+[data-lab-root] .card .card-title {
+  font-weight: 500;
+  font-size: 1em;
+  margin-bottom: 6px;
+}
+[data-lab-root] .card.purple .card-title { color: var(--lab-purple-title); }
+[data-lab-root] .card.teal   .card-title { color: var(--lab-teal-title);   }
+[data-lab-root] .card.coral  .card-title { color: var(--lab-coral-title);  }
+[data-lab-root] .card.amber  .card-title { color: var(--lab-amber-title);  }
+[data-lab-root] .card.blue   .card-title { color: var(--lab-blue-title);   }
+[data-lab-root] .card.gray   .card-title { color: var(--lab-gray-title);   }
+
+[data-lab-root] .card .card-body {
+  font-size: 0.875em;
+  line-height: 1.55;
+}
+
+/* ── Callout box (enfase com barra lateral) ──────────────────────────── */
+[data-lab-root] .callout {
+  border-left: 3px solid var(--lab-purple-border);
+  background: var(--lab-gray-bg);
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  margin: 12px 0;
+}
+[data-lab-root] .callout.purple { border-color: var(--lab-purple-border); }
+[data-lab-root] .callout.teal   { border-color: var(--lab-teal-border);   }
+[data-lab-root] .callout.coral  { border-color: var(--lab-coral-border);  }
+[data-lab-root] .callout.amber  { border-color: var(--lab-amber-border);  }
+[data-lab-root] .callout.blue   { border-color: var(--lab-blue-border);   }
+
+/* ── Título hero centralizado ──────────────────────────────────────────── */
+[data-lab-root] .hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 32px 16px;
+}
+[data-lab-root] .hero hr,
+[data-lab-root] .hero .sep {
+  width: 60px;
+  height: 4px;
+  background: var(--lab-purple-border);
+  border-radius: 2px;
+  border: 0;
+  margin: 0;
+}

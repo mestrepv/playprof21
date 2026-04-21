@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seminário de Tese — Paulo Vicente</title>
+<script src="https://www.youtube.com/iframe_api"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Söhne,'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#12121f;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}
+.wrap{width:960px;height:540px;background:#fafaf7;display:flex;flex-direction:column;position:relative;border-radius:6px;box-shadow:0 20px 80px rgba(0,0,0,.65),0 4px 16px rgba(0,0,0,.3);transform-origin:center center;cursor:pointer;user-select:none;flex-shrink:0}
+.dots{background-image:radial-gradient(#d3d1c7 .6px,transparent .6px);background-size:22px 22px;position:absolute;inset:0;opacity:.22;pointer-events:none;border-radius:6px}
+.content{flex:1;padding:26px 36px 10px;position:relative;z-index:1;animation:fadeIn .35s ease;overflow-y:auto;overflow-x:hidden}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:#d3d1c7;border-radius:2px}
+.nav{padding:6px 28px 8px;position:relative;z-index:1;border-top:1px solid #e8e6e0;background:rgba(250,250,247,.97);border-radius:0 0 6px 6px}
+.pills{display:flex;gap:4px;justify-content:center;margin-bottom:5px}
+.pill{height:5px;border-radius:3px;transition:all .3s;cursor:pointer}
+.info{display:flex;justify-content:center;align-items:center;gap:16px;font-size:10.5px;color:#9c9a92}
+.hint{animation:pulse 2s ease infinite}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:.7}50%{opacity:.25}}
+.tag{display:inline-block;padding:2px 10px;border-radius:6px;font-size:12px;font-weight:500}
+.card{border-radius:10px;padding:14px 18px;margin-bottom:0}
+.card-title{font-weight:500;font-size:15px;margin-bottom:6px}
+.card-body{font-size:13.5px;line-height:1.6}
+.bullet{display:flex;gap:8px;margin-bottom:6px;font-size:13.5px;line-height:1.55}
+.bullet::before{content:'•';margin-top:2px;flex-shrink:0}
+h2{font-size:20px;font-weight:500;color:#2C2C2A;margin:10px 0 12px}
+table{width:100%;border-collapse:collapse;font-size:12px;line-height:1.5}
+th{padding:6px 6px;text-align:left;color:#444441;font-weight:500}
+td{padding:5px 6px;color:#444441}
+thead tr{border-bottom:2px solid #d3d1c7}
+tbody tr{border-bottom:1px solid #e8e6e0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.layer{transition:opacity .6s ease,transform .6s ease}
+.layer-hidden{opacity:0;transform:translateY(6px)}
+#progress-bar{position:absolute;top:0;left:0;height:3px;z-index:10;border-radius:0 3px 3px 0;background:#534AB7;width:0%;transition:width .4s ease;pointer-events:none}
+#slide-number{margin-left:auto;font-size:10.5px;color:#9c9a92;opacity:.7}
+#grid-view{position:absolute;inset:0;z-index:20;background:rgba(250,250,247,0.97);border-radius:6px;display:none;grid-template-columns:repeat(5,1fr);gap:8px;padding:16px;overflow-y:auto;align-content:start}
+#grid-view .gc{border:1px solid #d3d1c7;border-radius:4px;padding:6px;font-size:9px;color:#444441;line-height:1.3;cursor:pointer;min-height:80px;background:#fff;overflow:hidden}
+#grid-view .gc.active{border-color:#534AB7;background:#EEEDFE}
+#shortcuts-overlay{position:absolute;inset:0;z-index:25;background:rgba(18,18,31,0.85);border-radius:6px;display:none;align-items:center;justify-content:center}
+.so-box{background:#fafaf7;border-radius:12px;padding:28px 36px;max-width:360px;width:100%}
+.so-box h3{font-size:16px;font-weight:500;color:#2C2C2A;margin-bottom:16px}
+.so-grid{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13px;color:#5F5E5A;align-items:center}
+.so-key{background:#F1EFE8;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:12px;color:#444441;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="progress-bar"></div>
+  <div class="dots"></div>
+  <div class="content" id="slide"></div>
+  <div id="grid-view"></div>
+  <div id="shortcuts-overlay">
+    <div class="so-box">
+      <h3>Atalhos do teclado</h3>
+      <div class="so-grid">
+        <span class="so-key">→ / Espaço / Enter</span><span>Próximo slide</span>
+        <span class="so-key">← / Backspace</span><span>Slide anterior</span>
+        <span class="so-key">F</span><span>Tela cheia</span>
+        <span class="so-key">R</span><span>Voltar ao início</span>
+        <span class="so-key">G</span><span>Grade de slides</span>
+        <span class="so-key">?</span><span>Este painel</span>
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="pills" id="pills"></div>
+    <div class="info">
+      <span id="counter">0/18</span>
+      <span id="hint" class="hint">clique ou seta →</span>
+      <span style="opacity:.5">· F · G · ?</span>
+      <span id="slide-number">1 / 19</span>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ── Paleta de cores ──────────────────────────────────────────────────────────
+var P = {
+  purple: {bg:'#EEEDFE', border:'#534AB7', title:'#3C3489', text:'#534AB7'},
+  teal:   {bg:'#E1F5EE', border:'#0F6E56', title:'#085041', text:'#0F6E56'},
+  coral:  {bg:'#FAECE7', border:'#993C1D', title:'#712B13', text:'#993C1D'},
+  amber:  {bg:'#FAEEDA', border:'#854F0B', title:'#633806', text:'#854F0B'},
+  blue:   {bg:'#E6F1FB', border:'#185FA5', title:'#0C447C', text:'#185FA5'},
+  gray:   {bg:'#F1EFE8', border:'#888780', title:'#444441', text:'#5F5E5A'}
+};
+
+// ── Helpers de componente ────────────────────────────────────────────────────
+function tag(c, t) {
+  return `<span class="tag" style="background:${P[c].bg};color:${P[c].title};border:1px solid ${P[c].border}">${t}</span>`;
+}
+// cardv: título em cima, corpo em baixo (layout vertical — padrão)
+function cardv(c, title, body, extra) {
+  return `<div class="card" style="background:${P[c].bg};border:1px solid ${P[c].border};${extra||''}">
+    <div class="card-title" style="color:${P[c].title}">${title}</div>
+    <div class="card-body" style="color:${P[c].text}">${body}</div>
+  </div>`;
+}
+// cardh: título à esquerda, corpo à direita (layout horizontal)
+function cardh(c, title, body, extra) {
+  return `<div class="card" style="background:${P[c].bg};border:1px solid ${P[c].border};display:flex;flex-direction:row;gap:12px;align-items:flex-start;${extra||''}">
+    <div class="card-title" style="color:${P[c].title};min-width:160px;flex-shrink:0">${title}</div>
+    <div class="card-body" style="color:${P[c].text}">${body}</div>
+  </div>`;
+}
+// alias legado
+function card(c, title, body, extra) { return cardv(c, title, body, extra); }
+function bullet(t, c) {
+  return `<div class="bullet" style="color:${c||'#5F5E5A'}">${t}</div>`;
+}
+
+// ── Diagrama da Pesquisa-Aplicação (SVG em 3 camadas) ───────────────────────
+function dbrSVG(layer) {
+  function vis(n) {
+    return `opacity:${layer>=n?1:0};transition:opacity .6s ease,transform .6s ease;${layer>=n?'':'transform:translateY(6px)'}`;
+  }
+  return `
+<svg viewBox="0 0 700 650" style="width:auto;height:auto;max-width:560px;max-height:390px;display:block;margin:0 auto">
+<defs>
+  <marker id="ma" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- Camada 1: Fundamento epistemológico + Fases da Pesquisa-Aplicação -->
+<g style="${vis(1)}">
+  <rect x="80" y="20" width="540" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+  <text x="350" y="39" text-anchor="middle" dominant-baseline="central" fill="#3C3489" font-size="13" font-weight="500">Fundamento epistemológico</text>
+  <text x="350" y="56" text-anchor="middle" dominant-baseline="central" fill="#534AB7" font-size="11">Socioconstrutivismo (Vygotsky) + mediação simbólica</text>
+  <line x1="350" y1="70" x2="350" y2="88" stroke="#9c9a92" stroke-width="1.5" marker-end="url(#ma)"/>
+
+  <rect x="80" y="90" width="540" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+  <text x="350" y="109" text-anchor="middle" dominant-baseline="central" fill="#3C3489" font-size="13" font-weight="500">Matriz de design cognitivo (Matta)</text>
+  <text x="350" y="126" text-anchor="middle" dominant-baseline="central" fill="#534AB7" font-size="11">Soluções cognitivas + soluções técnicas</text>
+  <line x1="350" y1="140" x2="350" y2="162" stroke="#9c9a92" stroke-width="1.5" marker-end="url(#ma)"/>
+
+  <rect x="200" y="164" width="300" height="330" rx="12" fill="none" stroke="#c8c6be" stroke-width="1" stroke-dasharray="6 4"/>
+  <text x="350" y="182" text-anchor="middle" fill="#73726c" font-size="10">Fases da Pesquisa-Aplicação (Matta; Silva; Boaventura, 2014)</text>
+
+  <rect x="218" y="196" width="260" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="348" y="215" text-anchor="middle" dominant-baseline="central" fill="#085041" font-size="13" font-weight="500">Fase 1 — Diagnóstico</text>
+  <text x="348" y="233" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="11">Co-construção com a comunidade</text>
+  <line x1="348" y1="246" x2="348" y2="262" stroke="#9c9a92" stroke-width="1.5" marker-end="url(#ma)"/>
+
+  <rect x="218" y="264" width="260" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="348" y="283" text-anchor="middle" dominant-baseline="central" fill="#085041" font-size="13" font-weight="500">Fase 2 — Prototipagem</text>
+  <text x="348" y="301" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="11">Ciclos de design exploratório</text>
+  <line x1="348" y1="314" x2="348" y2="330" stroke="#9c9a92" stroke-width="1.5" marker-end="url(#ma)"/>
+
+  <rect x="218" y="332" width="260" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="348" y="351" text-anchor="middle" dominant-baseline="central" fill="#085041" font-size="13" font-weight="500">Fase 3 — Implementação</text>
+  <text x="348" y="369" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="11">Ciclos iterativos + refinamento</text>
+  <path d="M478 360 L496 360 L496 289 L478 289" fill="none" stroke="#1D9E75" stroke-width="1.2" marker-end="url(#ma)"/>
+  <text x="503" y="328" fill="#0F6E56" font-size="12" dominant-baseline="central">↻</text>
+  <line x1="348" y1="382" x2="348" y2="398" stroke="#9c9a92" stroke-width="1.5" marker-end="url(#ma)"/>
+
+  <rect x="218" y="400" width="260" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="348" y="419" text-anchor="middle" dominant-baseline="central" fill="#085041" font-size="13" font-weight="500">Fase 4 — Sistematização</text>
+  <text x="348" y="437" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="11">Princípios validados + teoria</text>
+</g>
+
+<!-- Camada 2: Contexto sócio-histórico e comunidade de prática -->
+<g style="${vis(2)}">
+  <rect x="32" y="196" width="148" height="254" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+  <text x="106" y="274" text-anchor="middle" dominant-baseline="central" fill="#0C447C" font-size="13" font-weight="500">Contexto</text>
+  <text x="106" y="294" text-anchor="middle" dominant-baseline="central" fill="#0C447C" font-size="13" font-weight="500">sócio-histórico</text>
+  <text x="106" y="316" text-anchor="middle" dominant-baseline="central" fill="#185FA5" font-size="11">e institucional</text>
+  <text x="106" y="354" text-anchor="middle" dominant-baseline="central" fill="#185FA5" font-size="10">Gera o problema</text>
+  <text x="106" y="370" text-anchor="middle" dominant-baseline="central" fill="#185FA5" font-size="10">Restringe soluções</text>
+  <text x="106" y="386" text-anchor="middle" dominant-baseline="central" fill="#185FA5" font-size="10">Habilita o design</text>
+  <line x1="180" y1="220" x2="198" y2="220" stroke="#378ADD" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+  <line x1="180" y1="289" x2="198" y2="289" stroke="#378ADD" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+  <line x1="180" y1="357" x2="198" y2="357" stroke="#378ADD" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+  <line x1="180" y1="425" x2="198" y2="425" stroke="#378ADD" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+
+  <rect x="520" y="196" width="148" height="254" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+  <text x="594" y="274" text-anchor="middle" dominant-baseline="central" fill="#712B13" font-size="13" font-weight="500">Comunidade</text>
+  <text x="594" y="294" text-anchor="middle" dominant-baseline="central" fill="#712B13" font-size="13" font-weight="500">de prática</text>
+  <text x="594" y="316" text-anchor="middle" dominant-baseline="central" fill="#993C1D" font-size="11">(Wenger, 1998)</text>
+  <text x="594" y="354" text-anchor="middle" dominant-baseline="central" fill="#993C1D" font-size="10">Co-designers</text>
+  <text x="594" y="370" text-anchor="middle" dominant-baseline="central" fill="#993C1D" font-size="10">Validadores</text>
+  <text x="594" y="386" text-anchor="middle" dominant-baseline="central" fill="#993C1D" font-size="10">Facilitadores</text>
+  <line x1="518" y1="220" x2="502" y2="220" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+  <line x1="518" y1="289" x2="502" y2="289" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+  <line x1="518" y1="357" x2="502" y2="357" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+  <line x1="518" y1="425" x2="502" y2="425" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ma)"/>
+</g>
+
+<!-- Camada 3: Princípios de design validados e rastreabilidade -->
+<g style="${vis(3)}">
+  <line x1="350" y1="494" x2="350" y2="530" stroke="#9c9a92" stroke-width="1.5" marker-end="url(#ma)"/>
+  <rect x="80" y="532" width="540" height="50" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+  <text x="350" y="551" text-anchor="middle" dominant-baseline="central" fill="#633806" font-size="13" font-weight="500">Princípios de design validados</text>
+  <text x="350" y="569" text-anchor="middle" dominant-baseline="central" fill="#854F0B" font-size="11">Contexto-específico → domínio → genérico</text>
+  <text x="18" y="370" text-anchor="middle" dominant-baseline="central" fill="#b4b2a9" font-size="10" transform="rotate(-90 18 370)">Rastreabilidade teoria ↔ design ↔ evidência</text>
+  <line x1="26" y1="220" x2="26" y2="520" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 4"/>
+</g>
+</svg>`;
+}
+
+// ── Metadados de navegação ───────────────────────────────────────────────────
+var SECTIONS = [
+  '',                       // 0  título
+  'Contextualização',       // 1
+  'Contextualização',       // 2
+  'Contextualização',       // 3
+  'Contextualização',       // 4
+  'Questão norteadora',     // 5
+  'Objetivos',              // 6
+  'Justificativa',          // 7
+  'Percurso metodológico',  // 8
+  'Percurso metodológico',  // 9
+  'Artigos da tese',        // 10
+  'Artigos da tese',        // 11
+  'Artigos da tese',        // 12
+  'Artigos da tese',        // 13
+  'Cronograma',             // 14
+  'Referências'             // 15
+];
+var TITLES = [
+  'Título', 'FP na sociedade (contexto)', 'LHC em ação', 'Eixo 1: Domínio', 'Eixo 2: Metodologia',
+  'Questão norteadora', 'Objetivos', 'Justificativa', 'Metodologia',
+  'Diagrama DBR',
+  '3 artigos', 'Art. 1', 'Art. 2', 'Art. 3', 'Cronograma', 'Referências'
+];
+
+// ════════════════════════════════════════════════════════════════════════════
+// SLIDES — uma função nomeada por slide
+// ════════════════════════════════════════════════════════════════════════════
+
+function slideTitle() {
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;gap:16px">
+      ${tag('purple','PPGDC - Programa de Pós-Graduação em Difusão do Conhecimento')}
+      <div style="font-size:13px;color:#6B6B6B;margin-top:-8px">UFBA/UNEB/IFBA/SENAI-CIMATEC/LNCC</div>
+      <div style="width:60px;height:4px;background:#534AB7;border-radius:2px;margin:0 auto 4px"></div>
+      <h1 style="font-size:24px;font-weight:500;color:#2C2C2A;max-width:560px;line-height:1.4">
+        Princípios de Design para Jogos Epistêmicos na Difusão do Conhecimento em Física de Partículas
+      </h1>
+      <h2>Linha 2: Difusão do Conhecimento – Informação, Comunicação e Gestão</h2>
+      <div style="font-size:14px;color:#5F5E5A">Paulo Vicente Moreira dos Santos</div>
+      <div style="font-size:12px;color:#888780">Matrícula IFBA · 20251600014</div>
+    </div>
+  `;
+}
+
+function slideContexto1() {
+  return `
+    ${tag('blue','Contextualização')}
+    <h2>Contextualização — Eixo 1: Domínio</h2>
+    <p style="font-size:12px;color:#888780;margin-bottom:14px">Física de Partículas na educação básica</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${cardv('blue','SOUZA, R. S. Análise das contribuições da escola de física CERN no contexto do ensino médio (2010–2022). Revista Brasileira de Ensino de Física, v. 45, 2023 — RBEF, Qualis A1',
+        'Mapeia produção sobre ensino de Física de Partículas no Brasil. Identifica ausência de fundamentação teórica, uso marginal de jogos, falta de princípios de design.<br><br><strong>Proximidade:</strong> mesmo domínio e ecossistema.<br><br><strong>Distância:</strong> mapeamento descritivo — esta pesquisa preenche as lacunas.')}
+      ${cardv('blue','WIENER, G. J. Elementary particle physics in early physics education. Tese — Univ. Wien, 2017',
+        'Física de Partículas para crianças de 12 anos: Os conceitos são acessíveis quando o meio de mediação é adequado. Representações tipográficas reduziram concepções alternativas.<br><br><strong>Argumento-chave:</strong> o obstáculo não é cognitivo — é de mediação. Metodologia Design Based Research<br><br><strong>Distância:</strong> ensino formal, representações estáticas, sem jogos, sem difusão.')}
+    </div>
+  `;
+}
+
+function slideContexto2() {
+  return `
+    ${tag('blue','Contextualização')}
+    <h2>Contextualização — Eixo 2: Metodologia e teoria</h2>
+    <p style="font-size:12px;color:#888780;margin-bottom:14px">DBR e jogos epistêmicos em ciências</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${cardv('teal','HAAGEN-SCHÜTZENHÖFER, C.; HOPF, M. Design-Based Research as a Model for Systematic Curriculum Development: The Example of a Curriculum for Introductory Optics. Physical Review Physics Education Research, v. 16, n. 2, 2020',
+        '6 anos de DBR em óptica. Tradução regrada teoria → princípios de design. Crítica: tradução permanece nebulosa.<br><strong>Proximidade:</strong> DBR em ensino de Física com princípios explícitos.<br><strong>Distância:</strong> curricular formal; esta pesquisa opera em difusão não formal com conjecture mapping.<br><em>Nota: Hopf orientou Wiener (2017) — mesmo grupo de Viena.</em>')}
+      ${cardv('teal','ZAMBRANO, Andres Felipe et al. Unlocking gameplay insights with epistemic (ordered) network analysis: understanding the potential of video games to foster authentic scientific practices in STEM education. Journal of Science Education and Technology, v. 34, n. 5, p. 1164-1177, 2025.',
+        'Crystal Island: jogo investigativo (microbiologia) com 122 estudantes como cientistas. ONA + clustering → 4 arquétipos. Framework de Shaffer (2006) vivo.<br><strong>Proximidade:</strong> jogo epistêmico + práticas científicas autênticas + logs + populações sub-representadas.<br><strong>Distância:</strong> single-player, sem princípios a priori, sem DBR iterativa.')}
+    </div>
+  `;
+}
+
+function slideQuestao() {
+  return `
+    ${tag('purple','Questão norteadora')}
+    <h2>Questão norteadora</h2>
+    <div style="background:#F1EFE8;border-left:3px solid #534AB7;padding:14px 18px;border-radius:0 8px 8px 0;font-size:13px;color:#2C2C2A;line-height:1.65;margin-bottom:16px">
+      Que <strong>princípios de design</strong>, fundamentados na Natureza da Ciência (NdC) e validados por ciclos iterativos de Pesquisa-Aplicação com uma comunidade de prática, devem orientar a construção de um <strong>RPG Digital concebido como jogo epistêmico</strong> para a <strong>difusão do conhecimento em Física de Partículas</strong> junto a estudantes do Ensino Médio?
+    </div>
+
+    <div style="background:#F7F6FF;border:1px solid #C4BFF0;border-radius:10px;padding:14px 20px;margin:14px 0;font-size:13px;color:#2C2C2A;line-height:1.75">
+      <span style="color:#534AB7;font-weight:500">Se</span>, em um contexto específico <span style="color:#534AB7">(Z)</span>, emerge um problema educativo real <span style="color:#534AB7">(Y)</span>, e se uma comunidade de prática reconhece a pertinência de intervir,
+      <span style="display:block;margin-top:6px"><span style="color:#534AB7;font-weight:500">então</span> a intervenção <span style="color:#534AB7">(X)</span> deve ser concebida como <em>solução situada</em>, dotada de</span>
+      <ul style="margin:6px 0 6px 18px;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px">
+        <li style="display:flex;gap:8px"><span style="color:#534AB7;flex-shrink:0">→</span> características de design <span style="color:#534AB7;margin-left:4px">(A, B, C)</span></li>
+        <li style="display:flex;gap:8px"><span style="color:#534AB7;flex-shrink:0">→</span> processos colaborativos e iterativos <span style="color:#534AB7;margin-left:4px">(K, L, M)</span></li>
+        <li style="display:flex;gap:8px"><span style="color:#534AB7;flex-shrink:0">→</span> princípios teóricos e epistemológicos explícitos <span style="color:#534AB7;margin-left:4px">(P, Q, R)</span></li>
+      </ul>
+      <span style="color:#534AB7;font-style:italic">validados na e pela prática.</span>
+    </div>
+
+    <div style="font-size:11px;color:#888780;margin-top:8px">Adaptado do formato heurístico de Van den Akker (1999)</div>
+  `;
+}
+
+function slideObjetivos() {
+  return `
+    ${tag('teal','Objetivos')}
+    <h2>Objetivos</h2>
+    <div style="font-size:13px;color:#2C2C2A;line-height:1.6;margin-bottom:14px;font-weight:500">
+      Sistematizar princípios de design para jogos epistêmicos narrativos digitais voltados à difusão do conhecimento em Física de Partículas.
+    </div>
+    <div style="border-left:3px solid #534AB7;padding-left:14px;margin-bottom:10px">
+      <div style="margin-bottom:6px">${tag('purple','Art. 1')} ${tag('gray','Pré-fase + Fase 1')}</div>
+      ${bullet('1. Mapear sistematicamente a DBR no ensino de Física','#444441')}
+      ${bullet('2. Constituir comunidade de prática com egressos da Escola CERN para diagnóstico colaborativo','#444441')}
+      ${bullet('3. Formular os princípios de design via mapa de conjecturas','#444441')}
+    </div>
+    <div style="border-left:3px solid #0F6E56;padding-left:14px;margin-bottom:10px">
+      <div style="margin-bottom:6px">${tag('teal','Art. 2')} ${tag('gray','Fases 2–3')}</div>
+      ${bullet('4. Desenvolver e testar o jogo epistêmico em Ciclos de Design Exploratório (CDE)','#444441')}
+      ${bullet('5. Aplicar em Ciclos de Design Contextualizado (CDC) e validar ecologicamente em Estudo de Validação Ecológica (EVE)','#444441')}
+    </div>
+    <div style="border-left:3px solid #854F0B;padding-left:14px">
+      <div style="margin-bottom:6px">${tag('amber','Art. 3')} ${tag('gray','Fase 4')}</div>
+      ${bullet('6. Sistematizar princípios validados em níveis de abstração transferíveis','#444441')}
+    </div>
+  `;
+}
+
+function slideVideo() {
+  return `
+    ${tag('blue','Contextualização')}
+    <h2>O LHC em ação</h2>
+    <div style="display:flex;justify-content:center;align-items:center;margin-top:10px">
+      <div id="yt-player" style="border-radius:10px;overflow:hidden"></div>
+    </div>
+  `;
+}
+
+function slideJustificativaLHC() {
+  return `
+    ${tag('blue','Contextualização')}
+    <h2>Por que Física de Partículas importa?</h2>
+    <style>
+@keyframes beamL{0%{transform:translateX(-80px);opacity:0}40%{opacity:1}50%{transform:translateX(0);opacity:1}51%{opacity:0}100%{opacity:0}}
+@keyframes beamR{0%{transform:translateX(80px);opacity:0}40%{opacity:1}50%{transform:translateX(0);opacity:1}51%{opacity:0}100%{opacity:0}}
+@keyframes burst{0%,49%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(0)}70%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes spark1{0%,49%{opacity:0}50%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(28px,-22px)}}
+@keyframes spark2{0%,49%{opacity:0}50%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(-24px,-26px)}}
+@keyframes spark3{0%,49%{opacity:0}50%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(30px,18px)}}
+@keyframes spark4{0%,49%{opacity:0}50%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(-20px,24px)}}
+@keyframes spark5{0%,49%{opacity:0}50%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(-8px,-32px)}}
+@keyframes spark6{0%,49%{opacity:0}50%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(14px,28px)}}
+@keyframes fadein{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.spin-card{flex:0 0 calc(33.33% - 10px);min-width:130px;background:#fff;border:0.5px solid #e8e6e0;border-radius:12px;padding:14px 12px;text-align:center;animation:fadein .5s ease both}
+.spin-card:nth-child(1){animation-delay:.1s}.spin-card:nth-child(2){animation-delay:.2s}.spin-card:nth-child(3){animation-delay:.3s}
+.spin-card:nth-child(4){animation-delay:.45s}.spin-card:nth-child(5){animation-delay:.55s}.spin-card:nth-child(6){animation-delay:.65s}
+.sc-icon{width:40px;height:40px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.sc-title{font-size:13px;font-weight:500;color:#2C2C2A;margin-bottom:4px}
+.sc-year{font-size:11px;color:#9c9a92;margin-bottom:4px}
+.sc-desc{font-size:11px;color:#5F5E5A;line-height:1.4}
+    </style>
+    <div style="text-align:center;padding:8px 0 0">
+<svg width="220" height="180" viewBox="0 0 220 180" style="display:block;margin:0 auto">
+<circle cx="110" cy="90" r="70" fill="none" stroke="#534AB7" stroke-width="0.5" opacity="0.2"/>
+<circle cx="110" cy="90" r="55" fill="none" stroke="#534AB7" stroke-width="0.5" opacity="0.15"/>
+<circle cx="110" cy="90" r="40" fill="none" stroke="#0F6E56" stroke-width="0.5" opacity="0.2"/>
+<line x1="40" y1="90" x2="180" y2="90" stroke="#534AB7" stroke-width="0.3" opacity="0.15"/>
+<rect x="36" y="20" width="4" height="140" rx="2" fill="#534AB7" opacity="0.12"/>
+<rect x="180" y="20" width="4" height="140" rx="2" fill="#534AB7" opacity="0.12"/>
+<rect x="24" y="36" width="6" height="108" rx="3" fill="#534AB7" opacity="0.08"/>
+<rect x="190" y="36" width="6" height="108" rx="3" fill="#534AB7" opacity="0.08"/>
+<line x1="38" y1="30" x2="110" y2="70" stroke="#534AB7" stroke-width="0.3" opacity="0.1"/>
+<line x1="38" y1="150" x2="110" y2="110" stroke="#534AB7" stroke-width="0.3" opacity="0.1"/>
+<line x1="182" y1="30" x2="110" y2="70" stroke="#534AB7" stroke-width="0.3" opacity="0.1"/>
+<line x1="182" y1="150" x2="110" y2="110" stroke="#534AB7" stroke-width="0.3" opacity="0.1"/>
+<g style="animation:beamL 2.5s ease-in-out infinite">
+<circle cx="110" cy="90" r="4" fill="#D85A30"/>
+<circle cx="110" cy="90" r="2" fill="#F0997B"/>
+</g>
+<g style="animation:beamR 2.5s ease-in-out infinite">
+<circle cx="110" cy="90" r="4" fill="#185FA5"/>
+<circle cx="110" cy="90" r="2" fill="#85B7EB"/>
+</g>
+<circle cx="110" cy="90" r="12" fill="#FAEEDA" opacity="0" style="animation:burst 2.5s ease-out infinite;transform-origin:110px 90px"/>
+<circle cx="110" cy="90" r="6" fill="#EF9F27" opacity="0" style="animation:burst 2.5s ease-out infinite .05s;transform-origin:110px 90px"/>
+<circle cx="110" cy="90" r="2" fill="#0F6E56" style="animation:spark1 2.5s ease-out infinite;transform-origin:110px 90px"/>
+<circle cx="110" cy="90" r="1.5" fill="#534AB7" style="animation:spark2 2.5s ease-out infinite;transform-origin:110px 90px"/>
+<circle cx="110" cy="90" r="2" fill="#D85A30" style="animation:spark3 2.5s ease-out infinite;transform-origin:110px 90px"/>
+<circle cx="110" cy="90" r="1.5" fill="#185FA5" style="animation:spark4 2.5s ease-out infinite;transform-origin:110px 90px"/>
+<circle cx="110" cy="90" r="1.8" fill="#854F0B" style="animation:spark5 2.5s ease-out infinite;transform-origin:110px 90px"/>
+<circle cx="110" cy="90" r="1.5" fill="#993556" style="animation:spark6 2.5s ease-out infinite;transform-origin:110px 90px"/>
+<text x="110" y="172" text-anchor="middle" font-size="11" font-weight="500" fill="#534AB7" opacity="0.5">ATLAS · LHC · CERN</text>
+</svg>
+    </div>
+    <div class="card-row">
+<div class="spin-card">
+<div class="sc-icon" style="background:#FAECE7"><svg width="22" height="22" viewBox="0 0 22 22"><rect x="4" y="3" width="14" height="16" rx="2" fill="none" stroke="#993C1D" stroke-width="1.4"/><line x1="4" y1="14" x2="18" y2="14" stroke="#993C1D" stroke-width="0.9"/><path d="M11 17.5 Q13 14.5 13 11.5 Q13 9.5 11 9.5 Q9 9.5 9 11.5 Q9 14.5 11 17.5Z" fill="#993C1D" opacity="0.7"/><circle cx="11" cy="9" r="1.2" fill="#993C1D" opacity="0.4"/></svg></div>
+<div class="sc-title">Touchscreen</div>
+<div class="sc-year">1973 · CERN SPS</div>
+<div class="sc-desc">Tela sensível ao toque criada para controlar o acelerador SPS.</div>
+</div>
+<div class="spin-card">
+<div class="sc-icon" style="background:#E1F5EE"><svg width="22" height="22" viewBox="0 0 22 22"><ellipse cx="11" cy="11" rx="8" ry="5" fill="none" stroke="#0F6E56" stroke-width="1.4"/><ellipse cx="11" cy="11" rx="5" ry="3" fill="none" stroke="#0F6E56" stroke-width="0.9" opacity="0.5"/><line x1="11" y1="6" x2="11" y2="4" stroke="#0F6E56" stroke-width="1.2" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="18" stroke="#0F6E56" stroke-width="1.2" stroke-linecap="round"/><circle cx="11" cy="11" r="2" fill="#0F6E56" opacity="0.4"/><circle cx="11" cy="11" r="1" fill="#0F6E56"/></svg></div>
+<div class="sc-title">PET scanner</div>
+<div class="sc-year">anos 1980 · cristais de cintilação</div>
+<div class="sc-desc">Cristais dos detectores do CERN hoje diagnosticam câncer em hospitais.</div>
+</div>
+<div class="spin-card">
+<div class="sc-icon" style="background:#EEEDFE"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5" fill="none" stroke="#534AB7" stroke-width="1.4"/><ellipse cx="11" cy="11" rx="3.5" ry="8.5" fill="none" stroke="#534AB7" stroke-width="1"/><line x1="2.5" y1="8" x2="19.5" y2="8" stroke="#534AB7" stroke-width="0.9"/><line x1="2.5" y1="14" x2="19.5" y2="14" stroke="#534AB7" stroke-width="0.9"/></svg></div>
+<div class="sc-title">World Wide Web</div>
+<div class="sc-year">1989 · Tim Berners-Lee</div>
+<div class="sc-desc">Inventada para compartilhar dados entre pesquisadores. Hoje conecta bilhões.</div>
+</div>
+<div class="spin-card">
+<div class="sc-icon" style="background:#E6F1FB"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="15" cy="11" r="4" fill="none" stroke="#185FA5" stroke-width="1.4"/><circle cx="15" cy="11" r="1.5" fill="#185FA5" opacity="0.5"/><line x1="3" y1="11" x2="10" y2="11" stroke="#185FA5" stroke-width="2" stroke-linecap="round"/><circle cx="4.5" cy="11" r="1" fill="#185FA5"/><line x1="6" y1="9" x2="6" y2="13" stroke="#185FA5" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/><line x1="8" y1="9" x2="8" y2="13" stroke="#185FA5" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/></svg></div>
+<div class="sc-title">Hadronterapia</div>
+<div class="sc-year">1990s · aceleradores médicos</div>
+<div class="sc-desc">Feixes de prótons destroem tumores com precisão milimétrica.</div>
+</div>
+<div class="spin-card">
+<div class="sc-icon" style="background:#FAEEDA"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="2" fill="#854F0B" opacity="0.5"/><circle cx="4" cy="5" r="1.8" fill="none" stroke="#854F0B" stroke-width="1.2"/><circle cx="18" cy="5" r="1.8" fill="none" stroke="#854F0B" stroke-width="1.2"/><circle cx="4" cy="17" r="1.8" fill="none" stroke="#854F0B" stroke-width="1.2"/><circle cx="18" cy="17" r="1.8" fill="none" stroke="#854F0B" stroke-width="1.2"/><line x1="5.5" y1="6" x2="9.5" y2="10" stroke="#854F0B" stroke-width="0.9" opacity="0.7"/><line x1="16.5" y1="6" x2="12.5" y2="10" stroke="#854F0B" stroke-width="0.9" opacity="0.7"/><line x1="5.5" y1="16" x2="9.5" y2="12" stroke="#854F0B" stroke-width="0.9" opacity="0.7"/><line x1="16.5" y1="16" x2="12.5" y2="12" stroke="#854F0B" stroke-width="0.9" opacity="0.7"/></svg></div>
+<div class="sc-title">Computação em grid</div>
+<div class="sc-year">2002 · WLCG</div>
+<div class="sc-desc">Primeira "nuvem": milhares de computadores processando dados do LHC.</div>
+</div>
+<div class="spin-card">
+<div class="sc-icon" style="background:#FBEAF0"><svg width="22" height="22" viewBox="0 0 22 22"><rect x="3" y="7" width="16" height="11" rx="2" fill="none" stroke="#993556" stroke-width="1.4"/><path d="M3 9l8 5 8-5" fill="none" stroke="#993556" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="9" y="2" width="4" height="5" rx="1" fill="none" stroke="#993556" stroke-width="1.1"/><line x1="11" y1="4" x2="11" y2="5.5" stroke="#993556" stroke-width="1" stroke-linecap="round"/></svg></div>
+<div class="sc-title">ProtonMail</div>
+<div class="sc-year">2014 · nasceu na cafeteria</div>
+<div class="sc-desc">E-mail criptografado criado por cientistas do CERN para proteger privacidade.</div>
+</div>
+    </div>
+    <p style="text-align:center;font-size:11px;color:#9c9a92;margin-top:16px">Pesquisa fundamental gera tecnologia que transforma o cotidiano</p>
+  `;
+}
+
+function slideJustificativa() {
+  return `
+    ${tag('purple','Justificativa')}
+    <h2>Justificativa</h2>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${card('purple','Lacuna teórica',
+        'Não existem princípios de design para jogos em FP. Souza (2023): ausência de fundamentação. Zambrano (2025): jogos sem princípios explícitos.')}
+      ${card('purple','Lacuna metodológica',
+        'Haagen-Schützenhöfer & Hopf (2020): tradução teoria→design "permanece nebulosa". Não existe revisão sistemática da DBR no ensino de Física.')}
+      ${card('blue','Viabilidade demonstrada',
+        'Wiener (2017): crianças de 12 anos compreendem FP quando a mediação é adequada. O obstáculo não é cognitivo — é de mediação.')}
+      ${card('teal','Relevância social + oportunidade',
+        'FP inacessível na escola pública brasileira. Masterclasses demandam artefatos complementares. CERN Open Data + rede Escola CERN = infraestrutura pronta.')}
+    </div>
+  `;
+}
+
+function slideMetodologia() {
+  return `
+<svg width="100%" viewBox="0 0 700 460">
+  <defs>
+    <marker id="ma2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <text x="350" y="20" text-anchor="middle" fill="#9c9a92" font-size="10" opacity="0.6">Adapted from Collins (1999), in Barab &amp; Squire (2004, JLS, v.13, n.1, Table 1)</text>
+
+  <!-- Header -->
+  <rect x="40" y="38" width="130" height="34" rx="6" fill="#F1EFE8"/>
+  <text x="105" y="55" text-anchor="middle" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Categoria</text>
+  <rect x="180" y="38" width="220" height="34" rx="6" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="55" text-anchor="middle" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Pesquisa tradicional</text>
+  <rect x="410" y="38" width="250" height="34" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="55" text-anchor="middle" dominant-baseline="central" fill="#085041" font-size="13" font-weight="500">Design-Based Research</text>
+
+  <line x1="40" y1="80" x2="660" y2="80" stroke="#d3d1c7" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- Row 1: Localização -->
+  <text x="50" y="102" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Localização</text>
+  <rect x="180" y="88" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="102" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12">Laboratório controlado</text>
+  <rect x="410" y="88" width="250" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="102" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="12">Contexto real, situado</text>
+
+  <!-- Row 2: Variáveis -->
+  <text x="50" y="144" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Variáveis</text>
+  <rect x="180" y="130" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="144" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12">Uma ou duas dependentes</text>
+  <rect x="410" y="130" width="250" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="144" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="12">Múltiplas, interdependentes</text>
+
+  <!-- Row 3: Foco -->
+  <text x="50" y="186" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Foco</text>
+  <rect x="180" y="172" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="186" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12">Isolar e manter constantes</text>
+  <rect x="410" y="172" width="250" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="186" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="12">Caracterizar a complexidade</text>
+
+  <!-- Row 4: Procedimentos -->
+  <text x="50" y="228" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Procedimentos</text>
+  <rect x="180" y="214" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="228" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12">Fixos, pré-definidos</text>
+  <rect x="410" y="214" width="250" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="228" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="12">Revisão flexível, iterativa</text>
+
+  <!-- Row 5: Interação social -->
+  <text x="50" y="270" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Interação social</text>
+  <rect x="180" y="256" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="270" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12">Isolada, controlada</text>
+  <rect x="410" y="256" width="250" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="270" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="12">Complexa, capturada como dado</text>
+
+  <!-- Row 6: Achados -->
+  <text x="50" y="312" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Achados</text>
+  <rect x="180" y="298" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="312" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12">Testar hipóteses</text>
+  <rect x="410" y="298" width="250" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="312" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="12">Perfil que caracteriza o design</text>
+
+  <!-- Row 7: Participantes -->
+  <text x="50" y="354" dominant-baseline="central" fill="#444441" font-size="13" font-weight="500">Participantes</text>
+  <rect x="180" y="340" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+  <text x="290" y="354" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12">Sujeitos de pesquisa</text>
+  <rect x="410" y="340" width="250" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="535" y="354" text-anchor="middle" dominant-baseline="central" fill="#0F6E56" font-size="12">Co-designers e co-analistas</text>
+
+  <!-- Separator -->
+  <line x1="40" y1="380" x2="660" y2="380" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.3"/>
+
+  <!-- Row 8: Produto (extensão nossa) -->
+  <text x="50" y="404" dominant-baseline="central" fill="#9c9a92" font-size="13" font-style="italic">Produto*</text>
+  <rect x="180" y="390" width="220" height="28" rx="5" fill="#F1EFE8" stroke="#888780" stroke-width="0.5" opacity="0.5"/>
+  <text x="290" y="404" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A" font-size="12" opacity="0.6">Hipóteses confirmadas / refutadas</text>
+  <rect x="410" y="390" width="250" height="28" rx="5" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+  <text x="535" y="404" text-anchor="middle" dominant-baseline="central" fill="#854F0B" font-size="12">Princípios de design + artefato</text>
+
+  <!-- Footnote -->
+  <text x="350" y="444" text-anchor="middle" fill="#9c9a92" font-size="10" opacity="0.5">* Extensão nossa — não faz parte da tabela original.</text>
+</svg>
+  `;
+}
+
+function slideDiagrama3() {
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="align-self:flex-start;margin-bottom:8px;display:flex;gap:8px">
+        ${tag('teal','PERCURSO METODOLÓGICO')}
+      </div>
+      <h2 style="align-self:flex-start;font-size:16px">Arquitetura da Pesquisa-Aplicação</h2>
+      ${dbrSVG(3)}
+    </div>
+  `;
+}
+
+function slideArtigos() {
+  return `
+    ${tag('teal','Percurso metodológico')}
+    <h2>Tese multiartigos — 3 artigos</h2>
+    <p style="font-size:12px;color:#888780;margin-bottom:14px">Defesa: 2 publicados + 1 submetido</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;line-height:1.5">
+      <thead>
+        <tr style="border-bottom:2px solid #d3d1c7">
+          <th style="padding:8px 6px;text-align:left;color:#444441;font-weight:500;width:40px">Art.</th>
+          <th style="padding:8px 6px;text-align:left;color:#444441;font-weight:500;width:32%">Título provisório</th>
+          <th style="padding:8px 6px;text-align:left;color:#444441;font-weight:500;width:16%">Fase</th>
+          <th style="padding:8px 6px;text-align:left;color:#444441;font-weight:500;width:30%">Contribuição central</th>
+          <th style="padding:8px 6px;text-align:left;color:#444441;font-weight:500;width:12%">Periódico-alvo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #e8e6e0;vertical-align:top">
+          <td style="padding:8px 6px;font-weight:500;color:#3C3489">1</td>
+          <td style="padding:8px 6px;color:#444441;font-style:italic">"Design-Based Research no ensino de Física: revisão sistemática e diagnóstico colaborativo com egressos da Escola de Física CERN"</td>
+          <td style="padding:8px 6px;color:#5F5E5A">Pré-fase (revisão sistemática) + Fase 1 (diagnóstico colaborativo)</td>
+          <td style="padding:8px 6px;color:#5F5E5A">Panorama atualizado da DBR no ensino de Física; identificação de lacunas; modelo de constituição de CdP; princípios iniciais refinados; indicadores co-construídos</td>
+          <td style="padding:8px 6px;color:#444441;font-weight:500">RBEF (Qualis A1)</td>
+        </tr>
+        <tr style="border-bottom:1px solid #e8e6e0;vertical-align:top">
+          <td style="padding:8px 6px;font-weight:500;color:#085041">2</td>
+          <td style="padding:8px 6px;color:#444441;font-style:italic">"Conjecture mapping aplicado ao design iterativo de um RPG digital sobre Física de Partículas: operacionalização, evidências e evolução das conjecturas"</td>
+          <td style="padding:8px 6px;color:#5F5E5A">Fases 2–3 (CDE → CDC → EVE)</td>
+          <td style="padding:8px 6px;color:#5F5E5A">Documentação metodológica do processo iterativo com rastreabilidade explícita; evolução das conjecturas entre os ciclos</td>
+          <td style="padding:8px 6px;color:#444441;font-weight:500">IENCI (Qualis A1)</td>
+        </tr>
+        <tr style="vertical-align:top">
+          <td style="padding:8px 6px;font-weight:500;color:#854F0B">3</td>
+          <td style="padding:8px 6px;color:#444441;font-style:italic">"Design principles for narrative digital games in particle physics education: Empirical validation through conjecture mapping"</td>
+          <td style="padding:8px 6px;color:#5F5E5A">Fase 4 (sistematização teórica)</td>
+          <td style="padding:8px 6px;color:#5F5E5A">Princípios de design PD1–PD6 validados empiricamente com potencial de transferência; formulação em três níveis de abstração</td>
+          <td style="padding:8px 6px;color:#444441;font-weight:500">PRPER (Internacional)</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
+
+function slideArt1() {
+  return `
+    ${tag('teal','PERCURSO METODOLÓGICO')} ${tag('purple','Art. 1')}
+    <h2>Revisão sistemática + diagnóstico colaborativo</h2>
+    <div class="grid2">
+      <div>
+        <div style="font-weight:500;font-size:13px;color:#3C3489;margin-bottom:8px">Revisão sistemática</div>
+        ${bullet('Bases: Scopus, WoS, SciELO, ERIC','#444441')}
+        ${bullet('Período: 2014–2026','#444441')}
+        ${bullet('Foco: como a DBR opera no ensino de Física','#444441')}
+        ${bullet('Framework, artefatos, evidências, lacunas','#444441')}
+      </div>
+      <div>
+        <div style="font-weight:500;font-size:13px;color:#3C3489;margin-bottom:8px">Diagnóstico colaborativo</div>
+        ${bullet('CdP: professores egressos Escola CERN','#444441')}
+        ${bullet('Desafios na transposição da FP','#444441')}
+        ${bullet('Validação dos PD1–PD6 iniciais','#444441')}
+        ${bullet('Co-construção dos indicadores','#444441')}
+      </div>
+    </div>
+  `;
+}
+
+function slideArt2() {
+  return `
+    ${tag('teal','PERCURSO METODOLÓGICO')} ${tag('teal','Art. 2')}
+    <h2>Ciclos iterativos de design</h2>
+    <svg viewBox="0 0 680 440" style="width:100%;max-width:660px">
+<defs>
+<marker id="ma3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<rect x="40" y="16" width="600" height="116" rx="14" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<rect x="56" y="30" width="50" height="22" rx="11" fill="#534AB7"/>
+<text x="81" y="41" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="10" font-weight="500">CDE</text>
+<text x="116" y="41" dominant-baseline="central" fill="#3C3489" font-size="13" font-weight="500">Ciclos de Design Exploratório</text>
+<line x1="56" y1="62" x2="626" y2="62" stroke="#534AB7" stroke-width="0.5" opacity="0.2"/>
+<text x="56" y="80" fill="#534AB7" font-size="11">Objetivo</text>
+<text x="140" y="80" fill="#3C3489" font-size="11">Testar se a incorporação funciona tecnicamente</text>
+<text x="56" y="98" fill="#534AB7" font-size="11">Limite</text>
+<text x="140" y="98" fill="#3C3489" font-size="11">Usabilidade, jogabilidade</text>
+<text x="56" y="118" fill="#534AB7" font-size="11">Contexto</text>
+<text x="140" y="118" fill="#3C3489" font-size="11">Pesquisador = designer ativo · voluntários · 2–4 sem/ciclo</text>
+<line x1="340" y1="132" x2="340" y2="156" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma3)"/>
+<text x="354" y="146" fill="#9c9a92" font-size="9">refina</text>
+<rect x="40" y="158" width="600" height="116" rx="14" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<rect x="56" y="172" width="50" height="22" rx="11" fill="#0F6E56"/>
+<text x="81" y="183" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="10" font-weight="500">CDC</text>
+<text x="116" y="183" dominant-baseline="central" fill="#085041" font-size="13" font-weight="500">Ciclos de Design Contextualizado</text>
+<line x1="56" y1="204" x2="626" y2="204" stroke="#0F6E56" stroke-width="0.5" opacity="0.2"/>
+<text x="56" y="222" fill="#0F6E56" font-size="11">Objetivo</text>
+<text x="140" y="222" fill="#085041" font-size="11">Testar se a incorporação gera processos mediadores</text>
+<text x="56" y="240" fill="#0F6E56" font-size="11">Limite</text>
+<text x="140" y="240" fill="#085041" font-size="11">Funcionamento das conjecturas de design</text>
+<text x="56" y="258" fill="#0F6E56" font-size="11">Contexto</text>
+<text x="140" y="258" fill="#085041" font-size="11">Pesquisador = observador · escolas parceiras · 2–3 ciclos/sem</text>
+<line x1="340" y1="274" x2="340" y2="298" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma3)"/>
+<text x="354" y="288" fill="#9c9a92" font-size="9">valida</text>
+<rect x="40" y="300" width="600" height="116" rx="14" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<rect x="56" y="314" width="50" height="22" rx="11" fill="#854F0B"/>
+<text x="81" y="325" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="10" font-weight="500">EVE</text>
+<text x="116" y="325" dominant-baseline="central" fill="#633806" font-size="13" font-weight="500">Estudo de Validação Ecológica</text>
+<line x1="56" y1="346" x2="626" y2="346" stroke="#854F0B" stroke-width="0.5" opacity="0.15"/>
+<text x="56" y="364" fill="#854F0B" font-size="11">Objetivo</text>
+<text x="140" y="364" fill="#633806" font-size="11">Validar robustez no contexto-alvo</text>
+<text x="56" y="382" fill="#854F0B" font-size="11">Limite</text>
+<text x="140" y="382" fill="#633806" font-size="11">Validade ecológica, condições de contorno</text>
+<text x="56" y="400" fill="#854F0B" font-size="11">Contexto</text>
+<text x="140" y="400" fill="#633806" font-size="11">Professores conduzem · Masterclasses · episódico</text>
+    </svg>
+  `;
+}
+
+function slideArt3() {
+  return `
+    ${tag('teal','PERCURSO METODOLÓGICO')} ${tag('amber','Art. 3')}
+    <h2>Mapa de conjecturas — princípios de design</h2>
+    <svg viewBox="0 0 700 820" style="width:100%;height:auto;display:block">
+    <svg viewBox="0 0 700 820" style="width:100%;height:auto;display:block">
+<defs>
+<marker id="ma4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<!-- ═══ CAMADA 1: Conjectura de alto nível ═══ -->
+<rect x="40" y="16" width="620" height="70" rx="12" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<rect x="56" y="26" width="160" height="20" rx="10" fill="#534AB7"/>
+<text x="136" y="36" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">CONJECTURA DE ALTO NÍVEL</text>
+<text x="350" y="60" text-anchor="middle" dominant-baseline="central" fill="#3C3489" font-size="11" font-style="italic">"Um RPG Digital estruturado por práticas investigativas autênticas pode operar</text>
+<text x="350" y="74" text-anchor="middle" dominant-baseline="central" fill="#3C3489" font-size="11" font-style="italic">como jogo epistêmico e artefato de mediação simbólica em contextos de difusão científica."</text>
+<!-- Seta 1→2 -->
+<line x1="350" y1="86" x2="350" y2="108" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 2: Incorporação ═══ -->
+<rect x="40" y="110" width="620" height="130" rx="12" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<rect x="56" y="120" width="110" height="20" rx="10" fill="#185FA5"/>
+<text x="111" y="130" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">INCORPORAÇÃO</text>
+<text x="178" y="130" dominant-baseline="central" fill="#0C447C" font-size="10">Materialização da conjectura em elementos concretos do artefato</text>
+<line x1="56" y1="148" x2="646" y2="148" stroke="#185FA5" stroke-width="0.5" opacity="0.15"/>
+<rect x="56" y="156" width="186" height="70" rx="8" fill="#fff" stroke="#185FA5" stroke-width="0.5" opacity="0.6"/>
+<rect x="64" y="162" width="60" height="16" rx="8" fill="#185FA5" opacity="0.8"/>
+<text x="94" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">primária</text>
+<text x="64" y="188" fill="#0C447C" font-size="10" font-weight="500">Estrutura de Tarefa</text>
+<text x="64" y="202" fill="#185FA5" font-size="9">Missões por práticas</text>
+<text x="64" y="214" fill="#185FA5" font-size="9">investigativas + epistemic frames</text>
+<rect x="254" y="156" width="186" height="70" rx="8" fill="#fff" stroke="#185FA5" stroke-width="0.5" opacity="0.6"/>
+<rect x="262" y="162" width="54" height="16" rx="8" fill="#185FA5" opacity="0.5"/>
+<text x="289" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">suporte</text>
+<text x="262" y="188" fill="#0C447C" font-size="10" font-weight="500">Ferramentas e Materiais</text>
+<text x="262" y="202" fill="#185FA5" font-size="9">Simuladores, feedbacks,</text>
+<text x="262" y="214" fill="#185FA5" font-size="9">narrativa ficcional</text>
+<rect x="452" y="156" width="194" height="70" rx="8" fill="#fff" stroke="#185FA5" stroke-width="0.5" opacity="0.6"/>
+<rect x="460" y="162" width="54" height="16" rx="8" fill="#185FA5" opacity="0.5"/>
+<text x="487" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">suporte</text>
+<text x="460" y="188" fill="#0C447C" font-size="10" font-weight="500">Estrutura de Participação</text>
+<text x="460" y="202" fill="#185FA5" font-size="9">Mecânicas de cooperação,</text>
+<text x="460" y="214" fill="#185FA5" font-size="9">consenso grupal</text>
+<!-- Seta 2→3 -->
+<line x1="350" y1="240" x2="350" y2="262" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 3: Conjecturas de Design ═══ -->
+<rect x="40" y="264" width="620" height="240" rx="12" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+<rect x="56" y="274" width="150" height="20" rx="10" fill="#993C1D"/>
+<text x="131" y="284" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">CONJECTURAS DE DESIGN</text>
+<text x="218" y="284" dominant-baseline="central" fill="#712B13" font-size="10">"Se [incorporação], então [processo mediador] emergirá"</text>
+<line x1="56" y1="302" x2="646" y2="302" stroke="#993C1D" stroke-width="0.5" opacity="0.15"/>
+<rect x="56" y="310" width="296" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="62" y="316" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="78" y="323" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD1</text>
+<text x="100" y="323" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">NdC como construção humana</text>
+<text x="62" y="342" fill="#993C1D" font-size="9">Se missões apresentam ciência como processo →</text>
+<text x="62" y="354" fill="#993C1D" font-size="9">participantes questionam visões absolutistas</text>
+<rect x="364" y="310" width="282" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="370" y="316" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="386" y="323" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD2</text>
+<text x="408" y="323" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Prática investigativa</text>
+<text x="370" y="342" fill="#993C1D" font-size="9">Se missões usam dados reais do LHC →</text>
+<text x="370" y="354" fill="#993C1D" font-size="9">participantes mobilizam skills investigativas</text>
+<rect x="56" y="374" width="296" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="62" y="380" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="78" y="387" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD3</text>
+<text x="100" y="387" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Ficção científica como contexto</text>
+<text x="62" y="406" fill="#993C1D" font-size="9">Se narrativa envolve sem substituir →</text>
+<text x="62" y="418" fill="#993C1D" font-size="9">transição fluida entre frames sem perda de rigor</text>
+<rect x="364" y="374" width="282" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="370" y="380" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="386" y="387" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD4</text>
+<text x="408" y="387" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Cooperação e argumentação</text>
+<text x="370" y="406" fill="#993C1D" font-size="9">Se mecânicas exigem consenso grupal →</text>
+<text x="370" y="418" fill="#993C1D" font-size="9">participantes negociam sentidos coletivamente</text>
+<rect x="56" y="438" width="296" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="62" y="444" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="78" y="451" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD5</text>
+<text x="100" y="451" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Erro como recurso epistêmico</text>
+<text x="62" y="470" fill="#993C1D" font-size="9">Se feedback trata erro como informação →</text>
+<text x="62" y="482" fill="#993C1D" font-size="9">participantes revisam hipóteses sem abandono</text>
+<rect x="364" y="438" width="282" height="56" rx="6" fill="#fff" stroke="#993C1D" stroke-width="0.5" opacity="0.5"/>
+<rect x="370" y="444" width="32" height="14" rx="7" fill="#993C1D" opacity="0.7"/>
+<text x="386" y="451" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8" font-weight="500">PD6</text>
+<text x="408" y="451" dominant-baseline="central" fill="#712B13" font-size="9" font-weight="500">Modelagem dos fenômenos</text>
+<text x="370" y="470" fill="#993C1D" font-size="9">Se tarefas exigem construir representações →</text>
+<text x="370" y="482" fill="#993C1D" font-size="9">participantes produzem modelos explicativos</text>
+<!-- Seta 3→4 -->
+<line x1="350" y1="504" x2="350" y2="526" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 4: Processos Mediadores ═══ -->
+<rect x="40" y="528" width="620" height="130" rx="12" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<rect x="56" y="538" width="150" height="20" rx="10" fill="#0F6E56"/>
+<text x="131" y="548" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">PROCESSOS MEDIADORES</text>
+<text x="218" y="548" dominant-baseline="central" fill="#085041" font-size="10">Interações observáveis que indicam funcionamento</text>
+<line x1="56" y1="566" x2="646" y2="566" stroke="#0F6E56" stroke-width="0.5" opacity="0.15"/>
+<text x="64" y="584" fill="#085041" font-size="10">M1</text>
+<text x="84" y="584" fill="#0F6E56" font-size="10">Participantes mobilizam habilidades investigativas (skills)</text>
+<text x="64" y="600" fill="#085041" font-size="10">M2</text>
+<text x="84" y="600" fill="#0F6E56" font-size="10">Participantes articulam justificativas em decisões (knowledge)</text>
+<text x="64" y="616" fill="#085041" font-size="10">M3</text>
+<text x="84" y="616" fill="#0F6E56" font-size="10">Participantes negociam sentidos em grupo (values)</text>
+<text x="64" y="632" fill="#085041" font-size="10">M4</text>
+<text x="84" y="632" fill="#0F6E56" font-size="10">Participantes assumem postura investigativa (identity)</text>
+<text x="64" y="648" fill="#085041" font-size="10">M5</text>
+<text x="84" y="648" fill="#0F6E56" font-size="10">Transição fluida entre frame ficcional e investigativo (epistemology)</text>
+<!-- Seta 4→5 -->
+<line x1="350" y1="658" x2="350" y2="680" stroke="#9c9a92" stroke-width="1.2" marker-end="url(#ma4)"/>
+<!-- ═══ CAMADA 5: Validação ═══ -->
+<rect x="40" y="682" width="620" height="120" rx="12" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<rect x="56" y="692" width="180" height="20" rx="10" fill="#854F0B"/>
+<text x="146" y="702" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">VALIDAÇÃO DOS PRINCÍPIOS</text>
+<text x="248" y="702" dominant-baseline="central" fill="#633806" font-size="10">Para cada PD1–PD6, determinar status</text>
+<line x1="56" y1="720" x2="646" y2="720" stroke="#854F0B" stroke-width="0.5" opacity="0.15"/>
+<rect x="56" y="728" width="186" height="60" rx="8" fill="#fff" stroke="#854F0B" stroke-width="0.5" opacity="0.5"/>
+<rect x="64" y="734" width="80" height="16" rx="8" fill="#0F6E56"/>
+<text x="104" y="742" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">CONFIRMADO</text>
+<text x="64" y="762" fill="#633806" font-size="9">Incorporação gera processos</text>
+<text x="64" y="774" fill="#633806" font-size="9">mediadores esperados</text>
+<rect x="254" y="728" width="186" height="60" rx="8" fill="#fff" stroke="#854F0B" stroke-width="0.5" opacity="0.5"/>
+<rect x="262" y="734" width="74" height="16" rx="8" fill="#854F0B"/>
+<text x="299" y="742" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">REFINADO</text>
+<text x="262" y="762" fill="#633806" font-size="9">Funciona sob condições</text>
+<text x="262" y="774" fill="#633806" font-size="9">específicas (documentar)</text>
+<rect x="452" y="728" width="194" height="60" rx="8" fill="#fff" stroke="#854F0B" stroke-width="0.5" opacity="0.5"/>
+<rect x="460" y="734" width="74" height="16" rx="8" fill="#993C1D"/>
+<text x="497" y="742" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="500">REFUTADO</text>
+<text x="460" y="762" fill="#633806" font-size="9">Incorporação não gera</text>
+<text x="460" y="774" fill="#633806" font-size="9">processos esperados</text>
+<!-- Rastreabilidade lateral -->
+<text x="16" y="440" text-anchor="middle" dominant-baseline="central" fill="#b4b2a9" font-size="9" transform="rotate(-90 16 440)">Rastreabilidade: teoria → incorporação → conjectura → processo → evidência</text>
+<line x1="28" y1="110" x2="28" y2="790" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 4"/>
+    </svg>
+    </svg>
+  `;
+}
+
+function slideCronograma() {
+  var sem = ['25/1','25/2','26/1','26/2','27/1','27/2','28/1','28/2'];
+  var W = 62.5; // width per semester
+  var X0 = 160; // left edge of first semester
+  var Y0 = 56;  // top of first bar
+  var H = 16;   // bar height
+  var G = 30;   // gap between rows
+
+  var rows = [
+    {label:'Disciplinas',          s:0, e:2, color:'teal'},
+    {label:'Art. 1 (rev.+diag.)',  s:1, e:3, color:'purple'},
+    {label:'CDE — Fase 2',        s:1, e:3, color:'teal'},
+    {label:'CDC+EVE — Fase 3',     s:2, e:4, color:'teal'},
+    {label:'Qualificação',         s:4, e:4, color:'gray'},
+    {label:'Art. 2 (ciclos)',      s:4, e:5, color:'purple'},
+    {label:'Art. 3 (princípios)',  s:5, e:6, color:'purple'},
+    {label:'Redação integradora',  s:5, e:7, color:'gray', dim:true},
+    {label:'Defesa',               s:7, e:7, color:'amber', diamond:true}
+  ];
+
+  var svgH = Y0 + rows.length * G + 20;
+
+  var gridLines = sem.map(function(_, i) {
+    var x = X0 + i * W;
+    return '<line x1="'+x+'" y1="38" x2="'+x+'" y2="'+(svgH-10)+'" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>';
+  }).join('');
+  // right edge
+  gridLines += '<line x1="'+(X0+8*W)+'" y1="38" x2="'+(X0+8*W)+'" y2="'+(svgH-10)+'" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>';
+
+  var semLabels = sem.map(function(s, i) {
+    var cx = X0 + i * W + W/2;
+    return '<text x="'+cx+'" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">'+s+'</text>';
+  }).join('');
+
+  var bars = rows.map(function(r, i) {
+    var y = Y0 + i * G;
+    var c = P[r.color];
+    var labelEl = '<text x="148" y="'+(y+H/2)+'" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11"'+(r.diamond?' font-weight="500"':'')+'>'+r.label+'</text>';
+
+    if (r.diamond) {
+      var cx = X0 + r.s * W + W/2;
+      var cy = y + H/2;
+      return labelEl + '<polygon points="'+cx+','+(cy-9)+' '+(cx+9)+','+cy+' '+cx+','+(cy+9)+' '+(cx-9)+','+cy+'" fill="'+c.bg+'" stroke="'+c.border+'" stroke-width="1"/>';
+    }
+
+    var x1 = X0 + r.s * W + 2;
+    var barW = (r.e - r.s + 1) * W - 4;
+    var op = r.dim ? ' opacity="0.45"' : '';
+    return labelEl + '<rect x="'+x1+'" y="'+y+'" width="'+barW+'" height="'+H+'" rx="4" fill="'+c.bg+'" stroke="'+c.border+'" stroke-width="0.5"'+op+'/>';
+  }).join('');
+
+  return `
+    ${tag('gray','CRONOGRAMA DA PESQUISA')}
+    <h2>Cronograma</h2>
+    <svg viewBox="0 0 700 ${svgH}" style="width:100%;max-width:680px">
+      ${gridLines}
+      ${semLabels}
+      ${bars}
+    </svg>
+  `;
+}
+
+function slideReferencias() {
+  var refs = [
+    'GALEFFI, D. A.; MODESTO, M. A.; SOUZA, E. C. <em>Epistemologia, construção e difusão do conhecimento</em>. Salvador: EDUNEB, 2011.',
+    'HAAGEN-SCHÜTZENHÖFER, C.; HOPF, M. Design-based research as a model for systematic curriculum development. <em>Phys. Rev. PER</em>, v.16, 020152, 2020.',
+    'MATTA, A. E. R.; SILVA, F. P. S.; BOAVENTURA, E. M. Design-Based Research ou Pesquisa de Desenvolvimento. <em>Rev. FAEEBA</em>, v.23, n.42, p.23–36, 2014.',
+    'MOREIRA, M. A. Desafios no ensino da física. <em>RBEF</em>, v.43, supl.1, e20200451, 2021.',
+    'OSTERMANN, F.; MOREIRA, M. A. Uma revisão bibliográfica sobre FMC no EM. <em>IENCI</em>, v.5, n.1, p.23–48, 2000.',
+    'SANDOVAL, W. A. Conjecture mapping. <em>JLS</em>, v.23, n.1, p.18–36, 2014.',
+    'SHAFFER, D. W. Epistemic frames for epistemic games. <em>Comp. & Educ.</em>, v.46, n.3, p.223–234, 2006.',
+    'SOUZA, R. S. Análise das contribuições da escola de física CERN. <em>RBEF</em>, v.45, e20230124, 2023.',
+    'VAN DEN AKKER, J. Principles and methods of development research. Dordrecht: Kluwer, 1999.',
+    'WIENER, G. J. <em>Elementary particle physics in early physics education</em>. Tese — Univ. Viena, 2017.',
+    'ZAMBRANO, A. F. et al. Unlocking Gameplay Insights with Epistemic ONA. <em>JSET</em>, v.34, p.1164–1177, 2025.'
+  ];
+  return `
+    ${tag('gray','Referências')}
+    <h2>Referências</h2>
+    <div style="font-size:11px;color:#5F5E5A;line-height:1.7;display:flex;flex-direction:column;gap:4px">
+      ${refs.map(function(r) { return `<div>${r}</div>`; }).join('')}
+    </div>
+  `;
+}
+
+// Array de slides — apenas referências às funções acima
+var SLIDES = [
+  slideTitle,             // 0  — slide de título
+  slideJustificativaLHC,  // 1  — contextualização: FP na sociedade
+  slideVideo,             // 2  — vídeo: LHC em ação
+  slideContexto1,         // 3  — contextualização: eixo 1 (domínio)
+  slideContexto2,         // 4  — contextualização: eixo 2 (metodologia)
+  slideQuestao,           // 5  — questão norteadora
+  slideObjetivos,         // 6  — objetivos
+  slideJustificativa,     // 7  — justificativa: lacunas
+  slideMetodologia,       // 8  — percurso metodológico (tabela DBR vs pesquisa tradicional)
+  slideDiagrama3,         // 9  — diagrama arquitetura da pesquisa
+  slideArtigos,           // 10 — visão geral dos 3 artigos
+  slideArt1,              // 11 — artigo 1
+  slideArt2,              // 12 — artigo 2
+  slideArt3,              // 13 — artigo 3
+  slideCronograma,        // 14 — cronograma
+  slideReferencias        // 15 — referências
+];
+
+// ── Infraestrutura de navegação ──────────────────────────────────────────────
+var MAX       = SLIDES.length - 1;
+var step      = 0;
+var slideEl   = document.getElementById('slide');
+var pillsEl   = document.getElementById('pills');
+var counterEl = document.getElementById('counter');
+var hintEl    = document.getElementById('hint');
+
+for (var i = 0; i <= MAX; i++) {
+  var d = document.createElement('div');
+  d.className = 'pill';
+  d.dataset.i = i;
+  d.addEventListener('click', function(e) { e.stopPropagation(); goTo(+this.dataset.i); });
+  pillsEl.appendChild(d);
+}
+
+function goTo(n) {
+  step = Math.max(0, Math.min(n, MAX));
+  history.replaceState(null, '', '#' + step);
+  render();
+}
+
+var ytPlayer = null;
+var ytReady  = false;
+
+function onYouTubeIframeAPIReady() {
+  ytReady = true;
+  if (document.getElementById('yt-player')) initYT();
+}
+
+function initYT() {
+  ytPlayer = new YT.Player('yt-player', {
+    width: '720', height: '390',
+    videoId: 'pQhbhpU9Wrg',
+    playerVars: { rel: 0, modestbranding: 1, playsinline: 1 }
+  });
+}
+
+function render() {
+  if (ytPlayer && typeof ytPlayer.stopVideo === 'function') {
+    ytPlayer.stopVideo();
+    ytPlayer.destroy();
+    ytPlayer = null;
+  }
+
+  slideEl.innerHTML = SLIDES[step]();
+  slideEl.style.animation = 'none'; slideEl.offsetHeight; slideEl.style.animation = 'fadeIn .35s ease';
+
+  var pills = pillsEl.children;
+  for (var i = 0; i <= MAX; i++) {
+    pills[i].style.width      = step === i ? '20px' : '6px';
+    pills[i].style.background = i <= step ? (step === i ? '#534AB7' : 'rgba(83,74,183,0.25)') : '#d3d1c7';
+  }
+
+  counterEl.textContent = step + '/' + MAX;
+  hintEl.style.display  = step === 0 ? '' : 'none';
+
+  document.getElementById('progress-bar').style.width = (step / MAX * 100) + '%';
+  document.getElementById('slide-number').textContent = (step + 1) + ' / ' + (MAX + 1);
+
+  if (document.getElementById('yt-player')) {
+    if (ytReady) initYT(); // API já carregada
+    // senão, onYouTubeIframeAPIReady() chamará initYT() quando pronta
+  }
+}
+
+// ── Overlays: grade (G) e atalhos (?) ───────────────────────────────────────
+var gridOpen = false, shortcutsOpen = false;
+
+function buildGrid() {
+  var gv = document.getElementById('grid-view');
+  gv.innerHTML = '';
+  for (var i = 0; i <= MAX; i++) {
+    var cell = document.createElement('div');
+    cell.className = 'gc' + (i === step ? ' active' : '');
+    cell.innerHTML = `<div style="font-weight:600;font-size:10px;color:#534AB7;margin-bottom:3px">${i+1}</div><div>${TITLES[i]}</div>`;
+    (function(idx) {
+      cell.addEventListener('click', function(e) { e.stopPropagation(); goTo(idx); toggleGrid(); });
+    })(i);
+    gv.appendChild(cell);
+  }
+}
+function toggleGrid() {
+  var gv = document.getElementById('grid-view');
+  gridOpen = !gridOpen;
+  if (gridOpen) { buildGrid(); gv.style.display = 'grid'; if (shortcutsOpen) toggleShortcuts(); }
+  else { gv.style.display = 'none'; }
+}
+function toggleShortcuts() {
+  var so = document.getElementById('shortcuts-overlay');
+  shortcutsOpen = !shortcutsOpen;
+  so.style.display = shortcutsOpen ? 'flex' : 'none';
+  if (shortcutsOpen && gridOpen) toggleGrid();
+}
+function closeOverlays() {
+  if (gridOpen) toggleGrid();
+  if (shortcutsOpen) toggleShortcuts();
+}
+
+// stopPropagation: cliques nos overlays não disparam goTo()
+document.getElementById('grid-view').addEventListener('click', function(e) { e.stopPropagation(); });
+document.getElementById('shortcuts-overlay').addEventListener('click', function(e) { e.stopPropagation(); toggleShortcuts(); });
+document.querySelector('#shortcuts-overlay .so-box').addEventListener('click', function(e) { e.stopPropagation(); });
+
+// ── Eventos de navegação ─────────────────────────────────────────────────────
+document.body.addEventListener('click', function() {
+  if (gridOpen || shortcutsOpen) { closeOverlays(); return; }
+  goTo(step + 1);
+});
+document.body.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  if (gridOpen || shortcutsOpen) { closeOverlays(); return; }
+  goTo(step - 1);
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape')              { closeOverlays(); return; }
+  if (e.key === 'g' || e.key === 'G')  { e.preventDefault(); toggleGrid(); return; }
+  if (e.key === '?')                   { e.preventDefault(); toggleShortcuts(); return; }
+  if (gridOpen || shortcutsOpen) return;
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); goTo(step + 1); }
+  if (e.key === 'ArrowLeft'  || e.key === 'Backspace')              { e.preventDefault(); goTo(step - 1); }
+  if (e.key === 'r' || e.key === 'R') goTo(0);
+  if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+
+// ── Escalonamento e inicialização ────────────────────────────────────────────
+function scaleWrap() {
+  var w = document.querySelector('.wrap');
+  var s = Math.min(window.innerWidth / 960, window.innerHeight / 540) * 0.97;
+  w.style.transform = 'scale(' + s + ')';
+}
+window.addEventListener('resize', scaleWrap);
+scaleWrap();
+var hashSlide = parseInt(window.location.hash.replace('#', ''), 10);
+if (!isNaN(hashSlide)) step = Math.max(0, Math.min(hashSlide, MAX));
+render();
+
+</script>
+</body>
+</html>

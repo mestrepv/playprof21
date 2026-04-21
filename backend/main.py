@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from database import Base, engine
+from modules.lab.routes import router as lab_router
 
 
 @asynccontextmanager
@@ -38,6 +39,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(lab_router)
 
 
 @app.get("/health")

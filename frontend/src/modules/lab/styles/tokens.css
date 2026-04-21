@@ -1,0 +1,79 @@
+/*
+ * Tokens de design do lab — portado do module_lab do rpgia.
+ *
+ * :root custom properties puras (sem @theme do Tailwind) porque o CSS é
+ * importado direto dos componentes. Style inline usa var(--color-lab-*).
+ *
+ * Fontes (Inter Tight + JetBrains Mono) devem ser carregadas no index.html
+ * via <link> pra evitar FOIT/FOUT quando lazy-loaded.
+ */
+
+:root {
+  /* Cores */
+  --color-lab-bg: #FAFAF7;
+  --color-lab-bg-2: #F2F2ED;
+  --color-lab-ink: #0F1115;
+  --color-lab-ink-2: #2A2D33;
+  --color-lab-ink-3: #555B66;
+  --color-lab-rule: #D8D5CB;
+  --color-lab-accent: #5B2DB8;
+  --color-lab-amber: #E8A53A;
+  --color-lab-mint: #1E9E6A;
+  --color-lab-rose: #D4474A;
+
+  /* Fontes */
+  --font-lab-sans: "Inter Tight", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-lab-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Tipografia fluida */
+  --text-lab-xs: clamp(0.75rem, 0.70rem + 0.2vw, 0.85rem);
+  --text-lab-sm: clamp(0.875rem, 0.80rem + 0.3vw, 1rem);
+  --text-lab-base: clamp(1rem, 0.90rem + 0.5vw, 1.25rem);
+  --text-lab-md: clamp(1.125rem, 1rem + 0.6vw, 1.5rem);
+  --text-lab-lg: clamp(1.375rem, 1.2rem + 0.8vw, 2rem);
+  --text-lab-xl: clamp(1.75rem, 1.4rem + 1.5vw, 2.75rem);
+  --text-lab-2xl: clamp(2.25rem, 1.6rem + 3vw, 4rem);
+  --text-lab-3xl: clamp(2.75rem, 1.8rem + 5vw, 5.5rem);
+
+  /* Spacing fluido */
+  --spacing-lab-1: clamp(0.25rem, 0.2rem + 0.2vw, 0.5rem);
+  --spacing-lab-2: clamp(0.5rem, 0.4rem + 0.3vw, 0.75rem);
+  --spacing-lab-3: clamp(0.75rem, 0.6rem + 0.5vw, 1.25rem);
+  --spacing-lab-4: clamp(1rem, 0.8rem + 0.8vw, 1.75rem);
+  --spacing-lab-5: clamp(1.5rem, 1.2rem + 1vw, 2.5rem);
+  --spacing-lab-6: clamp(2rem, 1.5rem + 1.5vw, 3.5rem);
+  --spacing-lab-7: clamp(2.5rem, 2rem + 2vw, 5rem);
+  --spacing-lab-8: clamp(3.5rem, 2.5rem + 3vw, 7rem);
+
+  /* Raios */
+  --radius-lab-sm: 6px;
+  --radius-lab: 12px;
+  --radius-lab-lg: 18px;
+
+  /* Sombras, inversas e tap target */
+  --lab-shadow-sm: 0 2px 6px rgba(15, 17, 21, 0.06);
+  --lab-shadow: 0 8px 24px rgba(15, 17, 21, 0.08);
+  --lab-shadow-lg: 0 20px 60px rgba(15, 17, 21, 0.12);
+
+  --lab-ink-inverse: #FFF;
+  --lab-ink-inverse-dim: rgba(255, 255, 255, 0.72);
+  --lab-ink-inverse-dim-2: rgba(255, 255, 255, 0.55);
+
+  --lab-tap-min: 44px;
+}
+
+/* Dark mode local — [data-theme="dark"] no SlideShell. */
+[data-theme="dark"] {
+  --color-lab-bg: #0F1115;
+  --color-lab-bg-2: #1A1D23;
+  --color-lab-ink: #F5F5F0;
+  --color-lab-ink-2: #D6D9DF;
+  --color-lab-ink-3: #8C93A1;
+  --color-lab-rule: #2A2D33;
+}
+
+[data-lab-root] {
+  background: var(--color-lab-bg);
+  color: var(--color-lab-ink);
+  font-family: var(--font-lab-sans);
+}

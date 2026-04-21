@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 346" width="100%" style="max-width:700px;height:auto">
+<!-- Grid lines (8 semestres, W=62.5, X0=160) -->
+<line x1="160"   y1="38" x2="160"   y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="222.5" y1="38" x2="222.5" y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="285"   y1="38" x2="285"   y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="347.5" y1="38" x2="347.5" y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="410"   y1="38" x2="410"   y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="472.5" y1="38" x2="472.5" y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="535"   y1="38" x2="535"   y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="597.5" y1="38" x2="597.5" y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+<line x1="660"   y1="38" x2="660"   y2="336" stroke="#d3d1c7" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+
+<!-- Semester labels -->
+<text x="191.25" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">25/1</text>
+<text x="253.75" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">25/2</text>
+<text x="316.25" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">26/1</text>
+<text x="378.75" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">26/2</text>
+<text x="441.25" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">27/1</text>
+<text x="503.75" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">27/2</text>
+<text x="566.25" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">28/1</text>
+<text x="628.75" y="28" text-anchor="middle" dominant-baseline="central" fill="#888780" font-size="11" font-weight="500">28/2</text>
+
+<!-- Row 1: Disciplinas (s=0, e=2, teal) — y0=56, H=16, G=30 -->
+<text x="148" y="64" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">Disciplinas</text>
+<rect x="162" y="56" width="183.5" height="16" rx="4" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+
+<!-- Row 2: Art. 1 (rev.+diag.) (s=1, e=3, purple) -->
+<text x="148" y="94" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">Art. 1 (rev.+diag.)</text>
+<rect x="224.5" y="86" width="183.5" height="16" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+
+<!-- Row 3: CDE — Fase 2 (s=1, e=3, teal) -->
+<text x="148" y="124" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">CDE — Fase 2</text>
+<rect x="224.5" y="116" width="183.5" height="16" rx="4" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+
+<!-- Row 4: CDC+EVE — Fase 3 (s=2, e=4, teal) -->
+<text x="148" y="154" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">CDC+EVE — Fase 3</text>
+<rect x="287" y="146" width="183.5" height="16" rx="4" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+
+<!-- Row 5: Qualificação (s=4, e=4, gray) -->
+<text x="148" y="184" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">Qualificação</text>
+<rect x="412" y="176" width="58.5" height="16" rx="4" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+
+<!-- Row 6: Art. 2 (ciclos) (s=4, e=5, purple) -->
+<text x="148" y="214" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">Art. 2 (ciclos)</text>
+<rect x="412" y="206" width="121" height="16" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+
+<!-- Row 7: Art. 3 (princípios) (s=5, e=6, purple) -->
+<text x="148" y="244" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">Art. 3 (princípios)</text>
+<rect x="474.5" y="236" width="121" height="16" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+
+<!-- Row 8: Redação integradora (s=5, e=7, gray, dim) -->
+<text x="148" y="274" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11">Redação integradora</text>
+<rect x="474.5" y="266" width="183.5" height="16" rx="4" fill="#F1EFE8" stroke="#888780" stroke-width="0.5" opacity="0.45"/>
+
+<!-- Row 9: Defesa (s=7, e=7, amber, diamond at cx=628.75, cy=304) -->
+<text x="148" y="304" text-anchor="end" dominant-baseline="central" fill="#444441" font-size="11" font-weight="500">Defesa</text>
+<polygon points="628.75,295 637.75,304 628.75,313 619.75,304" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
+</svg>
