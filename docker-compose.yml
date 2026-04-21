@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: labprof21-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-labprof21}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-labprof21_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-labprof21}
+    ports:
+      - "5435:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-labprof21}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: labprof21-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-labprof21}:${POSTGRES_PASSWORD:-labprof21_dev}@db:5432/${POSTGRES_DB:-labprof21}
+      PYTHONUNBUFFERED: "1"
+      APP_ENV: ${APP_ENV:-development}
+    ports:
+      - "5105:5105"
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 5105 --reload
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: labprof21-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      VITE_API_URL: http://localhost:5105
+      VITE_WS_URL: ws://localhost:5105
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5174
+
+volumes:
+  db_data:
