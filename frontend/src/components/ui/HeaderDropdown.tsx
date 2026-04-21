@@ -138,7 +138,7 @@ const itemStyle: React.CSSProperties = {
 function roleBadge(role: string): React.CSSProperties {
   const palettes: Record<string, { bg: string; fg: string }> = {
     teacher: { bg: 'var(--p21-purple-soft)', fg: 'var(--p21-purple-ink)' },
-    student: { bg: 'var(--p21-teal-soft)', fg: 'var(--p21-teal)' },
+    student: { bg: 'var(--p21-primary-soft)', fg: 'var(--p21-primary-ink)' },
   }
   const p = palettes[role] ?? { bg: 'var(--p21-surface-2)', fg: 'var(--p21-ink-3)' }
   return {

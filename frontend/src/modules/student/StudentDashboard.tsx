@@ -144,7 +144,7 @@ function TrailTreeNode({ summary, displayIndex }: { summary: TrailSummary; displ
           borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
-          background: completed ? 'var(--p21-teal)' : palette.badgeBg,
+          background: completed ? 'var(--p21-primary-ink)' : palette.badgeBg,
           color: '#FFF',
           fontWeight: 700,
           fontFamily: 'var(--p21-font-display)',
@@ -200,7 +200,7 @@ function Stars({ n }: { n: number }) {
   return (
     <div aria-label={`${n} estrelas`} style={{ letterSpacing: 1, fontSize: 18 }}>
       {[0, 1, 2].map((i) => (
-        <span key={i} style={{ color: i < n ? 'var(--p21-amber)' : '#d8d5cb' }}>
+        <span key={i} style={{ color: i < n ? 'var(--p21-amber)' : 'var(--slate-300)' }}>
           ★
         </span>
       ))}
@@ -332,7 +332,7 @@ function TabBtn({
 function Chip({ tone, children }: { tone: 'primary' | 'teal' | 'purple' | 'muted'; children: React.ReactNode }) {
   const palettes = {
     primary: { bg: 'var(--p21-primary-soft)', fg: 'var(--p21-primary-ink)' },
-    teal: { bg: 'var(--p21-teal-soft)', fg: 'var(--p21-teal)' },
+    teal: { bg: 'var(--p21-primary-soft)', fg: 'var(--p21-primary-ink)' },
     purple: { bg: 'var(--p21-purple-soft)', fg: 'var(--p21-purple-ink)' },
     muted: { bg: 'var(--p21-surface-2)', fg: 'var(--p21-ink-3)' },
   }[tone]
@@ -359,7 +359,7 @@ function Chip({ tone, children }: { tone: 'primary' | 'teal' | 'purple' | 'muted
 // ── estilos ───────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<TrailStatus, { bg: string; border: string; badgeBg: string }> = {
-  completed: { bg: '#F4FBF8', border: 'var(--p21-teal)', badgeBg: 'var(--p21-teal)' },
+  completed: { bg: 'var(--p21-primary-soft)', border: 'var(--p21-primary-ink)', badgeBg: 'var(--p21-primary-ink)' },
   available: { bg: 'var(--p21-surface)', border: 'var(--p21-primary)', badgeBg: 'var(--p21-primary)' },
   locked: { bg: 'var(--p21-surface-2)', border: 'var(--p21-border)', badgeBg: 'var(--p21-border-strong)' },
 }

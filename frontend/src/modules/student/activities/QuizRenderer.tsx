@@ -61,14 +61,14 @@ export function QuizRenderer({ title, maxScore, config, onComplete }: Props) {
           const isRight = revealed && i === cfg.correctIndex
           const isWrong = revealed && isSel && i !== cfg.correctIndex
           const border = isRight
-            ? 'var(--p21-teal)'
+            ? 'var(--p21-primary-ink)'
             : isWrong
               ? 'var(--p21-coral)'
               : isSel
                 ? 'var(--p21-blue)'
                 : 'var(--p21-border-strong)'
           const bg = isRight
-            ? 'var(--p21-teal-soft)'
+            ? 'var(--p21-primary-soft)'
             : isWrong
               ? 'var(--p21-coral-soft)'
               : isSel
@@ -117,7 +117,7 @@ export function QuizRenderer({ title, maxScore, config, onComplete }: Props) {
                   {String.fromCharCode(65 + i)}
                 </span>
                 <span style={{ flex: 1 }}>{opt}</span>
-                {isRight && <span style={{ color: 'var(--p21-teal)', fontSize: 20 }}>✓</span>}
+                {isRight && <span style={{ color: 'var(--p21-primary-ink)', fontSize: 20 }}>✓</span>}
                 {isWrong && <span style={{ color: 'var(--p21-coral)', fontSize: 20 }}>✗</span>}
               </button>
             </li>
@@ -135,8 +135,8 @@ export function QuizRenderer({ title, maxScore, config, onComplete }: Props) {
           <div
             style={{
               padding: 'var(--p21-sp-4)',
-              background: correct ? 'var(--p21-teal-soft)' : 'var(--p21-coral-soft)',
-              color: correct ? 'var(--p21-teal)' : 'var(--p21-coral-ink)',
+              background: correct ? 'var(--p21-primary-soft)' : 'var(--p21-coral-soft)',
+              color: correct ? 'var(--p21-primary-ink)' : 'var(--p21-coral-ink)',
               borderRadius: 'var(--p21-radius-md)',
               fontFamily: 'var(--p21-font-mono)',
               fontSize: 'var(--p21-text-sm)',

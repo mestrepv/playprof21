@@ -156,7 +156,7 @@ function TrailHeader({
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div aria-label={`${stars} estrelas`} style={{ letterSpacing: 2, fontSize: 20 }}>
             {[0, 1, 2].map((i) => (
-              <span key={i} style={{ color: i < stars ? 'var(--p21-amber)' : '#d8d5cb' }}>
+              <span key={i} style={{ color: i < stars ? 'var(--p21-amber)' : 'var(--slate-300)' }}>
                 ★
               </span>
             ))}
@@ -200,7 +200,7 @@ function TrailFinishedScreen({
           }}
         >
           {[0, 1, 2].map((i) => (
-            <span key={i} style={{ color: i < progress.stars ? 'var(--p21-amber)' : '#d8d5cb' }}>
+            <span key={i} style={{ color: i < progress.stars ? 'var(--p21-amber)' : 'var(--slate-300)' }}>
               ★
             </span>
           ))}

@@ -150,9 +150,9 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
       style={{
         padding: '8px 14px',
         borderRadius: 8,
-        border: `1px solid ${active ? 'var(--color-lab-accent)' : 'var(--color-lab-rule, #D8D5CB)'}`,
-        background: active ? '#EEEDFE' : '#FFF',
-        color: active ? 'var(--color-lab-accent)' : 'inherit',
+        border: `1px solid ${active ? 'var(--p21-blue)' : 'var(--p21-border)'}`,
+        background: active ? 'var(--p21-blue-soft)' : 'var(--p21-surface)',
+        color: active ? 'var(--p21-blue-ink)' : 'inherit',
         fontWeight: active ? 500 : 400,
         cursor: 'pointer',
         fontFamily: 'inherit',
@@ -482,7 +482,7 @@ function TrailActivitiesEditor({
   const choices = bank.filter((a) => !existingIds.has(a.id))
 
   return (
-    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--color-lab-rule)' }}>
+    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--p21-border)' }}>
       <ol style={{ listStyle: 'decimal inside', padding: 0, margin: 0, display: 'grid', gap: 6 }}>
         {items.map((a, i) => (
           <li key={a.id} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -600,7 +600,7 @@ function LessonsTab({ token, onError }: { token: string; onError: (e: string) =>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ ...kindBadge, background: '#EEEDFE', color: '#3C3489' }}>aula interativa</span>
               <span style={{ flex: 1, fontWeight: 500 }}>{il.title}</span>
-              <Link to={`/lab/preview/${encodeURIComponent(il.slug)}`} style={{ ...small, color: 'var(--color-lab-accent)', textDecoration: 'none' }}>
+              <Link to={`/lab/preview/${encodeURIComponent(il.slug)}`} style={{ ...small, color: 'var(--p21-blue)', textDecoration: 'none' }}>
                 preview →
               </Link>
               <button onClick={() => del(il.id)} style={dangerBtn}>
@@ -647,18 +647,18 @@ const formCard: React.CSSProperties = {
   flexDirection: 'column',
   gap: 8,
   padding: 14,
-  border: '1px solid var(--color-lab-rule, #D8D5CB)',
+  border: '1px solid var(--p21-border)',
   borderRadius: 12,
-  background: '#FFFEF9',
-  marginTop: 'var(--spacing-lab-4)',
+  background: 'var(--p21-surface)',
+  marginTop: 'var(--p21-sp-4)',
 }
 const formRow: React.CSSProperties = { display: 'flex', gap: 6, flexWrap: 'wrap' }
 const iconBtn: React.CSSProperties = {
   width: 26,
   height: 26,
   borderRadius: 4,
-  border: '1px solid var(--color-lab-rule, #D8D5CB)',
-  background: '#FFF',
+  border: '1px solid var(--p21-border)',
+  background: 'var(--p21-surface)',
   cursor: 'pointer',
   fontSize: 13,
 }

@@ -147,7 +147,7 @@ function StudentsPanel({ classroomId, token }: { classroomId: string; token: str
 function ActivitiesPanel({ stats }: { stats: ClassroomStats | null }) {
   if (!stats) return <Muted>carregando…</Muted>
   const pills = [
-    { label: 'trilhas', value: stats.assignments_by_type.trail, tone: 'var(--p21-teal)' },
+    { label: 'trilhas', value: stats.assignments_by_type.trail, tone: 'var(--p21-primary-ink)' },
     { label: 'aulas', value: stats.assignments_by_type.interactive_lesson, tone: 'var(--p21-purple)' },
     { label: 'atividades avulsas', value: stats.assignments_by_type.activity, tone: 'var(--p21-stat-blue)' },
   ]

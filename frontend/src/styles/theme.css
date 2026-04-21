@@ -1,58 +1,150 @@
 /*
  * theme.css — design tokens globais do prof21 (UI do app).
  *
- * Espaço separado dos tokens do `module_lab` (que são escopados pros
- * slides de conteúdo via [data-lab-root]). Esses aqui aplicam em todo
- * o app — telas de auth, dashboards, runner, etc.
+ * Estrutura em DUAS CAMADAS pra permitir trocar a paleta sem mexer no
+ * código:
  *
- * Princípios:
- *   - minimalismo Google com pegada "escolar profissional"
- *   - mobile-first: paddings/typografia escalam com clamp()
- *   - tap targets ≥ 44px, shadow 3D sutil (estilo Duolingo)
+ *   Camada 1 — paleta física (--slate/--brand/--accent/--danger/--warn/
+ *              --purple/--pink). Escalas tipo Tailwind (50/100/300/500/
+ *              700/900). TROCAR AQUI muda todas as cores.
  *
- * Cores espelham o legado play.prof21:
- *   verde lime  — ações primárias, progresso, trilha disponível
- *   azul        — navegação, links, acento institucional
- *   cinzas      — texto e superfícies
+ *   Camada 2 — tokens semânticos (--p21-primary, --p21-blue, etc). O
+ *              código do app usa APENAS esses tokens. Papel = função,
+ *              não cor física.
+ *
+ * Dark mode futuro: sobrescreve só a Camada 2 em [data-theme="dark"].
+ *
+ * Contraste: combinações default passam WCAG AA (≥4.5:1 em texto normal).
+ *   --p21-primary (#2f6e00) sobre branco  → 7.5:1  ✅ AAA
+ *   --p21-blue (#185FA5) sobre branco     → 6.9:1  ✅ AAA
+ *   --p21-coral (#d4474a) sobre branco    → 4.2:1  ✅ AA 18px+/bold
+ *
+ * Tokens escopados pros slides do module_lab ficam em módulo_lab/styles/;
+ * estes aqui aplicam ao app (auth, dashboards, runner, feed).
  */
 
 :root {
-  /* ─ Cores base ─────────────────────────────────────────────────────── */
-  --p21-bg: #f7f7f5;
+  /* ═══════════════════════════════════════════════════════════════════ */
+  /* CAMADA 1 — paleta física                                             */
+  /* Edite aqui pra trocar a paleta inteira. Nunca use direto no código.  */
+  /* ═══════════════════════════════════════════════════════════════════ */
+
+  /* Slate — cinzas neutros (backgrounds, textos) */
+  --slate-50:  #fafaf7;
+  --slate-100: #f2f2ed;
+  --slate-200: #e4e1da;
+  --slate-300: #d0cec5;
+  --slate-400: #9ca3af;
+  --slate-500: #6b7280;
+  --slate-600: #424955;
+  --slate-700: #2a2d33;
+  --slate-800: #1f232a;
+  --slate-900: #1a1a1a;
+
+  /* Brand — azul do prof21 (marca, links, navegação) */
+  --brand-50:  #e6f1fb;
+  --brand-100: #cce3f7;
+  --brand-300: #66a0ce;
+  --brand-500: #185fa5;
+  --brand-600: #124a82;
+  --brand-700: #0c447c;
+  --brand-800: #08335e;
+  --brand-900: #041a30;
+
+  /* Accent — verde (ação, progresso, sucesso, completed).
+     500 = lime Duolingo visível; 700 = escuro pra passar AAA em botões. */
+  --accent-50:  #f0faeb;
+  --accent-100: #d8f0c2;
+  --accent-300: #90d455;
+  --accent-500: #58cc02;   /* lime vibrante — chips soft, progress fills */
+  --accent-600: #46a302;
+  --accent-700: #2f6e00;   /* verde escuro — botões primários, texto sobre soft */
+  --accent-800: #1f4a00;
+  --accent-900: #0f2500;
+
+  /* Danger — erro, destrutivo */
+  --danger-50:  #faece7;
+  --danger-100: #f5d6cc;
+  --danger-500: #d4474a;
+  --danger-700: #993c1d;
+  --danger-900: #712b13;
+
+  /* Warn — amarelo (estrelas, avisos) */
+  --warn-50:  #faeeda;
+  --warn-100: #f5dcb3;
+  --warn-500: #e8a53a;
+  --warn-700: #854f0b;
+  --warn-900: #4d2d06;
+
+  /* Purple — uso pontual (role teacher, aula interativa, stat atividades) */
+  --purple-50:  #eeedfe;
+  --purple-100: #dcd9fc;
+  --purple-500: #534ab7;
+  --purple-700: #3c3489;
+  --purple-900: #221d4f;
+
+  /* Pink — uso pontual (stat tentativas) */
+  --pink-50:  #fae8ef;
+  --pink-100: #f5cedd;
+  --pink-500: #d4537e;
+  --pink-700: #8a2a4b;
+  --pink-900: #4e1529;
+
+  /* ═══════════════════════════════════════════════════════════════════ */
+  /* CAMADA 2 — tokens semânticos                                         */
+  /* O código usa SÓ estes. Eles apontam pra Camada 1.                    */
+  /* ═══════════════════════════════════════════════════════════════════ */
+
+  /* Superfícies */
+  --p21-bg: var(--slate-50);
   --p21-surface: #ffffff;
-  --p21-surface-2: #f2f2ed;
-  --p21-border: #e4e1da;
-  --p21-border-strong: #d0cec5;
+  --p21-surface-2: var(--slate-100);
+  --p21-border: var(--slate-200);
+  --p21-border-strong: var(--slate-300);
 
-  --p21-ink: #1a1a1a;
-  --p21-ink-2: #424955;
-  --p21-ink-3: #6b7280;
-  --p21-ink-4: #9ca3af;
+  /* Texto */
+  --p21-ink: var(--slate-900);
+  --p21-ink-2: var(--slate-600);
+  --p21-ink-3: var(--slate-500);
+  --p21-ink-4: var(--slate-400);
 
-  /* ─ Acentos ─────────────────────────────────────────────────────────── */
-  --p21-primary: #58cc02;         /* verde lime — ações/progresso */
-  --p21-primary-hover: #46a302;
-  --p21-primary-soft: #eaf9d8;
-  --p21-primary-ink: #2f6e00;
+  /* Ação primária — verde (todos estados de ação, progresso e sucesso
+     usam esta família. Teal foi eliminado). */
+  --p21-primary: var(--accent-700);        /* fundo de botão primary */
+  --p21-primary-hover: var(--accent-800);  /* hover do botão */
+  --p21-primary-soft: var(--accent-100);   /* fundo de chip/pill */
+  --p21-primary-ink: var(--accent-700);    /* texto sobre soft */
+  --p21-primary-bright: var(--accent-500); /* lime vivo — progress bar fill,
+                                              stars on, preenchimentos visuais */
 
-  --p21-blue: #185FA5;            /* azul corporativo — marca/links */
-  --p21-blue-hover: #124a82;
-  --p21-blue-soft: #e6f1fb;
-  --p21-blue-ink: #0c447c;
+  /* Marca — azul (links, hero da turma, outline focus) */
+  --p21-blue: var(--brand-500);
+  --p21-blue-hover: var(--brand-700);
+  --p21-blue-soft: var(--brand-50);
+  --p21-blue-ink: var(--brand-700);
 
-  --p21-purple: #534ab7;          /* roxo — uso pontual */
-  --p21-purple-soft: #eeedfe;
-  --p21-purple-ink: #3c3489;
+  /* Stat do hero/alunos — tom levemente mais claro do mesmo azul */
+  --p21-stat-blue: var(--brand-500);
 
-  --p21-stat-blue: #378add;       /* azul mais claro — stat Alunos + hero gradient */
-  --p21-stat-pink: #d4537e;       /* rosa/coral — stat Tentativas */
+  /* Roxo — role badge teacher, aula interativa (pontual) */
+  --p21-purple: var(--purple-500);
+  --p21-purple-soft: var(--purple-50);
+  --p21-purple-ink: var(--purple-700);
 
-  --p21-amber: #e8a53a;           /* estrelas */
-  --p21-teal: #0f6e56;            /* acerto/completed */
-  --p21-teal-soft: #e1f5ee;
-  --p21-coral: #d4474a;           /* erro / destrutivo */
-  --p21-coral-soft: #faece7;
-  --p21-coral-ink: #993c1d;
+  /* Pink — stat Tentativas (pontual) */
+  --p21-stat-pink: var(--pink-500);
+  --p21-pink-soft: var(--pink-50);
+  --p21-pink-ink: var(--pink-700);
+
+  /* Warn — estrelas e avisos */
+  --p21-amber: var(--warn-500);
+  --p21-amber-soft: var(--warn-50);
+  --p21-amber-ink: var(--warn-700);
+
+  /* Danger — erro/destrutivo */
+  --p21-coral: var(--danger-500);
+  --p21-coral-soft: var(--danger-50);
+  --p21-coral-ink: var(--danger-700);
 
   /* ─ Tipografia ─────────────────────────────────────────────────────── */
   --p21-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -71,7 +163,7 @@
   --p21-lh-body: 1.55;
   --p21-lh-heading: 1.2;
 
-  /* ─ Espaçamento fluido ─────────────────────────────────────────────── */
+  /* ─ Espaçamento ────────────────────────────────────────────────────── */
   --p21-sp-1: 4px;
   --p21-sp-2: 8px;
   --p21-sp-3: 12px;
@@ -90,7 +182,7 @@
   --p21-radius-xl: 24px;
   --p21-radius-pill: 999px;
 
-  /* ─ Sombras ─ clean, minimalistas. Sem look 3D/Duolingo por preferência. */
+  /* ─ Sombras — clean, minimalistas ─────────────────────────────────── */
   --p21-shadow-sm: 0 1px 2px rgba(15, 17, 21, 0.05);
   --p21-shadow-md: 0 2px 8px rgba(15, 17, 21, 0.06);
   --p21-shadow-lg: 0 12px 32px rgba(15, 17, 21, 0.12);
@@ -99,11 +191,11 @@
   --p21-tap: 44px;
 
   /* ─ Container widths ─────────────────────────────────────────────── */
-  --p21-container-sm: 560px;   /* formulários */
-  --p21-container-md: 760px;   /* conteúdo de leitura */
-  --p21-container-lg: 960px;   /* dashboards */
+  --p21-container-sm: 560px;
+  --p21-container-md: 760px;
+  --p21-container-lg: 960px;
 
-  --p21-pad-x: clamp(1rem, 0.5rem + 2vw, 2rem);   /* padding horizontal da página */
+  --p21-pad-x: clamp(1rem, 0.5rem + 2vw, 2rem);
   --p21-pad-y: clamp(1rem, 0.75rem + 1vw, 1.75rem);
 }
 

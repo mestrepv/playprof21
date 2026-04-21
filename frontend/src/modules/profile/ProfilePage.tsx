@@ -137,8 +137,8 @@ function ProfileForm({
               style={{
                 padding: '10px 14px',
                 borderRadius: 'var(--p21-radius-md)',
-                background: msg.kind === 'ok' ? 'var(--p21-teal-soft)' : 'var(--p21-coral-soft)',
-                color: msg.kind === 'ok' ? 'var(--p21-teal)' : 'var(--p21-coral-ink)',
+                background: msg.kind === 'ok' ? 'var(--p21-primary-soft)' : 'var(--p21-coral-soft)',
+                color: msg.kind === 'ok' ? 'var(--p21-primary-ink)' : 'var(--p21-coral-ink)',
                 fontFamily: 'var(--p21-font-mono)',
                 fontSize: 'var(--p21-text-sm)',
               }}
@@ -168,7 +168,7 @@ function ProfileForm({
 function roleBadge(role: string): React.CSSProperties {
   const palettes: Record<string, { bg: string; fg: string }> = {
     teacher: { bg: 'var(--p21-purple-soft)', fg: 'var(--p21-purple-ink)' },
-    student: { bg: 'var(--p21-teal-soft)', fg: 'var(--p21-teal)' },
+    student: { bg: 'var(--p21-primary-soft)', fg: 'var(--p21-primary-ink)' },
   }
   const p = palettes[role] ?? { bg: 'var(--p21-surface-2)', fg: 'var(--p21-ink-3)' }
   return {
