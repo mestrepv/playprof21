@@ -67,15 +67,22 @@ export function IndexPage() {
             Aulas interativas síncronas · preview de conteúdo
           </p>
         </div>
-        <nav style={{ display: 'flex', gap: 14, fontSize: 14 }}>
+        <nav style={{ display: 'flex', gap: 14, fontSize: 14, flexWrap: 'wrap' }}>
           {user ? (
-            <Link to="/teacher" style={{ color: 'var(--color-lab-accent)' }}>
+            <Link
+              to={user.role === 'student' ? '/student' : '/teacher'}
+              style={{ color: 'var(--color-lab-accent)' }}
+            >
               painel ({user.display_name})
             </Link>
           ) : (
             <>
+              <Link to="/student/join" style={{ color: 'var(--color-lab-accent)' }}>
+                entrar como aluno
+              </Link>
+              <span style={{ color: '#D8D5CB' }}>·</span>
               <Link to="/login" style={{ color: 'var(--color-lab-accent)' }}>
-                entrar
+                professor
               </Link>
               <Link to="/register" style={{ color: 'var(--color-lab-accent)' }}>
                 criar conta

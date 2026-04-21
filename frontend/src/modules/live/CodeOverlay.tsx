@@ -13,13 +13,25 @@ import { QRCodeSVG } from 'qrcode.react'
 import { apiJson } from '../lab/runtime/apiFetch'
 
 interface Props {
-  sessionId: string
+  /** URL absoluta que o QR aponta — página pública de join correspondente. */
+  joinPathBase: string
+  /** Endpoint POST que rotaciona o código (owner only). */
+  rotatePath: string
+  /** Texto do topo. */
+  caption: string
   initialCode: string | null
   token: string | null
   onClose: () => void
 }
 
-export function CodeOverlay({ sessionId, initialCode, token, onClose }: Props) {
+export function CodeOverlay({
+  joinPathBase,
+  rotatePath,
+  caption,
+  initialCode,
+  token,
+  onClose,
+}: Props) {
   const [code, setCode] = useState<string | null>(initialCode)
   const [busy, setBusy] = useState(false)
 
@@ -29,17 +41,14 @@ export function CodeOverlay({ sessionId, initialCode, token, onClose }: Props) {
     if (!token) return
     setBusy(true)
     try {
-      const r = await apiJson<{ code: string }>(`/api/lab/sessions/${sessionId}/code/rotate`, {
-        token,
-        method: 'POST',
-      })
+      const r = await apiJson<{ code: string }>(rotatePath, { token, method: 'POST' })
       setCode(r.code)
     } finally {
       setBusy(false)
     }
   }
 
-  const joinUrl = code ? `${window.location.origin}/lab/join?code=${code}` : ''
+  const joinUrl = code ? `${window.location.origin}${joinPathBase}?code=${code}` : ''
 
   return (
     <div
@@ -69,7 +78,7 @@ export function CodeOverlay({ sessionId, initialCode, token, onClose }: Props) {
         }}
       >
         <div style={{ fontSize: 13, color: '#555B66', letterSpacing: 1, textTransform: 'uppercase' }}>
-          código de entrada
+          {caption}
         </div>
         <div
           style={{

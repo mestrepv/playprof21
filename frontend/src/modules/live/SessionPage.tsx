@@ -281,7 +281,9 @@ function SessionLive({
       />
       {showCode && state.role === 'master' && (
         <CodeOverlay
-          sessionId={sid}
+          caption="código da aula ao vivo"
+          joinPathBase="/lab/join"
+          rotatePath={`/api/lab/sessions/${sid}/code/rotate`}
           initialCode={snapshot.session.code}
           token={token}
           onClose={() => setShowCode(false)}

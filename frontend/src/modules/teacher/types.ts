@@ -18,6 +18,7 @@ export interface Classroom {
   id: string
   owner_id: string
   name: string
+  code: string | null
   created_at: string
 }
 

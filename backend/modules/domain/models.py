@@ -32,6 +32,7 @@ from datetime import datetime, timezone
 from sqlalchemy import (
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -52,12 +53,24 @@ def _utcnow() -> datetime:
 
 class Classroom(Base):
     __tablename__ = "classrooms"
+    # Unique parcial: código único entre turmas ativas (sem `archived_at`).
+    # Quando arquivamos turma no futuro, o código libera pra reuso.
+    __table_args__ = (
+        Index(
+            "ix_classrooms_code_active",
+            "code",
+            unique=True,
+            postgresql_where="code IS NOT NULL",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     owner_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(160), nullable=False)
+    # Código humano-amigável pra aluno entrar na turma. 6 dígitos.
+    code: Mapped[str | None] = mapped_column(String(6), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
 
 

@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -43,13 +43,15 @@ from database import get_db
 
 from ..auth.deps import require_teacher
 from ..auth.models import User
+from ..auth.security import create_access_token
+from ..live.join import RateLimiter, client_ip, random_code
 from .models import (
     ASSIGNMENT_CONTENT_TYPES,
     Activity,
     ActivityResult,  # noqa: F401 — declarada pro create_all
     Assignment,
     Classroom,
-    Enrollment,  # noqa: F401
+    Enrollment,
     InteractiveLesson,
     Trail,
     TrailActivity,
@@ -63,7 +65,10 @@ from .schemas import (
     AssignmentIn,
     AssignmentOut,
     AssignmentPatch,
+    ClassroomCodeOut,
     ClassroomIn,
+    ClassroomJoinIn,
+    ClassroomJoinOut,
     ClassroomOut,
     InteractiveLessonIn,
     InteractiveLessonOut,
@@ -73,6 +78,24 @@ from .schemas import (
     TrailOut,
     TrailPatch,
 )
+
+
+# Gerador de código de turma — análogo ao de sessão mas escopado em classrooms.
+_CODE_MAX_ATTEMPTS = 25
+
+
+def _generate_classroom_code(db: Session) -> str:
+    for _ in range(_CODE_MAX_ATTEMPTS):
+        c = random_code()
+        existing = db.scalar(select(Classroom.id).where(Classroom.code == c))
+        if existing is None:
+            return c
+    raise RuntimeError("falha ao gerar código único da turma")
+
+
+# Rate-limit do join público — mais generoso que sessões (aluno pode estar
+# numa aula buscando vários códigos antigos), mas protege contra brute-force.
+classroom_join_limiter = RateLimiter(max_events=20, window_seconds=60)
 
 
 router = APIRouter(tags=["domain"])
@@ -140,11 +163,67 @@ def list_classrooms(user: User = Depends(require_teacher), db: Session = Depends
 
 @router.post("/api/classrooms", response_model=ClassroomOut, status_code=status.HTTP_201_CREATED)
 def create_classroom(payload: ClassroomIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Classroom:
-    c = Classroom(owner_id=user.id, name=payload.name.strip())
+    c = Classroom(owner_id=user.id, name=payload.name.strip(), code=_generate_classroom_code(db))
     db.add(c)
     db.commit()
     db.refresh(c)
     return c
+
+
+@router.post("/api/classrooms/{cid}/code/rotate", response_model=ClassroomCodeOut)
+def rotate_classroom_code(
+    cid: uuid.UUID,
+    user: User = Depends(require_teacher),
+    db: Session = Depends(get_db),
+) -> ClassroomCodeOut:
+    c = _own_classroom(db, cid, user)
+    c.code = _generate_classroom_code(db)
+    db.commit()
+    return ClassroomCodeOut(code=c.code)
+
+
+@router.post("/api/classrooms/join", response_model=ClassroomJoinOut)
+def join_classroom(
+    payload: ClassroomJoinIn,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> ClassroomJoinOut:
+    """Público. Cria (ou reutiliza via cookie/token se chegar isso depois) um
+    User anônimo de role='student' + Enrollment. Devolve JWT pro cliente
+    persistir. Fase 6 mantém sempre anonimo-new; integrar OAuth na 6.1."""
+    classroom_join_limiter.check(client_ip(request))
+
+    c = db.scalar(select(Classroom).where(Classroom.code == payload.code))
+    if c is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "código inválido")
+
+    name = payload.display_name.strip()[:120]
+    # Cria um novo usuário student cada vez. Cliente que já tem JWT e só quer
+    # adicionar enrollment chama um endpoint separado (a criar quando precisar).
+    student = User(
+        email=None,
+        password_hash=None,
+        display_name=name,
+        role="student",
+    )
+    db.add(student)
+    db.flush()  # pega o id
+
+    # Idempotente via uq_enrollments_user_classroom — mas user é novo então
+    # não haverá colisão aqui. Só passamos direto.
+    e = Enrollment(user_id=student.id, classroom_id=c.id)
+    db.add(e)
+    db.commit()
+    db.refresh(student)
+
+    token = create_access_token(user_id=student.id, role=student.role)
+    return ClassroomJoinOut(
+        classroom_id=c.id,
+        classroom_name=c.name,
+        access_token=token,
+        user_id=student.id,
+        display_name=student.display_name,
+    )
 
 
 @router.get("/api/classrooms/{cid}", response_model=ClassroomOut)

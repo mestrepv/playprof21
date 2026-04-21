@@ -3,6 +3,8 @@ Utilidades da entrada-por-código (Fase 5).
 
 - `generate_code()` cria código de 6 dígitos com retry (evita colisão com
   outra sessão ativa).
+- `random_code()` gera sem dedupe (útil pra outros domínios que checam
+  colisão por conta própria).
 - `RateLimiter` in-process, limita tentativas de join por IP.
 """
 
@@ -23,7 +25,7 @@ CODE_ALPHABET = "0123456789"
 MAX_ATTEMPTS = 25
 
 
-def _random_code() -> str:
+def random_code() -> str:
     return "".join(random.choice(CODE_ALPHABET) for _ in range(CODE_LEN))
 
 
@@ -34,7 +36,7 @@ def generate_code(db: DbSession) -> str:
     from .models import Session  # local import evita ciclo
 
     for _ in range(MAX_ATTEMPTS):
-        code = _random_code()
+        code = random_code()
         existing = db.scalar(
             select(Session.id).where(Session.code == code, Session.status != "ended")
         )

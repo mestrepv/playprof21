@@ -42,7 +42,9 @@ Veja [docs/ROADMAP.md](docs/ROADMAP.md) como fonte de verdade. Resumo rápido:
 - **Fase 3** ✅ concluída (banco de conteúdos + JWT + dashboards `/teacher` e `/teacher/library`)
 - **Fase 4** ✅ concluída (runtime ao vivo mínimo; mission TSX + quiz ficam pra 4.1)
 - **Fase 5** ✅ concluída (código 6 dígitos + QR + /lab/join público com rate-limit)
-- **Fase 6** ⬜ próximo passo: PlanckGo wire (áudio/imagens de Física)
+- **Fase 6** ✅ concluída (onboarding de aluno por código + `/student/join` + `/student` dashboard)
+- **Fase 7** ⬜ próximo passo: runtime de trilha assíncrona (Duolingo-like + renderer real de Activity)
+- **PlanckGo** cancelado — trilhas nativas do labprof21 substituem
 - Demais fases documentadas em `docs/ROADMAP.md`
 
 **Para retomar:** leia `docs/ROADMAP.md`, identifique a Fase ⬜ mais próxima,

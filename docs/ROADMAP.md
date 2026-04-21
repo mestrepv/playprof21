@@ -178,24 +178,61 @@ ou QR code escaneado.
 
 ---
 
-## Fase 6 — PlanckGo wire (áudio/imagens de Física)
+## Fase 6 — Onboarding de aluno + enrollment
 
-**Status:** ⬜ pendente
+**Status:** ✅ concluída em 2026-04-21
 
-Objetivo: acessar biblioteca de assets de Física já montada no servidor
-de origem (`planckgo.getupscience.com`).
+Objetivo: aluno consegue entrar numa turma, manter identidade entre visitas
+e ver as trilhas/aulas atribuídas. Dev-mode: só nome (sem senha). Login
+com Google entra como iteração futura.
 
-- [ ] Decidir: symlink, proxy HTTP ou copy-on-demand
-- [ ] Se symlink: montar volume Docker apontando pra origem
-- [ ] Se proxy: rota `/api/lab/planckgo/{path:path}` que fetcha e cacheia
-- [ ] Documentar no README.md
-- [ ] Testar em 1 slide real (ex.: aula de cinemática usando imagem PlanckGo)
+### Backend
 
-**Estimativa:** 0,5-1 dia.
+- [x] Campo `code` em `classrooms` (6 dígitos, único parcial por `code IS NOT NULL`). Gerado no create via `_generate_classroom_code`.
+- [x] `POST /api/classrooms/{id}/code/rotate` (owner only)
+- [x] `POST /api/classrooms/join {code, display_name}` público, rate-limit sliding (20/IP/min). Cria `User(role=student, email=NULL, password_hash=NULL)` + `Enrollment` + devolve JWT. A lógica de reuso de JWT existente fica pra 6.1 junto com OAuth.
+- [x] `GET /api/student/classrooms` e `GET /api/student/classrooms/{id}/assignments` — autorizam via enrollment OR owner (professor pode espiar em modo debug).
+
+### Frontend
+
+- [x] `CodeOverlay` generalizado — aceita `joinPathBase` e `rotatePath` por prop, reusado pra sessão ao vivo (Fase 5) e pra turma (Fase 6).
+- [x] Botão "código NNNNNN" em cada card de turma no `/teacher` abre overlay com QR apontando pra `/student/join?code=NNNNNN`.
+- [x] `/student/join` com código + nome (pattern/inputMode numérico, autoComplete=one-time-code).
+- [x] `/student` — dashboard: lista turmas, expande pra ver assignments. Aula interativa vai direto pro preview da Fase 2; trilha/atividade mostram placeholder "runtime na Fase 7".
+- [x] Navegação pública: link "entrar como aluno" no index; card da turma mostra código.
+
+**Smoke backend validado:** join com código válido/inválido (404), rate limit (429), aluno lista suas turmas (só as matriculadas), rotate (200 owner, 401 sem auth), aluno tentando endpoint teacher → 403.
+
+**Nota:** Google OAuth entra numa Fase 6.1 quando o fluxo de nome+cookie for validado em aula real.
 
 ---
 
-## Fase 7 — Deploy
+## Fase 7 — Runtime de trilha assíncrona
+
+**Status:** ⬜ pendente
+
+Objetivo: aluno abre trilha atribuída e faz as atividades em sequência.
+UI inspirada em Duolingo: nós em onda, locked/available/completed,
+estrelas por score/max.
+
+### Backend
+
+- [ ] `POST /api/activity-results {activity_id, score, max_score, payload}` — grava resultado, calcula `is_best`
+- [ ] `GET /api/student/trails/{trail_id}/progress` — retorna activities ordenadas + melhor resultado por activity
+- [ ] `GET /api/student/trails/{trail_id}` resolve as activities pro aluno (via enrollment na turma que atribui a trilha)
+
+### Frontend
+
+- [ ] Renderer real de `Activity.kind='quiz'` — exibe stem/options, valida correctIndex, devolve `score`
+- [ ] Infra `Activity.kind='animation'` e `'simulator'` — registry de componentes TSX por `activityId` (paradigma AI-first, igual o `missionId` do module_lab)
+- [ ] `/student/trail/:id` — nós em sequência estilo Duolingo: locked/available/completed, 1-3 estrelas
+- [ ] `/student/activity/:id` — executa o renderer + `onComplete(score)` → grava result → volta pra trilha
+
+**Estimativa:** 2-3 dias.
+
+---
+
+## Fase 8 — Deploy
 
 **Status:** ⬜ pendente
 
@@ -218,7 +255,7 @@ mesmo, mas precisa confirmar se é `labprof21.prof21.com.br` ou outro subdomíni
 
 ---
 
-## Fase 8 — Iteração pós-primeira-aula real
+## Fase 9 — Iteração pós-primeira-aula real
 
 **Status:** ⬜ pendente
 
@@ -238,16 +275,17 @@ Candidatos conhecidos:
 
 ## Resumo de prazos
 
-| Fase | Esforço dev | Acumulado |
+| Fase | Esforço dev | Status |
 |---|---|---|
-| 1 setup | ✅ 4h | — |
-| 2 pipeline `.md` | 1-2 dias | 1-2 dias |
-| 3 schema + auth | 2-3 dias | 3-5 dias |
-| 4 runtime ao vivo | 2-3 dias | 5-8 dias |
-| 5 código + QR | 1-2 dias | 6-10 dias |
-| 6 PlanckGo | 0,5-1 dia | 7-11 dias |
-| 7 deploy | 1-2 dias | 8-13 dias |
-| 8 iteração real | ~1 semana | 13-18 dias |
+| 1 setup | 4h | ✅ |
+| 2 pipeline `.md` | 1-2d | ✅ |
+| 3 schema + banco de conteúdos | 2-3d | ✅ |
+| 4 runtime ao vivo | 2-3d | ✅ MVP |
+| 5 código + QR | 1-2d | ✅ |
+| 6 onboarding aluno | 1-2d | ⬜ |
+| 7 runtime de trilha | 2-3d | ⬜ |
+| 8 deploy | 1-2d | ⬜ |
+| 9 iteração pós-aula real | ~1 semana | ⬜ |
 
 **Alvo de MVP funcionando em produção: 2-3 semanas calendário** com
 sessões ativas de conversa/decisão frequentes.

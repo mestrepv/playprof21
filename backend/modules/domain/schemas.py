@@ -26,7 +26,26 @@ class ClassroomOut(BaseModel):
     id: uuid.UUID
     owner_id: uuid.UUID
     name: str
+    code: str | None
     created_at: datetime
+
+
+class ClassroomCodeOut(BaseModel):
+    code: str
+
+
+class ClassroomJoinIn(BaseModel):
+    code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+    display_name: str = Field(min_length=1, max_length=120)
+
+
+class ClassroomJoinOut(BaseModel):
+    classroom_id: uuid.UUID
+    classroom_name: str
+    access_token: str
+    token_type: str = "bearer"
+    user_id: uuid.UUID
+    display_name: str
 
 
 # ── Activity ────────────────────────────────────────────────────────────────

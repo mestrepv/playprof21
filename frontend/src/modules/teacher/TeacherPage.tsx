@@ -15,6 +15,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { SlideShell } from '../lab/components/SlideShell'
 import { apiJson } from '../lab/runtime/apiFetch'
+import { CodeOverlay } from '../live/CodeOverlay'
 import type {
   Activity,
   AssignmentExpanded,
@@ -42,6 +43,7 @@ function Dashboard({
 }) {
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [codeModalFor, setCodeModalFor] = useState<Classroom | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
   const reportErr = (e: unknown) => setErr(e instanceof Error ? e.message : String(e))
@@ -115,6 +117,23 @@ function Dashboard({
                   {expanded === c.id ? '▾ fechar' : '▸ abrir atribuições'}
                 </div>
               </button>
+              <button
+                type="button"
+                onClick={() => setCodeModalFor(c)}
+                style={{
+                  ...small,
+                  border: '1px solid var(--color-lab-accent)',
+                  color: 'var(--color-lab-accent)',
+                  background: '#FFF',
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+                title="mostrar código + QR da turma pros alunos entrarem"
+              >
+                {c.code ? `código ${c.code}` : 'código'}
+              </button>
               <button onClick={() => deleteClassroom(c.id)} style={dangerBtn} aria-label="deletar">
                 ×
               </button>
@@ -125,6 +144,19 @@ function Dashboard({
           </li>
         ))}
       </ul>
+      {codeModalFor && (
+        <CodeOverlay
+          caption={`código da turma ${codeModalFor.name}`}
+          joinPathBase="/student/join"
+          rotatePath={`/api/classrooms/${codeModalFor.id}/code/rotate`}
+          initialCode={codeModalFor.code}
+          token={token}
+          onClose={() => {
+            setCodeModalFor(null)
+            loadClassrooms()
+          }}
+        />
+      )}
     </Shell>
   )
 }
