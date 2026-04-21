@@ -150,7 +150,7 @@ function TrailTreeNode({ summary, displayIndex }: { summary: TrailSummary; displ
           fontFamily: 'var(--p21-font-display)',
           fontSize: 20,
           flexShrink: 0,
-          boxShadow: locked ? 'none' : '0 3px 0 rgba(0,0,0,0.12)',
+          boxShadow: 'none',
         }}
       >
         {completed ? '✓' : locked ? '🔒' : displayIndex}

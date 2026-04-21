@@ -1,6 +1,6 @@
 /**
- * Button — shadow-3D estilo Duolingo; variants primary/secondary/ghost/danger;
- * tamanhos sm/md/lg; suporta `as="a"` pra render como âncora/link.
+ * Button — clean, sem look 3D. Variants primary/secondary/outline/ghost/
+ * danger; tamanhos sm/md/lg; suporta `as="a"` pra âncora/link.
  *
  * Tap target ≥44px em md/lg pra mobile.
  */
@@ -27,7 +27,7 @@ export function Button(props: AsButton | AsAnchor) {
     ...sizes[size],
     ...palette[variant],
     width: block ? '100%' : undefined,
-    opacity: (rest as { disabled?: boolean }).disabled ? 0.6 : 1,
+    opacity: (rest as { disabled?: boolean }).disabled ? 0.55 : 1,
     cursor: (rest as { disabled?: boolean }).disabled ? 'not-allowed' : 'pointer',
     ...style,
   }
@@ -54,9 +54,9 @@ const baseStyle: CSSProperties = {
   fontWeight: 600,
   letterSpacing: 0.1,
   textDecoration: 'none',
-  transition: 'transform 0.05s ease, box-shadow 0.05s ease, background 0.15s ease',
+  transition: 'background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
   borderRadius: 'var(--p21-radius-md)',
-  border: '2px solid transparent',
+  border: '1px solid transparent',
   lineHeight: 1,
   whiteSpace: 'nowrap',
 }
@@ -71,20 +71,17 @@ const palette: Record<Variant, CSSProperties> = {
   primary: {
     background: 'var(--p21-primary)',
     color: '#FFF',
-    borderColor: 'var(--p21-primary-hover)',
-    boxShadow: '0 4px 0 var(--p21-primary-hover)',
+    borderColor: 'var(--p21-primary)',
   },
   secondary: {
     background: 'var(--p21-blue)',
     color: '#FFF',
-    borderColor: 'var(--p21-blue-hover)',
-    boxShadow: '0 4px 0 var(--p21-blue-hover)',
+    borderColor: 'var(--p21-blue)',
   },
   outline: {
     background: 'var(--p21-surface)',
     color: 'var(--p21-ink)',
     borderColor: 'var(--p21-border-strong)',
-    boxShadow: '0 3px 0 var(--p21-border)',
   },
   ghost: {
     background: 'transparent',
@@ -94,7 +91,6 @@ const palette: Record<Variant, CSSProperties> = {
   danger: {
     background: 'var(--p21-coral)',
     color: '#FFF',
-    borderColor: 'var(--p21-coral-ink)',
-    boxShadow: '0 4px 0 var(--p21-coral-ink)',
+    borderColor: 'var(--p21-coral)',
   },
 }

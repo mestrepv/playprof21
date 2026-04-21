@@ -90,10 +90,9 @@
   --p21-radius-xl: 24px;
   --p21-radius-pill: 999px;
 
-  /* ─ Sombras ─ Duolingo-like 3D low-contrast ─────────────────────── */
-  --p21-shadow-sm: 0 1px 2px rgba(15, 17, 21, 0.06);
-  --p21-shadow-3d: 0 4px 0 rgba(15, 17, 21, 0.08);
-  --p21-shadow-hover: 0 6px 0 rgba(15, 17, 21, 0.08);
+  /* ─ Sombras ─ clean, minimalistas. Sem look 3D/Duolingo por preferência. */
+  --p21-shadow-sm: 0 1px 2px rgba(15, 17, 21, 0.05);
+  --p21-shadow-md: 0 2px 8px rgba(15, 17, 21, 0.06);
   --p21-shadow-lg: 0 12px 32px rgba(15, 17, 21, 0.12);
 
   /* ─ Tap target mínimo ─────────────────────────────────────────────── */

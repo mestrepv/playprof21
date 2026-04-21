@@ -379,8 +379,7 @@ function SessionHUD({
               padding: '0 12px',
               background: 'var(--p21-blue)',
               color: '#FFF',
-              borderColor: 'var(--p21-blue-hover)',
-              boxShadow: '0 3px 0 var(--p21-blue-hover)',
+              borderColor: 'var(--p21-blue)',
             }}
             title="mostrar código + QR pros alunos entrarem"
           >

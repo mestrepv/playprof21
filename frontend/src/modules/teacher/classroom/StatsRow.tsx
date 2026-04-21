@@ -85,7 +85,7 @@ function StatCard({
         alignItems: 'center',
         gap: 12,
         boxShadow: 'var(--p21-shadow-sm)',
-        transition: 'transform 0.1s, box-shadow 0.1s',
+        transition: 'border-color 0.15s, background 0.15s',
         cursor: 'pointer',
         textAlign: 'left',
         fontFamily: 'inherit',
@@ -94,12 +94,10 @@ function StatCard({
         minHeight: 72,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)'
-        e.currentTarget.style.boxShadow = 'var(--p21-shadow-3d)'
+        e.currentTarget.style.borderColor = 'var(--p21-border-strong)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = 'var(--p21-shadow-sm)'
+        e.currentTarget.style.borderColor = 'var(--p21-border)'
       }}
     >
       <span

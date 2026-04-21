@@ -20,8 +20,9 @@ export function Card({ padded = true, interactive = false, style, children, ...r
         border: '1px solid var(--p21-border)',
         borderRadius: 'var(--p21-radius-lg)',
         padding: padded ? 'var(--p21-sp-5)' : 0,
-        boxShadow: interactive ? 'var(--p21-shadow-3d)' : 'var(--p21-shadow-sm)',
-        transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+        boxShadow: 'var(--p21-shadow-sm)',
+        transition: interactive ? 'border-color 0.15s ease, box-shadow 0.15s ease' : undefined,
+        cursor: interactive ? 'pointer' : undefined,
         ...style,
       }}
     >
