@@ -1,12 +1,12 @@
 /**
- * TeacherPage — dashboard do professor.
+ * TeacherPage — lista de turmas do professor.
  *
- * Seleção cascata: turma → trilha → coleção → aula. Cada coluna lista +
- * cria + deleta, sem UI polida. Aulas têm link direto pro preview da Fase 2.
+ * Cada turma expande pra mostrar suas atribuições (AssignmentExpanded). Trails,
+ * Activities e InteractiveLessons vivem no banco (/teacher/library); aqui só se
+ * cria/remove o link banco→turma.
  *
- * State shape intencionalmente simples: quatro listas e três IDs selecionados.
- * Refetch a lista correspondente quando o parent selecionado muda. Se virar
- * gargalo, trocamos por react-query ou SWR.
+ * Atribuir exige que o professor já tenha conteúdo no banco — se o banco estiver
+ * vazio, mostra CTA pra /teacher/library.
  */
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
@@ -15,14 +15,19 @@ import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { SlideShell } from '../lab/components/SlideShell'
 import { apiJson } from '../lab/runtime/apiFetch'
-import type { Classroom, Collection, Lesson, Track } from './types'
+import type {
+  Activity,
+  AssignmentExpanded,
+  Classroom,
+  ContentType,
+  InteractiveLesson,
+  Trail,
+} from './types'
 
 export function TeacherPage() {
   const { user, token, logout, loading } = useAuth()
-
   if (loading) return <Shell>carregando…</Shell>
   if (!user || !token) return <Navigate to="/login?next=/teacher" replace />
-
   return <Dashboard token={token} displayName={user.display_name} onLogout={logout} />
 }
 
@@ -36,145 +41,32 @@ function Dashboard({
   onLogout: () => void
 }) {
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
-  const [tracks, setTracks] = useState<Track[]>([])
-  const [collections, setCollections] = useState<Collection[]>([])
-  const [lessons, setLessons] = useState<Lesson[]>([])
-  const [selClassroom, setSelClassroom] = useState<string | null>(null)
-  const [selTrack, setSelTrack] = useState<string | null>(null)
-  const [selCollection, setSelCollection] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
   const reportErr = (e: unknown) => setErr(e instanceof Error ? e.message : String(e))
 
-  const loadClassrooms = useCallback(async () => {
-    try {
-      setClassrooms(await apiJson<Classroom[]>('/api/classrooms', { token }))
-    } catch (e) {
-      reportErr(e)
-    }
+  const loadClassrooms = useCallback(() => {
+    apiJson<Classroom[]>('/api/classrooms', { token }).then(setClassrooms).catch(reportErr)
   }, [token])
 
-  useEffect(() => {
-    loadClassrooms()
-  }, [loadClassrooms])
-
-  useEffect(() => {
-    if (!selClassroom) return setTracks([])
-    apiJson<Track[]>(`/api/tracks?classroom_id=${selClassroom}`, { token }).then(setTracks).catch(reportErr)
-  }, [selClassroom, token])
-
-  useEffect(() => {
-    if (!selTrack) return setCollections([])
-    apiJson<Collection[]>(`/api/collections?track_id=${selTrack}`, { token })
-      .then(setCollections)
-      .catch(reportErr)
-  }, [selTrack, token])
-
-  useEffect(() => {
-    if (!selCollection) return setLessons([])
-    apiJson<Lesson[]>(`/api/lessons?collection_id=${selCollection}`, { token }).then(setLessons).catch(reportErr)
-  }, [selCollection, token])
+  useEffect(loadClassrooms, [loadClassrooms])
 
   const createClassroom = async (name: string) => {
     try {
       const c = await apiJson<Classroom>('/api/classrooms', { token, method: 'POST', json: { name } })
       setClassrooms((prev) => [c, ...prev])
-      setSelClassroom(c.id)
+      setExpanded(c.id)
     } catch (e) {
       reportErr(e)
     }
   }
   const deleteClassroom = async (id: string) => {
-    if (!confirm('Deletar turma e tudo dentro dela?')) return
+    if (!confirm('Deletar turma e todas as atribuições? Conteúdo do banco fica intacto.')) return
     try {
       await apiJson<void>(`/api/classrooms/${id}`, { token, method: 'DELETE' })
       setClassrooms((prev) => prev.filter((c) => c.id !== id))
-      if (selClassroom === id) {
-        setSelClassroom(null)
-        setSelTrack(null)
-        setSelCollection(null)
-      }
-    } catch (e) {
-      reportErr(e)
-    }
-  }
-
-  const createTrack = async (name: string) => {
-    if (!selClassroom) return
-    try {
-      const t = await apiJson<Track>('/api/tracks', {
-        token,
-        method: 'POST',
-        json: { classroom_id: selClassroom, name, order: tracks.length },
-      })
-      setTracks((prev) => [...prev, t])
-      setSelTrack(t.id)
-    } catch (e) {
-      reportErr(e)
-    }
-  }
-  const deleteTrack = async (id: string) => {
-    if (!confirm('Deletar trilha e tudo dentro dela?')) return
-    try {
-      await apiJson<void>(`/api/tracks/${id}`, { token, method: 'DELETE' })
-      setTracks((prev) => prev.filter((t) => t.id !== id))
-      if (selTrack === id) {
-        setSelTrack(null)
-        setSelCollection(null)
-      }
-    } catch (e) {
-      reportErr(e)
-    }
-  }
-
-  const createCollection = async (name: string) => {
-    if (!selTrack) return
-    try {
-      const c = await apiJson<Collection>('/api/collections', {
-        token,
-        method: 'POST',
-        json: { track_id: selTrack, name, order: collections.length },
-      })
-      setCollections((prev) => [...prev, c])
-      setSelCollection(c.id)
-    } catch (e) {
-      reportErr(e)
-    }
-  }
-  const deleteCollection = async (id: string) => {
-    if (!confirm('Deletar coleção e tudo dentro dela?')) return
-    try {
-      await apiJson<void>(`/api/collections/${id}`, { token, method: 'DELETE' })
-      setCollections((prev) => prev.filter((c) => c.id !== id))
-      if (selCollection === id) setSelCollection(null)
-    } catch (e) {
-      reportErr(e)
-    }
-  }
-
-  const createLesson = async (slug: string, title: string) => {
-    if (!selCollection) return
-    try {
-      const l = await apiJson<Lesson>('/api/lessons', {
-        token,
-        method: 'POST',
-        json: {
-          collection_id: selCollection,
-          slug: slug.trim(),
-          title: title.trim() || null,
-          order: lessons.length,
-        },
-      })
-      setLessons((prev) => [...prev, l])
-    } catch (e) {
-      reportErr(e)
-    }
-  }
-  const deleteLesson = async (id: string) => {
-    if (!confirm('Deletar aula?')) return
-    try {
-      await apiJson<void>(`/api/lessons/${id}`, { token, method: 'DELETE' })
-      setLessons((prev) => prev.filter((l) => l.id !== id))
+      if (expanded === id) setExpanded(null)
     } catch (e) {
       reportErr(e)
     }
@@ -182,20 +74,17 @@ function Dashboard({
 
   return (
     <Shell>
-      <header
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          marginBottom: 'var(--spacing-lab-4)',
-        }}
-      >
+      <header style={headerRow}>
         <div>
-          <h1 style={{ fontSize: 'var(--text-lab-xl)', margin: 0 }}>Painel do professor</h1>
+          <h1 style={{ fontSize: 'var(--text-lab-xl)', margin: 0 }}>Turmas</h1>
           <p style={{ color: '#555B66', marginTop: 4 }}>
             Olá, <strong>{displayName}</strong>.{' '}
-            <Link to="/" style={{ color: 'var(--color-lab-accent)' }}>
-              preview de conteúdo
+            <Link to="/teacher/library" style={link}>
+              ir pro banco de conteúdos →
+            </Link>
+            {' · '}
+            <Link to="/" style={link}>
+              preview
             </Link>
           </p>
         </div>
@@ -204,268 +93,326 @@ function Dashboard({
         </button>
       </header>
 
-      {err && (
-        <div
-          style={{
-            padding: '10px 12px',
-            background: '#FAECE7',
-            color: '#993C1D',
-            borderRadius: 8,
-            fontFamily: 'var(--font-lab-mono, monospace)',
-            marginBottom: 'var(--spacing-lab-4)',
-          }}
-        >
-          {err} <button onClick={() => setErr(null)} style={{ ...linkBtn, color: '#993C1D' }}>(ok)</button>
-        </div>
+      {err && <ErrorBanner msg={err} onClose={() => setErr(null)} />}
+
+      <InlineCreate placeholder="Nome da turma (ex.: 3A 2026)" onSubmit={createClassroom} />
+
+      {classrooms.length === 0 && (
+        <div style={{ color: '#555B66', marginTop: 20 }}>nenhuma turma ainda — crie acima.</div>
       )}
 
-      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-        <Column
-          title="Turmas"
-          items={classrooms.map((c) => ({ id: c.id, primary: c.name, secondary: `${c.id.slice(0, 8)}…` }))}
-          selected={selClassroom}
-          onSelect={(id) => {
-            setSelClassroom(id)
-            setSelTrack(null)
-            setSelCollection(null)
-          }}
-          onDelete={deleteClassroom}
-          onCreate={createClassroom}
-          createLabel="Nova turma"
-        />
-        <Column
-          title="Trilhas"
-          disabled={!selClassroom}
-          items={tracks.map((t) => ({ id: t.id, primary: t.name, secondary: `ordem ${t.order}` }))}
-          selected={selTrack}
-          onSelect={(id) => {
-            setSelTrack(id)
-            setSelCollection(null)
-          }}
-          onDelete={deleteTrack}
-          onCreate={createTrack}
-          createLabel="Nova trilha"
-        />
-        <Column
-          title="Coleções"
-          disabled={!selTrack}
-          items={collections.map((c) => ({ id: c.id, primary: c.name, secondary: `ordem ${c.order}` }))}
-          selected={selCollection}
-          onSelect={setSelCollection}
-          onDelete={deleteCollection}
-          onCreate={createCollection}
-          createLabel="Nova coleção"
-        />
-        <LessonColumn
-          disabled={!selCollection}
-          lessons={lessons}
-          onDelete={deleteLesson}
-          onCreate={createLesson}
-        />
-      </div>
+      <ul style={list}>
+        {classrooms.map((c) => (
+          <li key={c.id} style={classCard}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+              <button
+                type="button"
+                onClick={() => setExpanded((cur) => (cur === c.id ? null : c.id))}
+                style={{ ...unbutton, flex: 1, textAlign: 'left' }}
+              >
+                <div style={{ fontSize: 'var(--text-lab-md)', fontWeight: 500 }}>{c.name}</div>
+                <div style={small}>
+                  {expanded === c.id ? '▾ fechar' : '▸ abrir atribuições'}
+                </div>
+              </button>
+              <button onClick={() => deleteClassroom(c.id)} style={dangerBtn} aria-label="deletar">
+                ×
+              </button>
+            </div>
+            {expanded === c.id && (
+              <AssignmentsPanel classroomId={c.id} token={token} onError={reportErr} />
+            )}
+          </li>
+        ))}
+      </ul>
     </Shell>
   )
 }
 
-// ── Coluna genérica com input só-de-nome ─────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// Painel de assignments dentro de uma turma expandida
+// ═════════════════════════════════════════════════════════════════════════
 
-interface Item {
-  id: string
-  primary: string
-  secondary: string
+function AssignmentsPanel({
+  classroomId,
+  token,
+  onError,
+}: {
+  classroomId: string
+  token: string
+  onError: (e: unknown) => void
+}) {
+  const [items, setItems] = useState<AssignmentExpanded[]>([])
+  const [bank, setBank] = useState<{ activities: Activity[]; trails: Trail[]; lessons: InteractiveLesson[] } | null>(
+    null,
+  )
+
+  const load = useCallback(() => {
+    apiJson<AssignmentExpanded[]>(`/api/classrooms/${classroomId}/assignments`, { token })
+      .then(setItems)
+      .catch(onError)
+  }, [classroomId, token, onError])
+
+  useEffect(load, [load])
+
+  // Banco (3 listas paralelas) — carrega ao expandir.
+  useEffect(() => {
+    Promise.all([
+      apiJson<Activity[]>('/api/activities', { token }),
+      apiJson<Trail[]>('/api/trails', { token }),
+      apiJson<InteractiveLesson[]>('/api/interactive-lessons', { token }),
+    ])
+      .then(([activities, trails, lessons]) => setBank({ activities, trails, lessons }))
+      .catch(onError)
+  }, [token, onError])
+
+  const attach = async (content_type: ContentType, content_id: string) => {
+    try {
+      await apiJson<unknown>(`/api/classrooms/${classroomId}/assignments`, {
+        token,
+        method: 'POST',
+        json: { content_type, content_id, position: items.length },
+      })
+      load()
+    } catch (e) {
+      onError(e)
+    }
+  }
+
+  const detach = async (assignmentId: string) => {
+    try {
+      await apiJson<void>(`/api/assignments/${assignmentId}`, { token, method: 'DELETE' })
+      setItems((prev) => prev.filter((x) => x.assignment.id !== assignmentId))
+    } catch (e) {
+      onError(e)
+    }
+  }
+
+  const bankEmpty = bank !== null && bank.activities.length === 0 && bank.trails.length === 0 && bank.lessons.length === 0
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px dashed var(--color-lab-rule)' }}>
+      <div style={{ fontSize: 13, color: '#555B66', marginBottom: 8 }}>Atribuições ({items.length})</div>
+      {items.length === 0 && <div style={{ color: '#888', fontSize: 13, fontStyle: 'italic' }}>nenhuma ainda</div>}
+      <ul style={list}>
+        {items.map((ae) => {
+          const meta = contentMeta(ae)
+          return (
+            <li key={ae.assignment.id} style={assignRow}>
+              <span style={{ ...kindBadge, background: meta.bg, color: meta.fg }}>{meta.label}</span>
+              <span style={{ flex: 1, fontWeight: 500 }}>{meta.title}</span>
+              {meta.href && (
+                <Link to={meta.href} style={{ ...small, color: 'var(--color-lab-accent)', textDecoration: 'none' }}>
+                  abrir →
+                </Link>
+              )}
+              <button onClick={() => detach(ae.assignment.id)} style={dangerBtn} aria-label="remover atribuição">
+                ×
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+
+      {bank === null ? (
+        <div style={{ ...small, marginTop: 10 }}>carregando banco…</div>
+      ) : bankEmpty ? (
+        <div style={{ ...small, marginTop: 10 }}>
+          seu banco está vazio —{' '}
+          <Link to="/teacher/library" style={link}>
+            criar conteúdo
+          </Link>
+        </div>
+      ) : (
+        <AttachPicker bank={bank} existing={items} onAttach={attach} />
+      )}
+    </div>
+  )
 }
 
-function Column({
-  title,
-  disabled = false,
-  items,
-  selected,
-  onSelect,
-  onDelete,
-  onCreate,
-  createLabel,
-}: {
+function contentMeta(ae: AssignmentExpanded): {
+  label: string
   title: string
-  disabled?: boolean
-  items: Item[]
-  selected: string | null
-  onSelect: (id: string) => void
-  onDelete: (id: string) => void
-  onCreate: (name: string) => void
-  createLabel: string
-}) {
-  const [name, setName] = useState('')
-  return (
-    <section style={{ ...columnStyle, opacity: disabled ? 0.45 : 1 }}>
-      <h2 style={colTitle}>{title}</h2>
-      <ul style={list}>
-        {items.map((it) => (
-          <li key={it.id} style={selected === it.id ? selectedItem : itemStyle}>
-            <button
-              type="button"
-              onClick={() => onSelect(it.id)}
-              style={{ ...unbutton, flex: 1, textAlign: 'left' }}
-              disabled={disabled}
-            >
-              <div style={{ fontWeight: 500 }}>{it.primary}</div>
-              <div style={{ fontSize: 12, color: '#555B66', fontFamily: 'var(--font-lab-mono)' }}>{it.secondary}</div>
-            </button>
-            <button onClick={() => onDelete(it.id)} style={dangerBtn} disabled={disabled} aria-label="deletar">
-              ×
-            </button>
-          </li>
-        ))}
-        {items.length === 0 && <li style={emptyStyle}>vazio</li>}
-      </ul>
-      {!disabled && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (!name.trim()) return
-            onCreate(name.trim())
-            setName('')
-          }}
-          style={{ display: 'flex', gap: 6, marginTop: 10 }}
-        >
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="nome"
-            style={{ ...inputSmall, flex: 1 }}
-          />
-          <button type="submit" style={smallPrimary}>
-            +
-          </button>
-        </form>
-      )}
-      {disabled && <div style={{ fontSize: 12, color: '#888' }}>{createLabel} — selecione {title === 'Trilhas' ? 'turma' : title === 'Coleções' ? 'trilha' : '…'}</div>}
-    </section>
-  )
+  bg: string
+  fg: string
+  href: string | null
+} {
+  if (ae.activity) {
+    return {
+      label: 'atividade',
+      title: ae.activity.title,
+      bg: '#E6F1FB',
+      fg: '#0C447C',
+      href: null,
+    }
+  }
+  if (ae.trail) {
+    return { label: 'trilha', title: ae.trail.title, bg: '#E1F5EE', fg: '#085041', href: null }
+  }
+  if (ae.interactive_lesson) {
+    return {
+      label: 'aula interativa',
+      title: ae.interactive_lesson.title,
+      bg: '#EEEDFE',
+      fg: '#3C3489',
+      href: `/lab/preview/${encodeURIComponent(ae.interactive_lesson.slug)}`,
+    }
+  }
+  return { label: '?', title: '(conteúdo apagado)', bg: '#F1EFE8', fg: '#555B66', href: null }
 }
 
-// ── Coluna de lessons: input duplo (slug + título) + link pro preview ────
-
-function LessonColumn({
-  disabled,
-  lessons,
-  onDelete,
-  onCreate,
+function AttachPicker({
+  bank,
+  existing,
+  onAttach,
 }: {
-  disabled: boolean
-  lessons: Lesson[]
-  onDelete: (id: string) => void
-  onCreate: (slug: string, title: string) => void
+  bank: { activities: Activity[]; trails: Trail[]; lessons: InteractiveLesson[] }
+  existing: AssignmentExpanded[]
+  onAttach: (t: ContentType, id: string) => void
 }) {
-  const [slug, setSlug] = useState('')
-  const [title, setTitle] = useState('')
+  const alreadyAttached = new Set(existing.map((e) => `${e.assignment.content_type}:${e.assignment.content_id}`))
+  const options: Array<{ type: ContentType; id: string; label: string; kind: string }> = [
+    ...bank.trails.map((t) => ({ type: 'trail' as const, id: t.id, label: t.title, kind: 'trilha' })),
+    ...bank.lessons.map((l) => ({ type: 'interactive_lesson' as const, id: l.id, label: l.title, kind: 'aula interativa' })),
+    ...bank.activities.map((a) => ({ type: 'activity' as const, id: a.id, label: a.title, kind: 'atividade' })),
+  ].filter((o) => !alreadyAttached.has(`${o.type}:${o.id}`))
+
+  const [sel, setSel] = useState('')
 
   return (
-    <section style={{ ...columnStyle, opacity: disabled ? 0.45 : 1 }}>
-      <h2 style={colTitle}>Aulas</h2>
-      <ul style={list}>
-        {lessons.map((l) => (
-          <li key={l.id} style={itemStyle}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500 }}>{l.title ?? l.slug}</div>
-              <div style={{ fontSize: 12, color: '#555B66', fontFamily: 'var(--font-lab-mono)' }}>
-                <code>{l.slug}</code> · ordem {l.order}
-              </div>
-              <Link
-                to={`/lab/preview/${encodeURIComponent(l.slug)}`}
-                style={{ fontSize: 12, color: 'var(--color-lab-accent)' }}
-              >
-                abrir preview →
-              </Link>
-            </div>
-            <button onClick={() => onDelete(l.id)} style={dangerBtn} aria-label="deletar">
-              ×
-            </button>
-          </li>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (!sel) return
+        const [type, id] = sel.split('|') as [ContentType, string]
+        onAttach(type, id)
+        setSel('')
+      }}
+      style={{ display: 'flex', gap: 6, marginTop: 10 }}
+    >
+      <select value={sel} onChange={(e) => setSel(e.target.value)} style={{ ...inputSmall, flex: 1 }}>
+        <option value="">— atribuir conteúdo do banco —</option>
+        {options.map((o) => (
+          <option key={`${o.type}|${o.id}`} value={`${o.type}|${o.id}`}>
+            [{o.kind}] {o.label}
+          </option>
         ))}
-        {lessons.length === 0 && <li style={emptyStyle}>vazio</li>}
-      </ul>
-      {!disabled && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (!slug.trim()) return
-            onCreate(slug.trim(), title.trim())
-            setSlug('')
-            setTitle('')
-          }}
-          style={{ display: 'grid', gap: 6, marginTop: 10 }}
-        >
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="slug (ex.: seminario-tese)"
-            style={inputSmall}
-          />
-          <div style={{ display: 'flex', gap: 6 }}>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="título (opcional)"
-              style={{ ...inputSmall, flex: 1 }}
-            />
-            <button type="submit" style={smallPrimary}>
-              +
-            </button>
-          </div>
-        </form>
-      )}
-      {disabled && <div style={{ fontSize: 12, color: '#888' }}>selecione uma coleção</div>}
-    </section>
+      </select>
+      <button type="submit" disabled={!sel} style={smallPrimary}>
+        +
+      </button>
+    </form>
   )
 }
+
+// ═════════════════════════════════════════════════════════════════════════
+// Pequenos helpers de UI
+// ═════════════════════════════════════════════════════════════════════════
 
 function Shell({ children }: { children: ReactNode }) {
   return <SlideShell>{children}</SlideShell>
 }
 
-// ── estilos ────────────────────────────────────────────────────────────────
-const columnStyle: React.CSSProperties = {
+function ErrorBanner({ msg, onClose }: { msg: string; onClose: () => void }) {
+  return (
+    <div
+      style={{
+        padding: '10px 12px',
+        background: '#FAECE7',
+        color: '#993C1D',
+        borderRadius: 8,
+        fontFamily: 'var(--font-lab-mono)',
+        marginBottom: 'var(--spacing-lab-4)',
+      }}
+    >
+      {msg}{' '}
+      <button onClick={onClose} style={{ ...linkBtn, color: '#993C1D' }}>
+        (ok)
+      </button>
+    </div>
+  )
+}
+
+export function InlineCreate({ placeholder, onSubmit, cta = '+' }: { placeholder: string; onSubmit: (v: string) => void; cta?: string }) {
+  const [v, setV] = useState('')
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (!v.trim()) return
+        onSubmit(v.trim())
+        setV('')
+      }}
+      style={{ display: 'flex', gap: 6, marginTop: 'var(--spacing-lab-4)', maxWidth: 520 }}
+    >
+      <input value={v} onChange={(e) => setV(e.target.value)} placeholder={placeholder} style={{ ...inputSmall, flex: 1 }} />
+      <button type="submit" style={smallPrimary}>
+        {cta}
+      </button>
+    </form>
+  )
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// estilos — compartilhados também com LibraryPage
+// ═════════════════════════════════════════════════════════════════════════
+
+export const headerRow: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'baseline',
+  marginBottom: 'var(--spacing-lab-4)',
+  flexWrap: 'wrap',
+  gap: 12,
+}
+export const list: React.CSSProperties = { listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'grid', gap: 8 }
+export const classCard: React.CSSProperties = {
   background: '#FFFEF9',
   border: '1px solid var(--color-lab-rule, #D8D5CB)',
   borderRadius: 12,
   padding: 14,
 }
-const colTitle: React.CSSProperties = { fontSize: 'var(--text-lab-md)', margin: '0 0 10px' }
-const list: React.CSSProperties = { listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 6 }
-const itemStyle: React.CSSProperties = {
+export const assignRow: React.CSSProperties = {
   display: 'flex',
-  gap: 8,
-  alignItems: 'flex-start',
+  alignItems: 'center',
+  gap: 10,
   padding: '8px 10px',
   border: '1px solid var(--color-lab-rule, #D8D5CB)',
   borderRadius: 8,
   background: '#FFF',
 }
-const selectedItem: React.CSSProperties = { ...itemStyle, borderColor: 'var(--color-lab-accent)', background: '#EEEDFE' }
-const emptyStyle: React.CSSProperties = {
-  padding: '8px 10px',
-  color: '#888',
-  fontSize: 13,
-  fontStyle: 'italic',
+export const kindBadge: React.CSSProperties = {
+  fontSize: 11,
+  fontFamily: 'var(--font-lab-mono, monospace)',
+  padding: '2px 8px',
+  borderRadius: 4,
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+  flexShrink: 0,
 }
-const inputSmall: React.CSSProperties = {
+export const small: React.CSSProperties = {
+  fontSize: 12,
+  color: '#555B66',
+  fontFamily: 'var(--font-lab-mono, monospace)',
+}
+export const inputSmall: React.CSSProperties = {
   padding: '8px 10px',
   border: '1px solid var(--color-lab-rule, #D8D5CB)',
   borderRadius: 6,
   fontSize: 14,
   fontFamily: 'inherit',
 }
-const smallPrimary: React.CSSProperties = {
-  padding: '0 12px',
+export const smallPrimary: React.CSSProperties = {
+  padding: '0 14px',
   borderRadius: 6,
   border: 'none',
   background: 'var(--color-lab-accent)',
   color: '#FFF',
-  fontSize: 18,
+  fontSize: 16,
   fontWeight: 500,
   cursor: 'pointer',
 }
-const dangerBtn: React.CSSProperties = {
+export const dangerBtn: React.CSSProperties = {
   width: 24,
   height: 24,
   borderRadius: 12,
@@ -477,7 +424,7 @@ const dangerBtn: React.CSSProperties = {
   cursor: 'pointer',
   flexShrink: 0,
 }
-const unbutton: React.CSSProperties = {
+export const unbutton: React.CSSProperties = {
   border: 'none',
   background: 'transparent',
   padding: 0,
@@ -485,7 +432,8 @@ const unbutton: React.CSSProperties = {
   font: 'inherit',
   color: 'inherit',
 }
-const linkBtn: React.CSSProperties = {
+export const link: React.CSSProperties = { color: 'var(--color-lab-accent)' }
+export const linkBtn: React.CSSProperties = {
   ...unbutton,
   color: 'var(--color-lab-accent)',
   fontSize: 14,

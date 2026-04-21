@@ -1,27 +1,34 @@
 """
-Rotas CRUD do domínio pedagógico (só professor).
+Rotas CRUD do domínio — banco de conteúdos + turmas + atribuições.
 
-Isolamento: toda leitura/escrita é filtrada pelo owner_id do professor logado.
-Tracks/Collections/Lessons ganham escopo por join ascendente até Classroom.
+Isolamento: toda leitura/escrita é filtrada pelo owner_id do teacher logado.
+Acesso cross-user devolve 404 (não vaza existência).
 
-Endpoints:
+Endpoints (todos sob /api, exigem teacher):
 
-  /api/classrooms          GET list / POST create
-  /api/classrooms/{id}     GET / PATCH / DELETE
+  # Turmas
+  GET/POST   /api/classrooms
+  GET/PATCH/DELETE /api/classrooms/{id}
+  GET        /api/classrooms/{id}/assignments   — lista expandida
 
-  /api/tracks              GET ?classroom_id / POST
-  /api/tracks/{id}         GET / PATCH / DELETE
+  # Banco de conteúdos
+  GET/POST   /api/activities
+  GET/PATCH/DELETE /api/activities/{id}
 
-  /api/collections         GET ?track_id / POST
-  /api/collections/{id}    GET / PATCH / DELETE
+  GET/POST   /api/trails
+  GET/PATCH/DELETE /api/trails/{id}
+  GET        /api/trails/{id}/activities        — lista ordenada (activities completas)
+  POST       /api/trails/{id}/activities        — adiciona activity na trilha
+  DELETE     /api/trails/{id}/activities/{aid}  — remove da trilha (não apaga activity)
+  PUT        /api/trails/{id}/order             — reordena (body: [activity_ids])
 
-  /api/lessons             GET ?collection_id / POST
-  /api/lessons/{id}        GET / PATCH / DELETE
+  GET/POST   /api/interactive-lessons
+  GET/PATCH/DELETE /api/interactive-lessons/{id}
 
-Validação do slug de Lesson contra o disco (games_content/) fica implícita —
-professor pode referenciar slug inexistente; o preview da Fase 2 vai dar 404.
-Trade-off consciente: manter o CRUD desacoplado do loader, não cascatear
-validação cara em cada insert.
+  # Atribuições
+  POST       /api/assignments
+  PATCH      /api/assignments/{id}
+  DELETE     /api/assignments/{id}
 """
 
 from __future__ import annotations
@@ -36,19 +43,35 @@ from database import get_db
 
 from ..auth.deps import require_teacher
 from ..auth.models import User
-from .models import Classroom, Collection, Lesson, Track
+from .models import (
+    ASSIGNMENT_CONTENT_TYPES,
+    Activity,
+    ActivityResult,  # noqa: F401 — declarada pro create_all
+    Assignment,
+    Classroom,
+    Enrollment,  # noqa: F401
+    InteractiveLesson,
+    Trail,
+    TrailActivity,
+)
 from .schemas import (
+    ACTIVITY_KINDS,
+    ActivityIn,
+    ActivityOut,
+    ActivityPatch,
+    AssignmentExpanded,
+    AssignmentIn,
+    AssignmentOut,
+    AssignmentPatch,
     ClassroomIn,
     ClassroomOut,
-    CollectionIn,
-    CollectionOut,
-    CollectionPatch,
-    LessonIn,
-    LessonOut,
-    LessonPatch,
-    TrackIn,
-    TrackOut,
-    TrackPatch,
+    InteractiveLessonIn,
+    InteractiveLessonOut,
+    InteractiveLessonPatch,
+    TrailActivityIn,
+    TrailIn,
+    TrailOut,
+    TrailPatch,
 )
 
 
@@ -56,38 +79,53 @@ router = APIRouter(tags=["domain"])
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Helpers de autorização — cada recurso resolve seu dono transitivamente
+# Helpers de ownership — cada tabela do banco filtra por owner_id
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _owned_classroom(db: Session, cid: uuid.UUID, user: User) -> Classroom:
+def _own_classroom(db: Session, cid: uuid.UUID, user: User) -> Classroom:
     c = db.get(Classroom, cid)
     if c is None or c.owner_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="turma não encontrada")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "turma não encontrada")
     return c
 
 
-def _owned_track(db: Session, tid: uuid.UUID, user: User) -> Track:
-    t = db.get(Track, tid)
-    if t is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="trilha não encontrada")
-    _owned_classroom(db, t.classroom_id, user)
+def _own_activity(db: Session, aid: uuid.UUID, user: User) -> Activity:
+    a = db.get(Activity, aid)
+    if a is None or a.owner_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "atividade não encontrada")
+    return a
+
+
+def _own_trail(db: Session, tid: uuid.UUID, user: User) -> Trail:
+    t = db.get(Trail, tid)
+    if t is None or t.owner_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "trilha não encontrada")
     return t
 
 
-def _owned_collection(db: Session, cid: uuid.UUID, user: User) -> Collection:
-    c = db.get(Collection, cid)
-    if c is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="coleção não encontrada")
-    _owned_track(db, c.track_id, user)
-    return c
+def _own_interactive_lesson(db: Session, lid: uuid.UUID, user: User) -> InteractiveLesson:
+    i = db.get(InteractiveLesson, lid)
+    if i is None or i.owner_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "aula interativa não encontrada")
+    return i
 
 
-def _owned_lesson(db: Session, lid: uuid.UUID, user: User) -> Lesson:
-    les = db.get(Lesson, lid)
-    if les is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="aula não encontrada")
-    _owned_collection(db, les.collection_id, user)
-    return les
+def _own_assignment(db: Session, aid: uuid.UUID, user: User) -> Assignment:
+    a = db.get(Assignment, aid)
+    if a is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "atribuição não encontrada")
+    _own_classroom(db, a.classroom_id, user)
+    return a
+
+
+def _resolve_content(db: Session, content_type: str, content_id: uuid.UUID, user: User) -> Activity | Trail | InteractiveLesson:
+    if content_type == "activity":
+        return _own_activity(db, content_id, user)
+    if content_type == "trail":
+        return _own_trail(db, content_id, user)
+    if content_type == "interactive_lesson":
+        return _own_interactive_lesson(db, content_id, user)
+    raise HTTPException(status.HTTP_400_BAD_REQUEST, f"content_type '{content_type}' inválido")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -101,11 +139,7 @@ def list_classrooms(user: User = Depends(require_teacher), db: Session = Depends
 
 
 @router.post("/api/classrooms", response_model=ClassroomOut, status_code=status.HTTP_201_CREATED)
-def create_classroom(
-    payload: ClassroomIn,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Classroom:
+def create_classroom(payload: ClassroomIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Classroom:
     c = Classroom(owner_id=user.id, name=payload.name.strip())
     db.add(c)
     db.commit()
@@ -115,17 +149,12 @@ def create_classroom(
 
 @router.get("/api/classrooms/{cid}", response_model=ClassroomOut)
 def get_classroom(cid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Classroom:
-    return _owned_classroom(db, cid, user)
+    return _own_classroom(db, cid, user)
 
 
 @router.patch("/api/classrooms/{cid}", response_model=ClassroomOut)
-def update_classroom(
-    cid: uuid.UUID,
-    payload: ClassroomIn,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Classroom:
-    c = _owned_classroom(db, cid, user)
+def update_classroom(cid: uuid.UUID, payload: ClassroomIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Classroom:
+    c = _own_classroom(db, cid, user)
     c.name = payload.name.strip()
     db.commit()
     db.refresh(c)
@@ -134,191 +163,327 @@ def update_classroom(
 
 @router.delete("/api/classrooms/{cid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
 def delete_classroom(cid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
-    c = _owned_classroom(db, cid, user)
+    c = _own_classroom(db, cid, user)
     db.delete(c)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Tracks
-# ═══════════════════════════════════════════════════════════════════════════
-
-@router.get("/api/tracks", response_model=list[TrackOut])
-def list_tracks(
-    classroom_id: uuid.UUID,
+@router.get("/api/classrooms/{cid}/assignments", response_model=list[AssignmentExpanded])
+def list_classroom_assignments(
+    cid: uuid.UUID,
     user: User = Depends(require_teacher),
     db: Session = Depends(get_db),
-) -> list[Track]:
-    _owned_classroom(db, classroom_id, user)
-    stmt = select(Track).where(Track.classroom_id == classroom_id).order_by(Track.order, Track.created_at)
+) -> list[AssignmentExpanded]:
+    _own_classroom(db, cid, user)
+    stmt = (
+        select(Assignment)
+        .where(Assignment.classroom_id == cid)
+        .order_by(Assignment.position, Assignment.created_at)
+    )
+    assigns = list(db.scalars(stmt).all())
+
+    # Pré-resolve content pra evitar N+1.
+    act_ids = {a.content_id for a in assigns if a.content_type == "activity"}
+    tr_ids = {a.content_id for a in assigns if a.content_type == "trail"}
+    il_ids = {a.content_id for a in assigns if a.content_type == "interactive_lesson"}
+
+    acts = {a.id: a for a in db.scalars(select(Activity).where(Activity.id.in_(act_ids))).all()} if act_ids else {}
+    trs = {t.id: t for t in db.scalars(select(Trail).where(Trail.id.in_(tr_ids))).all()} if tr_ids else {}
+    ils = {i.id: i for i in db.scalars(select(InteractiveLesson).where(InteractiveLesson.id.in_(il_ids))).all()} if il_ids else {}
+
+    out: list[AssignmentExpanded] = []
+    for a in assigns:
+        exp = AssignmentExpanded(assignment=AssignmentOut.model_validate(a))
+        if a.content_type == "activity":
+            act = acts.get(a.content_id)
+            if act is not None:
+                exp.activity = ActivityOut.model_validate(act)
+        elif a.content_type == "trail":
+            tr = trs.get(a.content_id)
+            if tr is not None:
+                exp.trail = TrailOut.model_validate(tr)
+        elif a.content_type == "interactive_lesson":
+            il = ils.get(a.content_id)
+            if il is not None:
+                exp.interactive_lesson = InteractiveLessonOut.model_validate(il)
+        out.append(exp)
+    return out
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Activities (banco)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _validate_kind(kind: str) -> None:
+    if kind not in ACTIVITY_KINDS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"kind '{kind}' inválido. Válidos: {sorted(ACTIVITY_KINDS)}",
+        )
+
+
+@router.get("/api/activities", response_model=list[ActivityOut])
+def list_activities(user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> list[Activity]:
+    stmt = select(Activity).where(Activity.owner_id == user.id).order_by(Activity.created_at.desc())
     return list(db.scalars(stmt).all())
 
 
-@router.post("/api/tracks", response_model=TrackOut, status_code=status.HTTP_201_CREATED)
-def create_track(
-    payload: TrackIn,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Track:
-    _owned_classroom(db, payload.classroom_id, user)
-    t = Track(classroom_id=payload.classroom_id, name=payload.name.strip(), order=payload.order)
+@router.post("/api/activities", response_model=ActivityOut, status_code=status.HTTP_201_CREATED)
+def create_activity(payload: ActivityIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Activity:
+    _validate_kind(payload.kind)
+    a = Activity(
+        owner_id=user.id,
+        title=payload.title.strip(),
+        kind=payload.kind,
+        config=payload.config,
+        max_score=payload.max_score,
+    )
+    db.add(a)
+    db.commit()
+    db.refresh(a)
+    return a
+
+
+@router.get("/api/activities/{aid}", response_model=ActivityOut)
+def get_activity(aid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Activity:
+    return _own_activity(db, aid, user)
+
+
+@router.patch("/api/activities/{aid}", response_model=ActivityOut)
+def update_activity(aid: uuid.UUID, payload: ActivityPatch, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Activity:
+    a = _own_activity(db, aid, user)
+    if payload.title is not None:
+        a.title = payload.title.strip()
+    if payload.kind is not None:
+        _validate_kind(payload.kind)
+        a.kind = payload.kind
+    if payload.config is not None:
+        a.config = payload.config
+    if payload.max_score is not None:
+        a.max_score = payload.max_score
+    db.commit()
+    db.refresh(a)
+    return a
+
+
+@router.delete("/api/activities/{aid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_activity(aid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
+    a = _own_activity(db, aid, user)
+    db.delete(a)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Trails (banco) + trail_activities
+# ═══════════════════════════════════════════════════════════════════════════
+
+@router.get("/api/trails", response_model=list[TrailOut])
+def list_trails(user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> list[Trail]:
+    stmt = select(Trail).where(Trail.owner_id == user.id).order_by(Trail.created_at.desc())
+    return list(db.scalars(stmt).all())
+
+
+@router.post("/api/trails", response_model=TrailOut, status_code=status.HTTP_201_CREATED)
+def create_trail(payload: TrailIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Trail:
+    t = Trail(
+        owner_id=user.id,
+        title=payload.title.strip(),
+        description=payload.description.strip() if payload.description else None,
+    )
     db.add(t)
     db.commit()
     db.refresh(t)
     return t
 
 
-@router.get("/api/tracks/{tid}", response_model=TrackOut)
-def get_track(tid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Track:
-    return _owned_track(db, tid, user)
+@router.get("/api/trails/{tid}", response_model=TrailOut)
+def get_trail(tid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Trail:
+    return _own_trail(db, tid, user)
 
 
-@router.patch("/api/tracks/{tid}", response_model=TrackOut)
-def update_track(
-    tid: uuid.UUID,
-    payload: TrackPatch,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Track:
-    t = _owned_track(db, tid, user)
-    if payload.name is not None:
-        t.name = payload.name.strip()
-    if payload.order is not None:
-        t.order = payload.order
+@router.patch("/api/trails/{tid}", response_model=TrailOut)
+def update_trail(tid: uuid.UUID, payload: TrailPatch, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Trail:
+    t = _own_trail(db, tid, user)
+    if payload.title is not None:
+        t.title = payload.title.strip()
+    if payload.description is not None:
+        t.description = payload.description.strip() or None
     db.commit()
     db.refresh(t)
     return t
 
 
-@router.delete("/api/tracks/{tid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
-def delete_track(tid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
-    t = _owned_track(db, tid, user)
+@router.delete("/api/trails/{tid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_trail(tid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
+    t = _own_trail(db, tid, user)
     db.delete(t)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Collections
-# ═══════════════════════════════════════════════════════════════════════════
-
-@router.get("/api/collections", response_model=list[CollectionOut])
-def list_collections(
-    track_id: uuid.UUID,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> list[Collection]:
-    _owned_track(db, track_id, user)
-    stmt = select(Collection).where(Collection.track_id == track_id).order_by(Collection.order, Collection.created_at)
+@router.get("/api/trails/{tid}/activities", response_model=list[ActivityOut])
+def list_trail_activities(tid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> list[Activity]:
+    _own_trail(db, tid, user)
+    stmt = (
+        select(Activity)
+        .join(TrailActivity, TrailActivity.activity_id == Activity.id)
+        .where(TrailActivity.trail_id == tid)
+        .order_by(TrailActivity.position, TrailActivity.id)
+    )
     return list(db.scalars(stmt).all())
 
 
-@router.post("/api/collections", response_model=CollectionOut, status_code=status.HTTP_201_CREATED)
-def create_collection(
-    payload: CollectionIn,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Collection:
-    _owned_track(db, payload.track_id, user)
-    c = Collection(track_id=payload.track_id, name=payload.name.strip(), order=payload.order)
-    db.add(c)
+@router.post("/api/trails/{tid}/activities", status_code=status.HTTP_201_CREATED)
+def add_trail_activity(tid: uuid.UUID, payload: TrailActivityIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> dict:
+    _own_trail(db, tid, user)
+    _own_activity(db, payload.activity_id, user)  # só pode adicionar activities próprias
+    existing = db.scalar(
+        select(TrailActivity).where(
+            TrailActivity.trail_id == tid,
+            TrailActivity.activity_id == payload.activity_id,
+        )
+    )
+    if existing is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "atividade já está na trilha")
+    ta = TrailActivity(trail_id=tid, activity_id=payload.activity_id, position=payload.position)
+    db.add(ta)
     db.commit()
-    db.refresh(c)
-    return c
+    db.refresh(ta)
+    return {"trail_id": str(tid), "activity_id": str(payload.activity_id), "position": ta.position}
 
 
-@router.get("/api/collections/{cid}", response_model=CollectionOut)
-def get_collection(cid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Collection:
-    return _owned_collection(db, cid, user)
-
-
-@router.patch("/api/collections/{cid}", response_model=CollectionOut)
-def update_collection(
-    cid: uuid.UUID,
-    payload: CollectionPatch,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Collection:
-    c = _owned_collection(db, cid, user)
-    if payload.name is not None:
-        c.name = payload.name.strip()
-    if payload.order is not None:
-        c.order = payload.order
+@router.delete("/api/trails/{tid}/activities/{aid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def remove_trail_activity(tid: uuid.UUID, aid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
+    _own_trail(db, tid, user)
+    ta = db.scalar(select(TrailActivity).where(TrailActivity.trail_id == tid, TrailActivity.activity_id == aid))
+    if ta is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "ligação trilha↔atividade não encontrada")
+    db.delete(ta)
     db.commit()
-    db.refresh(c)
-    return c
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.delete("/api/collections/{cid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
-def delete_collection(cid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
-    c = _owned_collection(db, cid, user)
-    db.delete(c)
+@router.put("/api/trails/{tid}/order", response_model=list[ActivityOut])
+def reorder_trail(tid: uuid.UUID, activity_ids: list[uuid.UUID], user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> list[Activity]:
+    """Body: lista de activity_ids na ordem desejada. Activities não listadas ficam no fim."""
+    _own_trail(db, tid, user)
+    tas = list(db.scalars(select(TrailActivity).where(TrailActivity.trail_id == tid)).all())
+    by_act = {ta.activity_id: ta for ta in tas}
+    next_pos = 0
+    seen: set[uuid.UUID] = set()
+    for act_id in activity_ids:
+        ta = by_act.get(act_id)
+        if ta is None:
+            continue
+        ta.position = next_pos
+        next_pos += 1
+        seen.add(act_id)
+    # Activities que não vieram no payload mantêm ordem relativa mas ficam no fim.
+    for ta in sorted(tas, key=lambda x: (x.position, x.id)):
+        if ta.activity_id in seen:
+            continue
+        ta.position = next_pos
+        next_pos += 1
+    db.commit()
+    return list_trail_activities(tid, user, db)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Interactive Lessons (banco)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@router.get("/api/interactive-lessons", response_model=list[InteractiveLessonOut])
+def list_interactive_lessons(user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> list[InteractiveLesson]:
+    stmt = select(InteractiveLesson).where(InteractiveLesson.owner_id == user.id).order_by(InteractiveLesson.created_at.desc())
+    return list(db.scalars(stmt).all())
+
+
+@router.post("/api/interactive-lessons", response_model=InteractiveLessonOut, status_code=status.HTTP_201_CREATED)
+def create_interactive_lesson(payload: InteractiveLessonIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> InteractiveLesson:
+    il = InteractiveLesson(owner_id=user.id, title=payload.title.strip(), slug=payload.slug.strip())
+    db.add(il)
+    db.commit()
+    db.refresh(il)
+    return il
+
+
+@router.get("/api/interactive-lessons/{lid}", response_model=InteractiveLessonOut)
+def get_interactive_lesson(lid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> InteractiveLesson:
+    return _own_interactive_lesson(db, lid, user)
+
+
+@router.patch("/api/interactive-lessons/{lid}", response_model=InteractiveLessonOut)
+def update_interactive_lesson(lid: uuid.UUID, payload: InteractiveLessonPatch, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> InteractiveLesson:
+    il = _own_interactive_lesson(db, lid, user)
+    if payload.title is not None:
+        il.title = payload.title.strip()
+    if payload.slug is not None:
+        il.slug = payload.slug.strip()
+    db.commit()
+    db.refresh(il)
+    return il
+
+
+@router.delete("/api/interactive-lessons/{lid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_interactive_lesson(lid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
+    il = _own_interactive_lesson(db, lid, user)
+    db.delete(il)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Lessons
+# Assignments — link banco→turma
 # ═══════════════════════════════════════════════════════════════════════════
 
-@router.get("/api/lessons", response_model=list[LessonOut])
-def list_lessons(
-    collection_id: uuid.UUID,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> list[Lesson]:
-    _owned_collection(db, collection_id, user)
-    stmt = select(Lesson).where(Lesson.collection_id == collection_id).order_by(Lesson.order, Lesson.created_at)
-    return list(db.scalars(stmt).all())
+@router.post("/api/classrooms/{cid}/assignments", response_model=AssignmentOut, status_code=status.HTTP_201_CREATED)
+def create_assignment(cid: uuid.UUID, payload: AssignmentIn, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Assignment:
+    _own_classroom(db, cid, user)
+    if payload.content_type not in ASSIGNMENT_CONTENT_TYPES:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"content_type '{payload.content_type}' inválido")
+    # Valida que o content referenciado existe e é do professor.
+    _resolve_content(db, payload.content_type, payload.content_id, user)
 
-
-@router.post("/api/lessons", response_model=LessonOut, status_code=status.HTTP_201_CREATED)
-def create_lesson(
-    payload: LessonIn,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Lesson:
-    _owned_collection(db, payload.collection_id, user)
-    les = Lesson(
-        collection_id=payload.collection_id,
-        slug=payload.slug.strip(),
-        title=payload.title.strip() if payload.title else None,
-        order=payload.order,
+    existing = db.scalar(
+        select(Assignment).where(
+            Assignment.classroom_id == cid,
+            Assignment.content_type == payload.content_type,
+            Assignment.content_id == payload.content_id,
+        )
     )
-    db.add(les)
+    if existing is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "conteúdo já atribuído a essa turma")
+
+    a = Assignment(
+        classroom_id=cid,
+        content_type=payload.content_type,
+        content_id=payload.content_id,
+        position=payload.position,
+        due_at=payload.due_at,
+    )
+    db.add(a)
     db.commit()
-    db.refresh(les)
-    return les
+    db.refresh(a)
+    return a
 
 
-@router.get("/api/lessons/{lid}", response_model=LessonOut)
-def get_lesson(lid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Lesson:
-    return _owned_lesson(db, lid, user)
-
-
-@router.patch("/api/lessons/{lid}", response_model=LessonOut)
-def update_lesson(
-    lid: uuid.UUID,
-    payload: LessonPatch,
-    user: User = Depends(require_teacher),
-    db: Session = Depends(get_db),
-) -> Lesson:
-    les = _owned_lesson(db, lid, user)
-    if payload.slug is not None:
-        les.slug = payload.slug.strip()
-    if payload.title is not None:
-        les.title = payload.title.strip() or None
-    if payload.order is not None:
-        les.order = payload.order
+@router.patch("/api/assignments/{aid}", response_model=AssignmentOut)
+def update_assignment(aid: uuid.UUID, payload: AssignmentPatch, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Assignment:
+    a = _own_assignment(db, aid, user)
+    if payload.position is not None:
+        a.position = payload.position
+    if payload.due_at is not None:
+        a.due_at = payload.due_at
     db.commit()
-    db.refresh(les)
-    return les
+    db.refresh(a)
+    return a
 
 
-@router.delete("/api/lessons/{lid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
-def delete_lesson(lid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
-    les = _owned_lesson(db, lid, user)
-    db.delete(les)
+@router.delete("/api/assignments/{aid}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_assignment(aid: uuid.UUID, user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> Response:
+    a = _own_assignment(db, aid, user)
+    db.delete(a)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

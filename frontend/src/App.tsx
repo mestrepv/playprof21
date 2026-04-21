@@ -18,6 +18,7 @@ import { LoginPage } from './modules/auth/LoginPage'
 import { RegisterPage } from './modules/auth/RegisterPage'
 import { IndexPage } from './modules/lab/preview/IndexPage'
 import { PreviewPage } from './modules/lab/preview/PreviewPage'
+import { LibraryPage } from './modules/teacher/LibraryPage'
 import { TeacherPage } from './modules/teacher/TeacherPage'
 
 export function App() {
@@ -30,6 +31,7 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/teacher" element={<TeacherPage />} />
+          <Route path="/teacher/library" element={<LibraryPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

@@ -1,13 +1,18 @@
 """
-Pydantic schemas de domínio. Todos usam from_attributes=True.
+Pydantic schemas do banco de conteúdos + turma + atribuições.
 """
 
 from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+Visibility = Literal["private", "shared", "public"]
+ContentType = Literal["activity", "trail", "interactive_lesson"]
 
 
 # ── Classroom ───────────────────────────────────────────────────────────────
@@ -24,70 +29,129 @@ class ClassroomOut(BaseModel):
     created_at: datetime
 
 
-# ── Track ───────────────────────────────────────────────────────────────────
+# ── Activity ────────────────────────────────────────────────────────────────
 
-class TrackIn(BaseModel):
-    classroom_id: uuid.UUID
-    name: str = Field(min_length=1, max_length=160)
-    order: int = 0
+ACTIVITY_KINDS = {"quiz", "external-link", "simulator", "animation"}
 
 
-class TrackPatch(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=160)
-    order: int | None = None
+class ActivityIn(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    kind: str = Field(min_length=1, max_length=40)
+    config: dict[str, Any] = Field(default_factory=dict)
+    max_score: int = Field(default=10, ge=0, le=1000)
 
 
-class TrackOut(BaseModel):
+class ActivityPatch(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    kind: str | None = Field(default=None, min_length=1, max_length=40)
+    config: dict[str, Any] | None = None
+    max_score: int | None = Field(default=None, ge=0, le=1000)
+
+
+class ActivityOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
-    classroom_id: uuid.UUID
-    name: str
-    order: int
+    owner_id: uuid.UUID
+    title: str
+    kind: str
+    config: dict[str, Any]
+    max_score: int
+    visibility: str
     created_at: datetime
 
 
-# ── Collection ──────────────────────────────────────────────────────────────
+# ── Trail ───────────────────────────────────────────────────────────────────
 
-class CollectionIn(BaseModel):
-    track_id: uuid.UUID
-    name: str = Field(min_length=1, max_length=160)
-    order: int = 0
-
-
-class CollectionPatch(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=160)
-    order: int | None = None
+class TrailIn(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=1000)
 
 
-class CollectionOut(BaseModel):
+class TrailPatch(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=1000)
+
+
+class TrailOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
-    track_id: uuid.UUID
-    name: str
-    order: int
+    owner_id: uuid.UUID
+    title: str
+    description: str | None
+    visibility: str
     created_at: datetime
 
 
-# ── Lesson ──────────────────────────────────────────────────────────────────
+class TrailActivityIn(BaseModel):
+    activity_id: uuid.UUID
+    position: int = 0
 
-class LessonIn(BaseModel):
-    collection_id: uuid.UUID
+
+class TrailActivityOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    trail_id: uuid.UUID
+    activity_id: uuid.UUID
+    position: int
+
+
+class TrailWithActivities(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    trail: TrailOut
+    activities: list[ActivityOut]  # na ordem de position
+
+
+# ── InteractiveLesson ───────────────────────────────────────────────────────
+
+class InteractiveLessonIn(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
     slug: str = Field(min_length=1, max_length=120)
-    title: str | None = Field(default=None, max_length=200)
-    order: int = 0
 
 
-class LessonPatch(BaseModel):
+class InteractiveLessonPatch(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
     slug: str | None = Field(default=None, min_length=1, max_length=120)
-    title: str | None = Field(default=None, max_length=200)
-    order: int | None = None
 
 
-class LessonOut(BaseModel):
+class InteractiveLessonOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
-    collection_id: uuid.UUID
+    owner_id: uuid.UUID
+    title: str
     slug: str
-    title: str | None
-    order: int
+    visibility: str
     created_at: datetime
+
+
+# ── Assignment ──────────────────────────────────────────────────────────────
+
+class AssignmentIn(BaseModel):
+    content_type: ContentType
+    content_id: uuid.UUID
+    position: int = 0
+    due_at: datetime | None = None
+
+
+class AssignmentPatch(BaseModel):
+    position: int | None = None
+    due_at: datetime | None = None
+
+
+class AssignmentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    classroom_id: uuid.UUID
+    content_type: str
+    content_id: uuid.UUID
+    position: int
+    due_at: datetime | None
+    created_at: datetime
+
+
+class AssignmentExpanded(BaseModel):
+    """Assignment + snapshot do content referenciado. Pré-resolvido na listagem
+    pra evitar N+1 calls do frontend."""
+    assignment: AssignmentOut
+    activity: ActivityOut | None = None
+    trail: TrailOut | None = None
+    interactive_lesson: InteractiveLessonOut | None = None

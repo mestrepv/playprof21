@@ -74,9 +74,20 @@ trilhas, coleções) e quem é quem (professor, aluno).
 
 ### Modelagem
 
-- [x] Tabelas: `users`, `classrooms` (turma), `tracks` (trilha), `collections`, `lessons`, `enrollments`
-- [x] Relações: professor `owner_id` em classroom; classroom→tracks→collections→lessons via FK `ON DELETE CASCADE`; `enrollments` N:N entre `users` e `classrooms`
-- [x] Schema via `create_all` no lifespan (mesma abordagem da Fase 1). Sync de colunas novas fica pra quando aparecer necessidade.
+Refatorada no mesmo dia pra adotar modelo **banco-de-conteúdos** (estilo Moodle Content Bank + H5P) — extinguindo os nomes `track`/`collection`/`lesson` como ficaram no play.prof21 legado.
+
+**Tabelas:**
+- `users`, `classrooms` (turma), `enrollments` (N:N `users` × `classrooms`)
+- **Banco (por `owner_id`, `visibility='private'`):**
+  - `activities` (kind: `quiz` · `external-link` · `simulator` · `animation`; `config` JSONB)
+  - `trails` + `trail_activities` (N:N ordenado por `position`)
+  - `interactive_lessons` (referencia `games_content/<slug>/`)
+- `assignments` — link polimórfico banco→turma (`content_type` + `content_id`, unique por par)
+- `activity_results` — progresso do aluno (pra Fase 4-5)
+
+**Relações:** cascade on delete preserva integridade. Editar content no banco propaga (single source of truth). `visibility` coluna fica pronta; só `private` implementada.
+
+Schema via `create_all` no lifespan. Sync de colunas fica pra quando aparecer necessidade.
 
 ### Auth
 
@@ -85,21 +96,24 @@ trilhas, coleções) e quem é quem (professor, aluno).
 - [x] Registro de professor — `POST /api/auth/register`; aluno anônimo fica pra Fase 5 (só o modelo User com role=student e campos nullable)
 - [x] Dependency `get_current_user` + `require_teacher`
 
-### CRUD mínimo (só professor)
+### CRUD do banco + atribuições
 
-- [x] `/api/classrooms` GET/POST + `/api/classrooms/{id}` GET/PATCH/DELETE
-- [x] `/api/tracks` com query `?classroom_id`, CRUD igual
-- [x] `/api/collections` com `?track_id`
-- [x] `/api/lessons` com `?collection_id`; `slug` referencia `games_content/<slug>` do disco
-- [x] Isolamento por `owner_id` (teacher só vê/mexe no que criou); acesso cross-user devolve 404 pra não vazar existência
-- [x] UI mínima no frontend: `/login`, `/register`, `/teacher` (dashboard cascata turma→trilha→coleção→aula com link pro preview)
+- [x] `/api/classrooms` GET/POST, `/api/classrooms/{id}` GET/PATCH/DELETE
+- [x] `/api/classrooms/{id}/assignments` GET (expandido com o content referenciado)
+- [x] `/api/activities` CRUD; `/api/trails` CRUD + `/{id}/activities` + `/{id}/order`; `/api/interactive-lessons` CRUD
+- [x] `/api/classrooms/{id}/assignments` POST · `/api/assignments/{id}` PATCH/DELETE
+- [x] Isolamento por `owner_id`; cross-user → 404
+- [x] UI frontend: `/login`, `/register`, `/teacher` (turmas + atribuições expandidas), `/teacher/library` (três abas: Atividades · Trilhas · Aulas Interativas, com create/delete/reorder)
 
 **Decisões fechadas:**
-- Multi-tenancy: **isolamento por `owner_id`** (refactor pra "todo mundo vê tudo" é filter change trivial)
-- Aluno em múltiplas turmas: **sim** (`enrollments` é N:N com `UniqueConstraint(user_id, classroom_id)`)
-- Auth lib: **bcrypt direto + python-jose**, sem `fastapi-users`
+- Multi-tenancy: **isolamento por `owner_id`** em todo o banco de conteúdos
+- Banco de conteúdos: Moodle Content Bank + H5P (conteúdo separado de turma, atribuído via link)
+- Aluno em múltiplas turmas: **sim** (`enrollments` N:N)
+- Auth: **bcrypt direto + python-jose**, sem `fastapi-users` nem `passlib`
+- Nomes: `Trail` (assíncrona), `InteractiveLesson` (síncrona), `Activity` (unidade atômica). `collection`/`track` extintos.
+- `Activity.kind` inicial: `quiz`, `external-link`, `simulator` (stub), `animation` (stub)
 
-**Critério de aceite atingido:** register + login + CRUD completo smoke-testado via curl; isolamento confirmado (segundo user vê 0 turmas, GET em turma alheia → 404). Typecheck passa. Rotas frontend respondem em 200.
+**Critério de aceite atingido:** register + login + CRUD completo smoke-testado (create activity+trail, add trail-activity, reorder, criar classroom, atribuir trail+interactive_lesson, listar expandido, duplicar assignment → 409). Typecheck passa. Rotas frontend 200.
 
 ---
 
