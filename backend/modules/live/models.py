@@ -26,7 +26,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -39,6 +39,18 @@ def _utcnow() -> datetime:
 
 class Session(Base):
     __tablename__ = "live_sessions"
+    # Unique parcial: código só conflita entre sessões ativas. `ended` libera
+    # o código pra reuso. Criado via ALTER + CREATE UNIQUE INDEX ... WHERE
+    # porque SQLAlchemy pre-2.1 não tem API limpa pra partial unique no
+    # __table_args__; o Postgres aceita normalmente.
+    __table_args__ = (
+        Index(
+            "ix_live_sessions_code_active",
+            "code",
+            unique=True,
+            postgresql_where="status <> 'ended' AND code IS NOT NULL",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     interactive_lesson_id: Mapped[uuid.UUID] = mapped_column(
@@ -56,6 +68,8 @@ class Session(Base):
     interaction_mode: Mapped[str] = mapped_column(String(16), nullable=False, default="free")
     # 'idle' | 'live' | 'ended'
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="idle")
+    # Código humano-amigável pra join (6 dígitos). NULL em sessão já encerrada.
+    code: Mapped[str | None] = mapped_column(String(6), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

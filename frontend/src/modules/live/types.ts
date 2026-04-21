@@ -14,6 +14,7 @@ export interface SessionOut {
   current_activity_id: string | null
   interaction_mode: InteractionMode
   status: SessionStatus
+  code: string | null
   created_at: string
   started_at: string | null
   ended_at: string | null

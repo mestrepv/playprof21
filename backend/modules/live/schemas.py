@@ -29,6 +29,7 @@ class SessionOut(BaseModel):
     current_activity_id: str | None
     interaction_mode: str
     status: str
+    code: str | None
     created_at: datetime
     started_at: datetime | None
     ended_at: datetime | None
@@ -51,3 +52,20 @@ class SessionSnapshot(BaseModel):
     participants: list[MembershipOut]
     my_membership: MembershipOut | None = None
     my_role: Role = "player"
+
+
+# ── Fase 5 — join por código ────────────────────────────────────────────────
+
+class JoinIn(BaseModel):
+    code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+    display_name: str = Field(min_length=1, max_length=120)
+
+
+class JoinOut(BaseModel):
+    session_id: uuid.UUID
+    anon_id: uuid.UUID
+    display_name: str
+
+
+class CodeOut(BaseModel):
+    code: str

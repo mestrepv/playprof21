@@ -18,6 +18,7 @@ import { LoginPage } from './modules/auth/LoginPage'
 import { RegisterPage } from './modules/auth/RegisterPage'
 import { IndexPage } from './modules/lab/preview/IndexPage'
 import { PreviewPage } from './modules/lab/preview/PreviewPage'
+import { JoinPage } from './modules/live/JoinPage'
 import { SessionPage } from './modules/live/SessionPage'
 import { LibraryPage } from './modules/teacher/LibraryPage'
 import { TeacherPage } from './modules/teacher/TeacherPage'
@@ -34,6 +35,7 @@ export function App() {
           <Route path="/teacher" element={<TeacherPage />} />
           <Route path="/teacher/library" element={<LibraryPage />} />
           <Route path="/lab/session/:sid" element={<SessionPage />} />
+          <Route path="/lab/join" element={<JoinPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

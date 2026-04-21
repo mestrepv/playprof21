@@ -158,25 +158,23 @@ Objetivo: aula síncrona mestre↔alunos. Mestre avança slides, todos veem junt
 
 ## Fase 5 — Entrada de aluno por código + QR
 
-**Status:** ⬜ pendente
+**Status:** ✅ concluída em 2026-04-21
 
 Objetivo: aluno entra na aula sem digitar UUID longo. Código de 6 dígitos
 ou QR code escaneado.
 
 ### Backend
 
-- [ ] Campo `code` (6 dígitos únicos por sessão ativa) na tabela `session`
-- [ ] Rota `POST /api/lab/sessions/{id}/code/rotate` (professor regenera se vazar)
-- [ ] Rota `POST /api/lab/join` com `{code, display_name}` → retorna session_id + JWT/UUID anônimo
-- [ ] Rate limit na rota de join (anti-brute-force)
+- [x] Campo `code` (6 dígitos) em `live_sessions`, gerado via `generate_code()` no create. Unique partial index (`status <> 'ended'`) libera reuso após encerramento.
+- [x] `POST /api/lab/sessions/{id}/code/rotate` (master-only) regera código
+- [x] `POST /api/lab/join {code, display_name}` público → `{session_id, anon_id, display_name}`. Cliente persiste anon_id em localStorage; WS handshake dedupa por `(session_id, anon_id)`.
+- [x] Rate-limit in-process (sliding window) — 10 tentativas/IP/minuto no endpoint join. 429 com `Retry-After` header. Interface stateless; se escalar, troca por Redis.
 
 ### Frontend
 
-- [ ] Tela do professor: destacar código grande + QR code renderizado com lib leve (`qrcode.react`)
-- [ ] Tela de entrada do aluno (`/lab/join`): input do código + nome, submit → redireciona pra sessão
-- [ ] QR aponta pra `/lab/join?code=XXXXXX` (pré-preenche)
-
-**Estimativa:** 1-2 dias.
+- [x] `CodeOverlay` com código gigante + QR (`qrcode.react`). Auto-abre no master quando sessão em `idle`; botão "código NNNNNN" no HUD reabre; botão "gerar novo código" rotaciona.
+- [x] `/lab/join?code=NNNNNN` pré-preenche via QR; aluno só precisa digitar nome. Redireciona pra `/lab/session/:sid?role=player&name=...`.
+- [x] Input do código com `inputMode="numeric"` e `autoComplete="one-time-code"` — teclado numérico em mobile + iOS/Android sugerem o código do SMS/Notificação se aplicável.
 
 ---
 

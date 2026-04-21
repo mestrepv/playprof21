@@ -41,7 +41,8 @@ Veja [docs/ROADMAP.md](docs/ROADMAP.md) como fonte de verdade. Resumo rápido:
 - **Fase 2** ✅ concluída (pipeline `.md`, preview em `/lab/preview/:slug`)
 - **Fase 3** ✅ concluída (banco de conteúdos + JWT + dashboards `/teacher` e `/teacher/library`)
 - **Fase 4** ✅ concluída (runtime ao vivo mínimo; mission TSX + quiz ficam pra 4.1)
-- **Fase 5** ⬜ próximo passo: entrada de aluno por código + QR
+- **Fase 5** ✅ concluída (código 6 dígitos + QR + /lab/join público com rate-limit)
+- **Fase 6** ⬜ próximo passo: PlanckGo wire (áudio/imagens de Física)
 - Demais fases documentadas em `docs/ROADMAP.md`
 
 **Para retomar:** leia `docs/ROADMAP.md`, identifique a Fase ⬜ mais próxima,

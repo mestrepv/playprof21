@@ -19,6 +19,7 @@ import { SlideShell } from '../lab/components/SlideShell'
 import { apiJson } from '../lab/runtime/apiFetch'
 import type { Slide } from '../lab/types/manifest'
 import { SessionAdapter, type InternalState } from './adapter'
+import { CodeOverlay } from './CodeOverlay'
 import type { SessionSnapshot } from './types'
 import { getAnonymousId } from './useAnonymousId'
 
@@ -229,6 +230,15 @@ function SessionLive({
     return () => window.removeEventListener('keydown', onKey)
   }, [adapter, state.role, state.slideIndex, state.snapshotReceived, slides.length])
 
+  const [showCode, setShowCode] = useState(false)
+  // Auto-abre o overlay do código assim que o master conecta em sessão idle.
+  // Idle = primeiro acesso, alunos ainda entrando; escondendo o overlay inicia a aula.
+  useEffect(() => {
+    if (state.role === 'master' && state.snapshotReceived && state.status === 'idle') {
+      setShowCode(true)
+    }
+  }, [state.role, state.snapshotReceived, state.status])
+
   if (!state.snapshotReceived) {
     return <SlideShell>conectando…</SlideShell>
   }
@@ -261,13 +271,22 @@ function SessionLive({
         total={slides.length}
         participants={state.participants.length}
         title={snapshot.game_title}
+        code={snapshot.session.code}
         onPrev={() => adapter.send({ type: 'setSlide', index: state.slideIndex - 1 })}
         onNext={() => adapter.send({ type: 'setSlide', index: state.slideIndex + 1 })}
         onEnd={() => {
           if (confirm('Encerrar sessão pra todos?')) adapter.send({ type: 'endSession' })
         }}
-        sid={sid}
+        onShowCode={() => setShowCode(true)}
       />
+      {showCode && state.role === 'master' && (
+        <CodeOverlay
+          sessionId={sid}
+          initialCode={snapshot.session.code}
+          token={token}
+          onClose={() => setShowCode(false)}
+        />
+      )}
     </SlideShell>
   )
 }
@@ -279,10 +298,11 @@ function SessionHUD({
   total,
   participants,
   title,
+  code,
   onPrev,
   onNext,
   onEnd,
-  sid,
+  onShowCode,
 }: {
   role: 'master' | 'player' | null
   status: string
@@ -290,13 +310,13 @@ function SessionHUD({
   total: number
   participants: number
   title: string
+  code: string | null
   onPrev: () => void
   onNext: () => void
   onEnd: () => void
-  sid: string
+  onShowCode: () => void
 }) {
   const isMaster = role === 'master'
-  const playerLink = `${window.location.origin}/lab/session/${sid}?role=player`
 
   return (
     <nav
@@ -337,11 +357,18 @@ function SessionHUD({
             →
           </button>
           <button
-            onClick={() => navigator.clipboard?.writeText(playerLink).catch(() => {})}
-            style={{ ...btn, minWidth: 0, padding: '0 8px' }}
-            title="copiar link do aluno"
+            onClick={onShowCode}
+            style={{
+              ...btn,
+              minWidth: 0,
+              padding: '0 10px',
+              background: 'var(--color-lab-accent)',
+              color: '#FFF',
+              borderColor: 'var(--color-lab-accent)',
+            }}
+            title="mostrar código + QR pros alunos entrarem"
           >
-            copiar link aluno
+            {code ? `código ${code}` : 'código'}
           </button>
           <button onClick={onEnd} style={{ ...btn, color: '#993C1D' }}>
             encerrar
