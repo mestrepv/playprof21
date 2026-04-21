@@ -41,9 +41,11 @@ from .schemas import (
     AssignmentOut,
     ClassroomOut,
     InteractiveLessonOut,
+    StudentInteractiveLessonItem,
     TrailNode,
     TrailOut,
     TrailProgress,
+    TrailSummary,
 )
 
 
@@ -125,12 +127,10 @@ def list_student_assignments(
 # Progresso de trilha (Fase 7)
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _stars(score: int, max_score: int) -> int:
-    """3 estrelas se ≥100%, 2 se ≥75%, 1 se >0, 0 caso contrário. Espelha o
-    cálculo do play.prof21 legado pra manter familiaridade."""
-    if max_score <= 0 or score <= 0:
+def _stars_from_ratio(ratio: float) -> int:
+    """3★ se ≥100%, 2★ se ≥75%, 1★ se >0, 0★ caso contrário."""
+    if ratio <= 0:
         return 0
-    ratio = score / max_score
     if ratio >= 1.0:
         return 3
     if ratio >= 0.75:
@@ -158,10 +158,33 @@ def _user_has_access_to_trail(db: Session, user: User, trail: Trail) -> bool:
     return db.scalar(stmt) is not None
 
 
+def _trail_aggregate_stars(pairs: list[tuple[Activity, int]], bests: dict[uuid.UUID, ActivityResult]) -> tuple[int, int, int]:
+    """Devolve (stars, attempted, total) pra uma trilha.
+
+    Stars agregadas = média de (best_score/max_score) das atividades
+    com tentativa. Atividades sem tentativa contam como 0 no total mas
+    puxam a média pra baixo — faz sentido: "você ainda não acertou tudo
+    dessa trilha".
+    """
+    total = len(pairs)
+    if total == 0:
+        return 0, 0, 0
+    attempted = 0
+    ratio_sum = 0.0
+    for activity, _pos in pairs:
+        best = bests.get(activity.id)
+        if best is None:
+            continue
+        attempted += 1
+        denom = best.max_score or activity.max_score or 1
+        ratio_sum += best.score / denom
+    avg_ratio = ratio_sum / total  # não /attempted — trilha é medida pelo todo
+    return _stars_from_ratio(avg_ratio), attempted, total
+
+
 def _load_trail_progress(db: Session, user: User, trail: Trail) -> TrailProgress:
-    """Monta TrailProgress: activities ordenadas + melhor resultado por activity
-    + status lock/available/completed."""
-    # activities ordenadas por trail_activities.position
+    """Monta TrailProgress pra runner linear. Não calcula lock/available
+    por atividade — a UI execute em sequência."""
     pairs = list(
         db.execute(
             select(Activity, TrailActivity.position)
@@ -171,7 +194,6 @@ def _load_trail_progress(db: Session, user: User, trail: Trail) -> TrailProgress
         ).all()
     )
 
-    # melhores resultados por activity
     act_ids = [a.id for a, _pos in pairs]
     bests: dict[uuid.UUID, ActivityResult] = {}
     if act_ids:
@@ -179,39 +201,94 @@ def _load_trail_progress(db: Session, user: User, trail: Trail) -> TrailProgress
             select(ActivityResult).where(
                 ActivityResult.user_id == user.id,
                 ActivityResult.activity_id.in_(act_ids),
-                ActivityResult.is_best == True,  # noqa: E712 — SQL boolean literal
+                ActivityResult.is_best == True,  # noqa: E712
             )
         ).all()
         for r in rows:
             bests[r.activity_id] = r
 
-    nodes: list[TrailNode] = []
-    prev_completed = True  # primeiro é sempre available
-    for activity, position in pairs:
-        best = bests.get(activity.id)
-        completed = best is not None and best.score >= activity.max_score * 0.5
-        # "completed" pra efeito de desbloqueio = ≥50% do max. Estrelas são 3-patamar
-        # separado. Trade-off pragmático: aluno que tirou 0 não completou, mas quem
-        # tirou metade libera o próximo. Rever na Fase 9 se aluno real achar estranho.
-        if completed:
-            status_ = "completed"
-        elif prev_completed:
-            status_ = "available"
-        else:
-            status_ = "locked"
-        nodes.append(
-            TrailNode(
-                activity=ActivityOut.model_validate(activity),
-                position=position,
-                status=status_,
-                best_score=best.score if best else None,
-                best_max_score=best.max_score if best else None,
-                stars=_stars(best.score, best.max_score) if best else 0,
-            )
+    nodes = [
+        TrailNode(
+            activity=ActivityOut.model_validate(activity),
+            position=position,
+            best_score=bests[activity.id].score if activity.id in bests else None,
+            best_max_score=bests[activity.id].max_score if activity.id in bests else None,
         )
-        prev_completed = completed
+        for activity, position in pairs
+    ]
 
-    return TrailProgress(trail=TrailOut.model_validate(trail), nodes=nodes)
+    stars, attempted, total = _trail_aggregate_stars(pairs, bests)
+    return TrailProgress(
+        trail=TrailOut.model_validate(trail),
+        nodes=nodes,
+        stars=stars,
+        activities_total=total,
+        activities_attempted=attempted,
+        completed=total > 0 and attempted == total,
+    )
+
+
+@router.get("/trails", response_model=list[TrailSummary])
+def list_student_trails(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[TrailSummary]:
+    """Lista trilhas acessíveis ao aluno, agrupadas por turma, ordenadas
+    por `assignment.position`. Calcula status sequencial: primeira trilha
+    de cada turma sempre available; próxima só se a anterior foi completed
+    (todas atividades com tentativa)."""
+    from .models import Assignment
+
+    # Turmas em que o aluno está matriculado
+    classroom_rows = list(
+        db.execute(
+            select(Classroom, Enrollment.joined_at)
+            .join(Enrollment, Enrollment.classroom_id == Classroom.id)
+            .where(Enrollment.user_id == user.id)
+            .order_by(Enrollment.joined_at.desc())
+        ).all()
+    )
+
+    out: list[TrailSummary] = []
+    for classroom, _joined in classroom_rows:
+        # Assignments de trilha ordenados pela position, dentro dessa turma
+        rows = list(
+            db.execute(
+                select(Trail, Assignment.position)
+                .join(Assignment, Assignment.content_id == Trail.id)
+                .where(
+                    Assignment.classroom_id == classroom.id,
+                    Assignment.content_type == "trail",
+                )
+                .order_by(Assignment.position, Assignment.created_at)
+            ).all()
+        )
+
+        # Calcula progresso de cada trilha na sequência
+        prev_completed = True  # 1ª trilha é sempre available
+        for trail, position in rows:
+            progress = _load_trail_progress(db, user, trail)
+            if progress.completed:
+                status_ = "completed"
+            elif prev_completed:
+                status_ = "available"
+            else:
+                status_ = "locked"
+            out.append(
+                TrailSummary(
+                    trail=TrailOut.model_validate(trail),
+                    classroom_id=classroom.id,
+                    classroom_name=classroom.name,
+                    position=position,
+                    activities_total=progress.activities_total,
+                    activities_attempted=progress.activities_attempted,
+                    stars=progress.stars,
+                    status=status_,
+                )
+            )
+            # Desbloqueia a próxima se esta foi completada (passou por todas).
+            prev_completed = progress.completed
+    return out
 
 
 @router.get("/trails/{tid}", response_model=TrailProgress)
@@ -226,6 +303,37 @@ def get_trail_progress(
     if not _user_has_access_to_trail(db, user, trail):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "trilha não encontrada")
     return _load_trail_progress(db, user, trail)
+
+
+@router.get("/interactive-lessons", response_model=list[StudentInteractiveLessonItem])
+def list_student_interactive_lessons(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[StudentInteractiveLessonItem]:
+    """Aulas interativas atribuídas às turmas do aluno."""
+    from .models import Assignment
+
+    rows = list(
+        db.execute(
+            select(InteractiveLesson, Classroom, Assignment.position)
+            .join(Assignment, Assignment.content_id == InteractiveLesson.id)
+            .join(Classroom, Classroom.id == Assignment.classroom_id)
+            .join(Enrollment, Enrollment.classroom_id == Classroom.id)
+            .where(
+                Enrollment.user_id == user.id,
+                Assignment.content_type == "interactive_lesson",
+            )
+            .order_by(Assignment.position, Assignment.created_at)
+        ).all()
+    )
+    return [
+        StudentInteractiveLessonItem(
+            interactive_lesson=InteractiveLessonOut.model_validate(il),
+            classroom_id=classroom.id,
+            classroom_name=classroom.name,
+        )
+        for il, classroom, _pos in rows
+    ]
 
 
 @router.get("/activities/{aid}", response_model=ActivityOut)

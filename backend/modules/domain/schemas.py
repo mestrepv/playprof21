@@ -69,18 +69,42 @@ class ActivityResultOut(BaseModel):
 
 
 class TrailNode(BaseModel):
-    """Activity + resultado do aluno + status pra UI Duolingo."""
+    """Activity dentro de uma trilha + melhor resultado do aluno.
+    Não tem status lock/available — dentro da trilha a execução é linear.
+    A UI usa isso só pra saber qual é a próxima (primeira sem best_score)
+    e pra construir o resumo final."""
     activity: ActivityOut
     position: int
-    status: Literal["locked", "available", "completed"]
     best_score: int | None
     best_max_score: int | None
-    stars: int  # 0..3
 
 
 class TrailProgress(BaseModel):
     trail: TrailOut
     nodes: list[TrailNode]
+    stars: int  # 0..3 agregado da trilha (média de best/max)
+    activities_total: int
+    activities_attempted: int
+    completed: bool  # todas as activities têm ActivityResult
+
+
+class TrailSummary(BaseModel):
+    """Item da lista de trilhas do aluno — nó da árvore Duolingo."""
+    trail: TrailOut
+    classroom_id: uuid.UUID
+    classroom_name: str
+    position: int  # do assignment, pra ordenar
+    activities_total: int
+    activities_attempted: int
+    stars: int  # 0..3
+    status: Literal["locked", "available", "completed"]
+
+
+class StudentInteractiveLessonItem(BaseModel):
+    """Item da aba Aulas: aula interativa atribuída a uma turma do aluno."""
+    interactive_lesson: InteractiveLessonOut
+    classroom_id: uuid.UUID
+    classroom_name: str
 
 
 # ── Activity ────────────────────────────────────────────────────────────────

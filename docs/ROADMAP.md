@@ -226,16 +226,17 @@ Nós lock/available/completed com estrelas.
 
 - [x] `QuizRenderer` real (`Activity.kind='quiz'`): valida localmente, revela correto/errado, onComplete devolve score
 - [x] `ActivityRunner` despacha por kind. `external-link` abre em nova aba; `simulator`/`animation` mostram placeholder "registrar TSX" (7.1)
-- [x] `/student/trail/:id` — nós stacked vertical com lock/available/completed, estrelas 0-3
-- [x] `/student/activity/:id?trail=:tid` — executa runner, grava result, volta pra trilha
-- [x] Dashboard `/student` agora linka trilhas/atividades direto pras novas páginas
+- [x] Dashboard `/student` com duas tabs: **Trilhas** (árvore sequencial Duolingo-like, estrelas agregadas por trilha) + **Aulas** (aulas interativas atribuídas, link pro preview)
+- [x] `/student/trail/:id` vira **runner linear** — execução sequencial sem grid; header com progress bar + estrelas atuais; tela-resumo ao terminar com estrelas finais e botão "refazer"
+- [x] Desbloqueio sequencial entre trilhas: próxima abre quando a anterior foi completada (todas atividades com tentativa)
+- [x] Estrelas agregadas na trilha (média de `bestScore/maxScore` das atividades, patamares 100%/75%/>0)
 
 ### 7.1 — fica pra depois
 
 - Registry de componentes TSX por `activityId` (paradigma AI-first, espelho do `missionId` do module_lab) pra `kind='animation'` e `'simulator'` virarem executáveis
-- Tela mais visual (onda Duolingo, avatar, animações) — stacked vertical basta pra usar
+- Tela em "onda" Duolingo com SVG/curvas; hoje é stacked vertical
 
-**Smoke validado:** aluno join → trilha carrega com 1º nó available, 2º locked → completa quiz → 1º vira completed com 3 estrelas → 2º vira available. Autorização bloqueia aluno de outra turma (404).
+**Smoke validado:** aluno join → tab Trilhas mostra trilhas disponíveis com 1ª available, resto locked → clica → runner linear → responde 5 quizzes em sequência → tela-resumo com 3★ → volta → trilha vira completed, próxima desbloqueia.
 
 ---
 
