@@ -1,24 +1,15 @@
 /**
- * /student — dashboard do aluno com duas tabs:
- *
- *   Trilhas  →  árvore vertical de trilhas (estilo Duolingo stacked).
- *               Cada trilha é UM nó; dentro da trilha as atividades são
- *               executadas linearmente (ver TrailPage). Estrelas agregam
- *               a performance das atividades da trilha.
- *               Desbloqueio sequencial por turma: próxima trilha só abre
- *               quando a anterior foi completada (todas atividades
- *               tentadas, com qualquer score).
- *
- *   Aulas    →  aulas interativas atribuídas às turmas do aluno. Cada
- *               card tem link pro preview; aula ao vivo entra por código
- *               separado em /lab/join.
+ * /student — dashboard do aluno com duas tabs (Trilhas | Aulas).
+ * Árvore Duolingo-like de trilhas, sequencial por turma.
  */
 
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
+import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { PageShell } from '../../components/ui/PageShell'
 import { useAuth } from '../auth/AuthContext'
-import { SlideShell } from '../lab/components/SlideShell'
 import { apiJson } from '../lab/runtime/apiFetch'
 import type { StudentInteractiveLessonItem, TrailStatus, TrailSummary } from './types'
 
@@ -26,7 +17,7 @@ type Tab = 'trails' | 'lessons'
 
 export function StudentDashboard() {
   const { user, token, logout, loading } = useAuth()
-  if (loading) return <SlideShell>carregando…</SlideShell>
+  if (loading) return <PageShell>carregando…</PageShell>
   if (!user || !token) return <Navigate to="/student/join" replace />
   if (user.role !== 'student') return <Navigate to="/teacher" replace />
   return <Dashboard token={token} displayName={user.display_name} onLogout={logout} />
@@ -55,55 +46,61 @@ function Dashboard({
       .catch(() => setLessons([]))
   }, [token])
 
+  const right = (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <span style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-2)' }}>
+        {displayName}
+      </span>
+      <Button variant="ghost" size="sm" onClick={onLogout}>
+        sair
+      </Button>
+    </div>
+  )
+
   return (
-    <SlideShell>
-      <header style={headerRow}>
-        <div>
-          <h1 style={{ fontSize: 'var(--text-lab-xl)', margin: 0 }}>Olá, {displayName}</h1>
-          <p style={{ color: '#555B66', marginTop: 4 }}>
-            <Link to="/student/join" style={{ color: 'var(--color-lab-accent)' }}>
-              entrar em outra turma
-            </Link>
-          </p>
+    <PageShell headerRight={right}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 'var(--p21-sp-5)' }}>
+        <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: 0 }}>Oi, {displayName.split(' ')[0]}</h1>
+        <Button as="a" href="/student/join" variant="outline" size="sm">
+          outra turma
+        </Button>
+      </div>
+
+      {err && (
+        <div style={errBox}>
+          {err}
         </div>
-        <button onClick={onLogout} style={linkBtn}>
-          sair
-        </button>
-      </header>
+      )}
 
-      {err && <div style={errBox}>{err}</div>}
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-        <TabBtn active={tab === 'trails'} onClick={() => setTab('trails')}>
+      <div role="tablist" style={tabRow}>
+        <TabBtn active={tab === 'trails'} onClick={() => setTab('trails')} count={trails?.length}>
           Trilhas
-          {trails && trails.length > 0 && <span style={badgeCount}>{trails.length}</span>}
         </TabBtn>
-        <TabBtn active={tab === 'lessons'} onClick={() => setTab('lessons')}>
+        <TabBtn active={tab === 'lessons'} onClick={() => setTab('lessons')} count={lessons?.length}>
           Aulas
-          {lessons && lessons.length > 0 && <span style={badgeCount}>{lessons.length}</span>}
         </TabBtn>
       </div>
 
       {tab === 'trails' && <TrailsTab trails={trails} />}
       {tab === 'lessons' && <LessonsTab lessons={lessons} />}
-    </SlideShell>
+    </PageShell>
   )
 }
 
-// ── Tab Trilhas — árvore sequencial ────────────────────────────────────────
+// ── Tab Trilhas ────────────────────────────────────────────────────────────
 
 function TrailsTab({ trails }: { trails: TrailSummary[] | null }) {
   if (trails === null) return <div style={muted}>carregando…</div>
   if (trails.length === 0) {
     return (
-      <div style={muted}>
-        sem trilhas atribuídas ainda. Peça pro seu professor atribuir uma trilha à turma.
-      </div>
+      <Card>
+        <div style={{ color: 'var(--p21-ink-3)' }}>
+          sem trilhas atribuídas ainda. Quando o professor atribuir, elas aparecem aqui.
+        </div>
+      </Card>
     )
   }
 
-  // Agrupa por turma mantendo a ordem de position; cada turma vira uma "ilha"
-  // de trilhas sequenciais. Ao dar aula em múltiplas turmas é o que faz sentido.
   const groups = new Map<string, { name: string; items: TrailSummary[] }>()
   for (const t of trails) {
     if (!groups.has(t.classroom_id)) groups.set(t.classroom_id, { name: t.classroom_name, items: [] })
@@ -111,11 +108,11 @@ function TrailsTab({ trails }: { trails: TrailSummary[] | null }) {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 28 }}>
+    <div style={{ display: 'grid', gap: 'var(--p21-sp-7)' }}>
       {[...groups.entries()].map(([cid, { name, items }]) => (
         <section key={cid}>
           <h2 style={sectionTitle}>{name}</h2>
-          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10, maxWidth: 560 }}>
+          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--p21-sp-3)' }}>
             {items
               .slice()
               .sort((a, b) => a.position - b.position)
@@ -136,48 +133,66 @@ function TrailTreeNode({ summary, displayIndex }: { summary: TrailSummary; displ
   const palette = STATUS_COLORS[status]
 
   const card = (
-    <div
+    <Card
+      padded
+      interactive={!locked}
       style={{
         display: 'flex',
         gap: 14,
-        padding: '16px 18px',
-        borderRadius: 14,
-        border: `2px solid ${palette.border}`,
-        background: palette.bg,
-        color: locked ? '#8C93A1' : 'inherit',
         alignItems: 'center',
+        borderColor: palette.border,
+        background: palette.bg,
+        opacity: locked ? 0.7 : 1,
       }}
     >
       <div
         aria-hidden
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: 26,
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
-          background: completed ? '#0F6E56' : palette.border,
+          background: completed ? 'var(--p21-teal)' : palette.badgeBg,
           color: '#FFF',
           fontWeight: 700,
-          fontFamily: 'var(--font-lab-mono)',
-          fontSize: 18,
+          fontFamily: 'var(--p21-font-display)',
+          fontSize: 20,
           flexShrink: 0,
+          boxShadow: locked ? 'none' : '0 3px 0 rgba(0,0,0,0.12)',
         }}
       >
         {completed ? '✓' : locked ? '🔒' : displayIndex}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 500, fontSize: 'var(--text-lab-md)' }}>{trail.title}</div>
-        <div style={{ fontSize: 12, color: '#555B66', fontFamily: 'var(--font-lab-mono)' }}>
-          {activities_attempted}/{activities_total} atividade{activities_total === 1 ? '' : 's'}
-          {trail.description && ` · ${trail.description}`}
+        <div style={{ fontWeight: 600, fontSize: 'var(--p21-text-md)', color: 'var(--p21-ink)' }}>
+          {trail.title}
         </div>
+        <div
+          style={{
+            fontSize: 'var(--p21-text-xs)',
+            color: 'var(--p21-ink-3)',
+            fontFamily: 'var(--p21-font-mono)',
+            marginTop: 2,
+          }}
+        >
+          {activities_attempted}/{activities_total} atividade{activities_total === 1 ? '' : 's'}
+        </div>
+        {trail.description && (
+          <div
+            style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)', marginTop: 4 }}
+          >
+            {trail.description}
+          </div>
+        )}
       </div>
-      <Stars n={stars} faded={!completed} />
-      {!locked && !completed && <Chip bg="#EEEDFE" fg="#3C3489">continuar →</Chip>}
-      {completed && <Chip bg="#E1F5EE" fg="#085041">revisitar</Chip>}
-      {locked && <Chip bg="#F1EFE8" fg="#888780">bloqueada</Chip>}
-    </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+        <Stars n={stars} />
+        {!locked && !completed && <Chip tone="primary">continuar →</Chip>}
+        {completed && <Chip tone="teal">revisitar</Chip>}
+        {locked && <Chip tone="muted">bloqueada</Chip>}
+      </div>
+    </Card>
   )
 
   if (locked) return <li aria-disabled>{card}</li>
@@ -190,35 +205,15 @@ function TrailTreeNode({ summary, displayIndex }: { summary: TrailSummary; displ
   )
 }
 
-function Stars({ n, faded = false }: { n: number; faded?: boolean }) {
+function Stars({ n }: { n: number }) {
   return (
-    <div aria-label={`${n} estrela${n === 1 ? '' : 's'}`} style={{ fontSize: 18, letterSpacing: 2, flexShrink: 0 }}>
+    <div aria-label={`${n} estrelas`} style={{ letterSpacing: 1, fontSize: 18 }}>
       {[0, 1, 2].map((i) => (
-        <span key={i} style={{ color: i < n ? '#E8A53A' : faded ? '#D8D5CB' : '#D8D5CB' }}>
+        <span key={i} style={{ color: i < n ? 'var(--p21-amber)' : '#d8d5cb' }}>
           ★
         </span>
       ))}
     </div>
-  )
-}
-
-function Chip({ bg, fg, children }: { bg: string; fg: string; children: React.ReactNode }) {
-  return (
-    <span
-      style={{
-        fontSize: 11,
-        padding: '4px 8px',
-        borderRadius: 6,
-        fontFamily: 'var(--font-lab-mono)',
-        background: bg,
-        color: fg,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-        flexShrink: 0,
-      }}
-    >
-      {children}
-    </span>
   )
 }
 
@@ -227,7 +222,11 @@ function Chip({ bg, fg, children }: { bg: string; fg: string; children: React.Re
 function LessonsTab({ lessons }: { lessons: StudentInteractiveLessonItem[] | null }) {
   if (lessons === null) return <div style={muted}>carregando…</div>
   if (lessons.length === 0) {
-    return <div style={muted}>sem aulas interativas atribuídas ainda.</div>
+    return (
+      <Card>
+        <div style={{ color: 'var(--p21-ink-3)' }}>sem aulas interativas atribuídas ainda.</div>
+      </Card>
+    )
   }
 
   const groups = new Map<string, { name: string; items: StudentInteractiveLessonItem[] }>()
@@ -237,126 +236,169 @@ function LessonsTab({ lessons }: { lessons: StudentInteractiveLessonItem[] | nul
   }
 
   return (
-    <div style={{ display: 'grid', gap: 28 }}>
+    <div style={{ display: 'grid', gap: 'var(--p21-sp-7)' }}>
       {[...groups.entries()].map(([cid, { name, items }]) => (
         <section key={cid}>
           <h2 style={sectionTitle}>{name}</h2>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10, maxWidth: 560 }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--p21-sp-3)' }}>
             {items.map((x) => (
               <li key={x.interactive_lesson.id}>
                 <Link
                   to={`/lab/preview/${encodeURIComponent(x.interactive_lesson.slug)}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '14px 16px',
-                    borderRadius: 12,
-                    background: '#FFFEF9',
-                    border: '1px solid var(--color-lab-rule)',
-                    textDecoration: 'none',
-                    color: 'inherit',
-                  }}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
                 >
-                  <span style={{ fontSize: 20 }} aria-hidden>
-                    🎬
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500 }}>{x.interactive_lesson.title}</div>
-                    <div style={{ fontSize: 12, color: '#555B66', fontFamily: 'var(--font-lab-mono)' }}>
-                      aula interativa · <code>{x.interactive_lesson.slug}</code>
+                  <Card interactive style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <span style={{ fontSize: 24 }} aria-hidden>
+                      🎬
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600 }}>{x.interactive_lesson.title}</div>
+                      <div
+                        style={{
+                          fontSize: 'var(--p21-text-xs)',
+                          color: 'var(--p21-ink-3)',
+                          fontFamily: 'var(--p21-font-mono)',
+                        }}
+                      >
+                        aula interativa
+                      </div>
                     </div>
-                  </div>
-                  <Chip bg="#EEEDFE" fg="#3C3489">abrir →</Chip>
+                    <Chip tone="purple">abrir →</Chip>
+                  </Card>
                 </Link>
               </li>
             ))}
           </ul>
-          <div style={{ ...muted, fontSize: 12, marginTop: 8 }}>
-            Aula ao vivo? O professor mostra um código — abra{' '}
-            <Link to="/lab/join" style={{ color: 'var(--color-lab-accent)' }}>
-              entrar na aula ao vivo
-            </Link>
-            .
-          </div>
         </section>
       ))}
+      <Card>
+        <div style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)' }}>
+          Aula ao vivo em curso? Abra{' '}
+          <Link to="/lab/join">entrar na sala ao vivo</Link> e digite o código que o professor mostrou.
+        </div>
+      </Card>
     </div>
   )
 }
 
-// ── Helpers visuais ───────────────────────────────────────────────────────
+// ── UI helpers ────────────────────────────────────────────────────────────
 
-function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function TabBtn({
+  active,
+  onClick,
+  count,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  count?: number
+  children: React.ReactNode
+}) {
   return (
     <button
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
       style={{
-        padding: '8px 14px',
-        borderRadius: 8,
-        border: `1px solid ${active ? 'var(--color-lab-accent)' : 'var(--color-lab-rule)'}`,
-        background: active ? '#EEEDFE' : '#FFF',
-        color: active ? 'var(--color-lab-accent)' : 'inherit',
-        fontWeight: active ? 500 : 400,
-        cursor: 'pointer',
+        flex: 1,
+        minHeight: 'var(--p21-tap)',
+        padding: '10px 16px',
+        borderRadius: 'var(--p21-radius-md)',
+        border: `2px solid ${active ? 'var(--p21-blue)' : 'var(--p21-border)'}`,
+        background: active ? 'var(--p21-blue-soft)' : 'var(--p21-surface)',
+        color: active ? 'var(--p21-blue-ink)' : 'var(--p21-ink-2)',
+        fontWeight: active ? 600 : 500,
         fontFamily: 'inherit',
+        fontSize: 'var(--p21-text-base)',
+        cursor: 'pointer',
+        transition: 'background 0.15s, border-color 0.15s',
         display: 'inline-flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 8,
       }}
     >
       {children}
+      {count !== undefined && count > 0 && (
+        <span
+          style={{
+            fontSize: 11,
+            padding: '1px 7px',
+            borderRadius: 999,
+            background: active ? 'var(--p21-blue)' : 'var(--p21-border-strong)',
+            color: '#FFF',
+            fontFamily: 'var(--p21-font-mono)',
+            fontWeight: 600,
+          }}
+        >
+          {count}
+        </span>
+      )}
     </button>
   )
 }
 
-const STATUS_COLORS: Record<TrailStatus, { bg: string; border: string }> = {
-  completed: { bg: '#F4FBF8', border: '#0F6E56' },
-  available: { bg: '#FFFEF9', border: 'var(--color-lab-accent)' },
-  locked: { bg: '#F5F5F0', border: '#D8D5CB' },
+function Chip({ tone, children }: { tone: 'primary' | 'teal' | 'purple' | 'muted'; children: React.ReactNode }) {
+  const palettes = {
+    primary: { bg: 'var(--p21-primary-soft)', fg: 'var(--p21-primary-ink)' },
+    teal: { bg: 'var(--p21-teal-soft)', fg: 'var(--p21-teal)' },
+    purple: { bg: 'var(--p21-purple-soft)', fg: 'var(--p21-purple-ink)' },
+    muted: { bg: 'var(--p21-surface-2)', fg: 'var(--p21-ink-3)' },
+  }[tone]
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        padding: '4px 9px',
+        borderRadius: 'var(--p21-radius-pill)',
+        fontFamily: 'var(--p21-font-mono)',
+        background: palettes.bg,
+        color: palettes.fg,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </span>
+  )
 }
 
-const headerRow: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'baseline',
-  gap: 12,
-  marginBottom: 18,
-  flexWrap: 'wrap',
+// ── estilos ───────────────────────────────────────────────────────────────
+
+const STATUS_COLORS: Record<TrailStatus, { bg: string; border: string; badgeBg: string }> = {
+  completed: { bg: '#F4FBF8', border: 'var(--p21-teal)', badgeBg: 'var(--p21-teal)' },
+  available: { bg: 'var(--p21-surface)', border: 'var(--p21-primary)', badgeBg: 'var(--p21-primary)' },
+  locked: { bg: 'var(--p21-surface-2)', border: 'var(--p21-border)', badgeBg: 'var(--p21-border-strong)' },
 }
+
 const sectionTitle: React.CSSProperties = {
-  fontSize: 'var(--text-lab-md)',
-  margin: '0 0 10px',
-  color: '#2A2D33',
+  fontSize: 'var(--p21-text-sm)',
+  margin: '0 0 var(--p21-sp-3)',
+  color: 'var(--p21-ink-3)',
+  fontFamily: 'var(--p21-font-mono)',
+  textTransform: 'uppercase',
+  letterSpacing: 1,
+  fontWeight: 600,
 }
 const muted: React.CSSProperties = {
-  color: '#555B66',
-  fontFamily: 'var(--font-lab-mono)',
-  fontSize: 14,
+  color: 'var(--p21-ink-3)',
+  fontFamily: 'var(--p21-font-mono)',
+  fontSize: 'var(--p21-text-sm)',
   marginTop: 20,
 }
+const tabRow: React.CSSProperties = {
+  display: 'flex',
+  gap: 'var(--p21-sp-2)',
+  marginBottom: 'var(--p21-sp-5)',
+}
 const errBox: React.CSSProperties = {
-  padding: '10px 12px',
-  background: '#FAECE7',
-  color: '#993C1D',
-  borderRadius: 8,
-  fontFamily: 'var(--font-lab-mono)',
-  marginBottom: 14,
-}
-const linkBtn: React.CSSProperties = {
-  border: 'none',
-  background: 'transparent',
-  color: 'var(--color-lab-accent)',
-  fontSize: 14,
-  textDecoration: 'underline',
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-}
-const badgeCount: React.CSSProperties = {
-  fontSize: 11,
-  padding: '1px 6px',
-  borderRadius: 10,
-  background: '#FFF',
-  border: '1px solid currentColor',
-  fontFamily: 'var(--font-lab-mono)',
+  padding: '10px 14px',
+  background: 'var(--p21-coral-soft)',
+  color: 'var(--p21-coral-ink)',
+  borderRadius: 'var(--p21-radius-md)',
+  fontFamily: 'var(--p21-font-mono)',
+  fontSize: 'var(--p21-text-sm)',
+  marginBottom: 'var(--p21-sp-4)',
 }

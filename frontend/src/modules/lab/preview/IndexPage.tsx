@@ -1,15 +1,16 @@
 /**
- * Lista de aulas — GET /api/lab/games. Cada aula linka pra /lab/preview/:slug.
- *
- * Também carrega o smoke de health (herdado da Fase 1) como sanity rodapé —
- * assim abrir a raiz em dev continua sendo um atalho pro status do stack.
+ * Landing/home pública do labprof21. Lista as aulas interativas disponíveis
+ * em `games_content/` e oferece caminhos de entrada (aluno via código,
+ * professor via login/register).
  */
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { Button } from '../../../components/ui/Button'
+import { Card } from '../../../components/ui/Card'
+import { PageShell } from '../../../components/ui/PageShell'
 import { useAuth } from '../../auth/AuthContext'
-import { SlideShell } from '../components/SlideShell'
 import { apiUrl } from '../runtime/apiUrl'
 
 const API_URL = apiUrl()
@@ -42,100 +43,100 @@ export function IndexPage() {
       })
       .then((p) => setGames(p.games))
       .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
-
     fetch(`${API_URL}/health`)
       .then((r) => r.json())
       .then(setHealth)
       .catch(() => setHealth({ status: 'error', db: false }))
   }, [])
 
-  return (
-    <SlideShell>
-      <header
-        style={{
-          marginBottom: 'var(--spacing-lab-5, 2rem)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          flexWrap: 'wrap',
-          gap: 12,
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: 'var(--text-lab-2xl)', margin: 0 }}>labprof21</h1>
-          <p style={{ color: '#555B66', marginTop: 4 }}>
-            Aulas interativas síncronas · preview de conteúdo
-          </p>
-        </div>
-        <nav style={{ display: 'flex', gap: 14, fontSize: 14, flexWrap: 'wrap' }}>
-          {user ? (
-            <Link
-              to={user.role === 'student' ? '/student' : '/teacher'}
-              style={{ color: 'var(--color-lab-accent)' }}
-            >
-              painel ({user.display_name})
-            </Link>
-          ) : (
-            <>
-              <Link to="/student/join" style={{ color: 'var(--color-lab-accent)' }}>
-                entrar como aluno
-              </Link>
-              <span style={{ color: '#D8D5CB' }}>·</span>
-              <Link to="/login" style={{ color: 'var(--color-lab-accent)' }}>
-                professor
-              </Link>
-              <Link to="/register" style={{ color: 'var(--color-lab-accent)' }}>
-                criar conta
-              </Link>
-            </>
-          )}
-        </nav>
-      </header>
+  const nav = user ? (
+    <Button as="a" href={user.role === 'student' ? '/student' : '/teacher'} variant="outline" size="sm">
+      {user.display_name} →
+    </Button>
+  ) : (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Button as="a" href="/student/join" variant="primary" size="sm">
+        entrar como aluno
+      </Button>
+      <Button as="a" href="/login" variant="ghost" size="sm">
+        professor
+      </Button>
+    </div>
+  )
 
-      <h2 style={{ fontSize: 'var(--text-lab-lg)' }}>Aulas disponíveis</h2>
+  return (
+    <PageShell headerRight={nav}>
+      <section style={{ marginBottom: 'var(--p21-sp-8)' }}>
+        <h1
+          style={{
+            fontSize: 'var(--p21-text-3xl)',
+            margin: 0,
+            fontFamily: 'var(--p21-font-display)',
+          }}
+        >
+          Aulas interativas <span style={{ color: 'var(--p21-primary)' }}>do prof21</span>
+        </h1>
+        <p style={{ color: 'var(--p21-ink-3)', marginTop: 'var(--p21-sp-3)', maxWidth: 560 }}>
+          Síncrono ao vivo ou assíncrono em trilhas. Entre com o código da sua
+          turma; professores montam conteúdo no painel.
+        </p>
+      </section>
+
+      <h2 style={{ fontSize: 'var(--p21-text-lg)', marginBottom: 'var(--p21-sp-4)' }}>
+        Aulas disponíveis pra preview
+      </h2>
 
       {err && (
-        <div style={{ color: '#993C1D', fontFamily: 'var(--font-lab-mono)' }}>
-          erro carregando lista: {err}
-        </div>
+        <Card>
+          <div style={{ color: 'var(--p21-coral-ink)', fontFamily: 'var(--p21-font-mono)' }}>
+            erro carregando lista: {err}
+          </div>
+        </Card>
       )}
       {!err && games === null && (
-        <div style={{ color: '#555B66', fontFamily: 'var(--font-lab-mono)' }}>carregando…</div>
+        <div style={{ color: 'var(--p21-ink-3)', fontFamily: 'var(--p21-font-mono)' }}>carregando…</div>
       )}
       {games && games.length === 0 && (
-        <div style={{ color: '#555B66' }}>
-          nenhuma aula em <code>backend/modules/lab/games_content/</code>
-        </div>
+        <Card>
+          <div style={{ color: 'var(--p21-ink-3)' }}>
+            nenhuma aula em <code>backend/modules/lab/games_content/</code>
+          </div>
+        </Card>
       )}
       {games && games.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, marginTop: 'var(--spacing-lab-4)' }}>
+        <ul
+          style={{
+            listStyle: 'none',
+            padding: 0,
+            margin: 0,
+            display: 'grid',
+            gap: 'var(--p21-sp-3)',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          }}
+        >
           {games.map((g) => (
-            <li
-              key={g.slug}
-              style={{
-                marginBottom: 12,
-                padding: '14px 18px',
-                border: '1px solid var(--color-lab-rule, #D8D5CB)',
-                borderRadius: 12,
-                background: '#FFFEF9',
-              }}
-            >
+            <li key={g.slug}>
               <Link
                 to={`/lab/preview/${encodeURIComponent(g.slug)}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               >
-                <div style={{ fontSize: 'var(--text-lab-md)', fontWeight: 500 }}>{g.title}</div>
-                <div
-                  style={{
-                    marginTop: 4,
-                    color: '#555B66',
-                    fontSize: 'var(--text-lab-sm)',
-                    fontFamily: 'var(--font-lab-mono)',
-                  }}
-                >
-                  {g.subject ? `${g.subject} · ` : ''}
-                  {g.slideCount} slides · v{g.version} · <code>{g.slug}</code>
-                </div>
+                <Card interactive>
+                  <div style={{ fontSize: 'var(--p21-text-md)', fontWeight: 600 }}>{g.title}</div>
+                  <div
+                    style={{
+                      marginTop: 6,
+                      color: 'var(--p21-ink-3)',
+                      fontSize: 'var(--p21-text-sm)',
+                      fontFamily: 'var(--p21-font-mono)',
+                    }}
+                  >
+                    {g.subject ? `${g.subject} · ` : ''}
+                    {g.slideCount} slides · v{g.version}
+                  </div>
+                  <div style={{ marginTop: 12, color: 'var(--p21-blue)', fontSize: 'var(--p21-text-sm)', fontWeight: 500 }}>
+                    abrir preview →
+                  </div>
+                </Card>
               </Link>
             </li>
           ))}
@@ -144,16 +145,16 @@ export function IndexPage() {
 
       <footer
         style={{
-          marginTop: 'var(--spacing-lab-7, 3rem)',
-          paddingTop: 'var(--spacing-lab-4)',
-          borderTop: '1px dashed var(--color-lab-rule, #D8D5CB)',
-          color: '#555B66',
-          fontFamily: 'var(--font-lab-mono)',
+          marginTop: 'var(--p21-sp-9)',
+          paddingTop: 'var(--p21-sp-5)',
+          borderTop: '1px dashed var(--p21-border)',
+          color: 'var(--p21-ink-4)',
+          fontFamily: 'var(--p21-font-mono)',
           fontSize: 12,
         }}
       >
         API {API_URL} · db {health?.db ? 'ok' : '…'} · {health?.status ?? '…'}
       </footer>
-    </SlideShell>
+    </PageShell>
   )
 }

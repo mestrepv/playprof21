@@ -11,6 +11,7 @@
 
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
+import './styles/theme.css'
 import './modules/lab/styles/tokens.css'
 import './modules/lab/styles/helpers.css'
 import { AuthProvider } from './modules/auth/AuthContext'

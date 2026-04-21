@@ -231,12 +231,20 @@ Nós lock/available/completed com estrelas.
 - [x] Desbloqueio sequencial entre trilhas: próxima abre quando a anterior foi completada (todas atividades com tentativa)
 - [x] Estrelas agregadas na trilha (média de `bestScore/maxScore` das atividades, patamares 100%/75%/>0)
 
-### 7.1 — fica pra depois
+### 7.1 — Identidade visual prof21 (concluída 2026-04-21)
 
-- Registry de componentes TSX por `activityId` (paradigma AI-first, espelho do `missionId` do module_lab) pra `kind='animation'` e `'simulator'` virarem executáveis
+- [x] Tokens globais em `frontend/src/styles/theme.css` — paleta prof21 (verde `#58cc02`, azul `#185FA5`), tipografia Inter + Space Grotesk (headings) + JetBrains Mono (código), radius 8/12/16, shadow 3D low-contrast, tap target ≥44px, espaçamento/fontes fluidos com `clamp()`
+- [x] `components/ui/`: `Logo` (P21 mark + nome), `Button` (variants primary/secondary/outline/ghost/danger; sizes sm/md/lg), `Card` (padded/interactive), `Input` (label/hint/error, 16px font-size pra evitar zoom iOS), `PageShell` (wrapper com header sticky + logo)
+- [x] Refactor das páginas pra nova linguagem visual: Index/Login/Register/StudentJoin/JoinPage/StudentDashboard/TrailPage/QuizRenderer/ActivityRunner/TeacherPage/LibraryPage/SessionPage HUD/CodeOverlay
+- [x] Mobile-first: paddings responsivos, tap targets adequados, tabs/cards quebram bem em 375px, HUD da aula ao vivo com `env(safe-area-inset-bottom)` pra notch do iPhone
+- [x] Fontes via Google Fonts (`<link preconnect>` em `index.html`) pra evitar FOUT
+
+### 7.2 — fica pra depois
+
+- Registry de componentes TSX por `activityId` pra `kind='animation'` e `'simulator'` virarem executáveis
 - Tela em "onda" Duolingo com SVG/curvas; hoje é stacked vertical
 
-**Smoke validado:** aluno join → tab Trilhas mostra trilhas disponíveis com 1ª available, resto locked → clica → runner linear → responde 5 quizzes em sequência → tela-resumo com 3★ → volta → trilha vira completed, próxima desbloqueia.
+**Smoke validado:** aluno join → tab Trilhas mostra trilhas disponíveis com 1ª available, resto locked → clica → runner linear → responde 5 quizzes em sequência → tela-resumo com 3★ → volta → trilha vira completed, próxima desbloqueia. Visual consistente entre páginas com paleta prof21.
 
 ---
 

@@ -12,8 +12,9 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 
+import { Button } from '../../components/ui/Button'
+import { PageShell } from '../../components/ui/PageShell'
 import { useAuth } from '../auth/AuthContext'
-import { SlideShell } from '../lab/components/SlideShell'
 import { apiJson } from '../lab/runtime/apiFetch'
 import { CodeOverlay } from '../live/CodeOverlay'
 import type {
@@ -27,7 +28,7 @@ import type {
 
 export function TeacherPage() {
   const { user, token, logout, loading } = useAuth()
-  if (loading) return <Shell>carregando…</Shell>
+  if (loading) return <PageShell>carregando…</PageShell>
   if (!user || !token) return <Navigate to="/login?next=/teacher" replace />
   return <Dashboard token={token} displayName={user.display_name} onLogout={logout} />
 }
@@ -74,26 +75,23 @@ function Dashboard({
     }
   }
 
+  const right = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-2)' }}>{displayName}</span>
+      <Button as="a" href="/teacher/library" variant="outline" size="sm">
+        banco de conteúdos
+      </Button>
+      <Button variant="ghost" size="sm" onClick={onLogout}>
+        sair
+      </Button>
+    </div>
+  )
+
   return (
-    <Shell>
-      <header style={headerRow}>
-        <div>
-          <h1 style={{ fontSize: 'var(--text-lab-xl)', margin: 0 }}>Turmas</h1>
-          <p style={{ color: '#555B66', marginTop: 4 }}>
-            Olá, <strong>{displayName}</strong>.{' '}
-            <Link to="/teacher/library" style={link}>
-              ir pro banco de conteúdos →
-            </Link>
-            {' · '}
-            <Link to="/" style={link}>
-              preview
-            </Link>
-          </p>
-        </div>
-        <button onClick={onLogout} style={linkBtn}>
-          sair
-        </button>
-      </header>
+    <PageShell headerRight={right}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 'var(--p21-sp-4)' }}>
+        <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: 0 }}>Turmas</h1>
+      </div>
 
       {err && <ErrorBanner msg={err} onClose={() => setErr(null)} />}
 
@@ -157,7 +155,7 @@ function Dashboard({
           }}
         />
       )}
-    </Shell>
+    </PageShell>
   )
 }
 
@@ -372,24 +370,24 @@ function AttachPicker({
 // Pequenos helpers de UI
 // ═════════════════════════════════════════════════════════════════════════
 
-function Shell({ children }: { children: ReactNode }) {
-  return <SlideShell>{children}</SlideShell>
-}
-
 function ErrorBanner({ msg, onClose }: { msg: string; onClose: () => void }) {
   return (
     <div
       style={{
-        padding: '10px 12px',
-        background: '#FAECE7',
-        color: '#993C1D',
-        borderRadius: 8,
-        fontFamily: 'var(--font-lab-mono)',
-        marginBottom: 'var(--spacing-lab-4)',
+        padding: '10px 14px',
+        background: 'var(--p21-coral-soft)',
+        color: 'var(--p21-coral-ink)',
+        borderRadius: 'var(--p21-radius-md)',
+        fontFamily: 'var(--p21-font-mono)',
+        fontSize: 'var(--p21-text-sm)',
+        marginBottom: 'var(--p21-sp-4)',
       }}
     >
       {msg}{' '}
-      <button onClick={onClose} style={{ ...linkBtn, color: '#993C1D' }}>
+      <button
+        onClick={onClose}
+        style={{ background: 'transparent', border: 'none', color: 'var(--p21-coral-ink)', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit' }}
+      >
         (ok)
       </button>
     </div>

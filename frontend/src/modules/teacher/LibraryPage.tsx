@@ -11,8 +11,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
+import { Button } from '../../components/ui/Button'
+import { PageShell } from '../../components/ui/PageShell'
 import { useAuth } from '../auth/AuthContext'
-import { SlideShell } from '../lab/components/SlideShell'
 import { apiJson } from '../lab/runtime/apiFetch'
 import {
   ACTIVITY_KINDS,
@@ -40,7 +41,7 @@ type Tab = 'activities' | 'trails' | 'lessons'
 
 export function LibraryPage() {
   const { user, token, logout, loading } = useAuth()
-  if (loading) return <SlideShell>carregando…</SlideShell>
+  if (loading) return <PageShell>carregando…</PageShell>
   if (!user || !token) return <Navigate to="/login?next=/teacher/library" replace />
   return <Library token={token} displayName={user.display_name} onLogout={logout} />
 }
@@ -49,22 +50,21 @@ function Library({ token, displayName, onLogout }: { token: string; displayName:
   const [tab, setTab] = useState<Tab>('activities')
   const [err, setErr] = useState<string | null>(null)
 
+  const right = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-2)' }}>{displayName}</span>
+      <Button as="a" href="/teacher" variant="outline" size="sm">
+        turmas
+      </Button>
+      <Button variant="ghost" size="sm" onClick={onLogout}>
+        sair
+      </Button>
+    </div>
+  )
+
   return (
-    <SlideShell>
-      <header style={headerRow}>
-        <div>
-          <h1 style={{ fontSize: 'var(--text-lab-xl)', margin: 0 }}>Banco de conteúdos</h1>
-          <p style={{ color: '#555B66', marginTop: 4 }}>
-            <strong>{displayName}</strong>.{' '}
-            <Link to="/teacher" style={link}>
-              ← voltar pras turmas
-            </Link>
-          </p>
-        </div>
-        <button onClick={onLogout} style={linkBtn}>
-          sair
-        </button>
-      </header>
+    <PageShell headerRight={right}>
+      <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: '0 0 var(--p21-sp-5)' }}>Banco de conteúdos</h1>
 
       {err && <ErrorBanner msg={err} onClose={() => setErr(null)} />}
 
@@ -83,7 +83,7 @@ function Library({ token, displayName, onLogout }: { token: string; displayName:
       {tab === 'activities' && <ActivitiesTab token={token} onError={setErr} />}
       {tab === 'trails' && <TrailsTab token={token} onError={setErr} />}
       {tab === 'lessons' && <LessonsTab token={token} onError={setErr} />}
-    </SlideShell>
+    </PageShell>
   )
 }
 

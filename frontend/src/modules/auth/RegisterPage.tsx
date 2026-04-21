@@ -1,11 +1,14 @@
 /**
- * RegisterPage — cria conta de professor. Sucesso vai pra /teacher.
+ * RegisterPage — criação de conta de professor.
  */
 
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { SlideShell } from '../lab/components/SlideShell'
+import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { Input } from '../../components/ui/Input'
+import { PageShell } from '../../components/ui/PageShell'
 import { useAuth } from './AuthContext'
 
 export function RegisterPage() {
@@ -32,99 +35,51 @@ export function RegisterPage() {
   }
 
   return (
-    <SlideShell>
-      <div style={{ maxWidth: 440, margin: '0 auto' }}>
-        <h1 style={{ fontSize: 'var(--text-lab-xl)', marginTop: 'var(--spacing-lab-6)' }}>
-          Criar conta de professor
-        </h1>
-        <p style={{ color: '#555B66', marginTop: 4 }}>
-          Alunos não têm conta — eles entram por código de sessão (Fase 5).
+    <PageShell variant="narrow">
+      <Card padded>
+        <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: 0 }}>Criar conta de professor</h1>
+        <p style={{ color: 'var(--p21-ink-3)', marginTop: 6 }}>
+          Alunos não têm conta — eles entram por código da turma.
         </p>
 
-        <form onSubmit={onSubmit} style={form}>
-          <Field label="Nome (como aparece pros alunos)">
-            <input
-              type="text"
-              required
-              minLength={1}
-              maxLength={120}
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              style={input}
-            />
-          </Field>
-          <Field label="Email">
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={input}
-            />
-          </Field>
-          <Field label="Senha (mínimo 8)">
-            <input
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={input}
-            />
-          </Field>
-          {err && <div style={errBox}>{err}</div>}
-          <button type="submit" disabled={busy} style={primaryBtn}>
+        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14, marginTop: 'var(--p21-sp-6)' }}>
+          <Input
+            label="Nome (como aparece pros alunos)"
+            type="text"
+            required
+            minLength={1}
+            maxLength={120}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+          <Input
+            label="Email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            label="Senha"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            hint="mínimo 8 caracteres"
+            error={err}
+          />
+          <Button type="submit" disabled={busy} block size="lg">
             {busy ? 'criando…' : 'Criar conta'}
-          </button>
+          </Button>
         </form>
 
-        <div style={{ marginTop: 'var(--spacing-lab-5)', fontSize: 14, color: '#555B66' }}>
-          Já tem conta?{' '}
-          <Link to="/login" style={{ color: 'var(--color-lab-accent)' }}>
-            Entrar
-          </Link>
+        <div style={{ marginTop: 'var(--p21-sp-5)', fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)' }}>
+          Já tem conta? <Link to="/login">entrar</Link>
         </div>
-      </div>
-    </SlideShell>
+      </Card>
+    </PageShell>
   )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'grid', gap: 6 }}>
-      <span style={{ fontSize: 13, color: '#555B66' }}>{label}</span>
-      {children}
-    </label>
-  )
-}
-
-const form: React.CSSProperties = { display: 'grid', gap: 14, marginTop: 'var(--spacing-lab-5)' }
-const input: React.CSSProperties = {
-  padding: '10px 12px',
-  border: '1px solid var(--color-lab-rule, #D8D5CB)',
-  borderRadius: 8,
-  fontSize: 15,
-  fontFamily: 'inherit',
-  background: '#FFF',
-}
-const primaryBtn: React.CSSProperties = {
-  padding: '12px 18px',
-  borderRadius: 10,
-  border: 'none',
-  background: 'var(--color-lab-accent, #5B2DB8)',
-  color: '#FFF',
-  fontSize: 15,
-  fontWeight: 500,
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-}
-const errBox: React.CSSProperties = {
-  padding: '10px 12px',
-  background: '#FAECE7',
-  color: '#993C1D',
-  borderRadius: 8,
-  fontSize: 14,
-  fontFamily: 'var(--font-lab-mono, monospace)',
 }

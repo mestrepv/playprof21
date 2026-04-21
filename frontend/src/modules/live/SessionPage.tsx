@@ -329,55 +329,69 @@ function SessionHUD({
         right: 0,
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
-        background: 'rgba(255,255,255,0.92)',
-        backdropFilter: 'blur(8px)',
-        borderTop: '1px solid var(--color-lab-rule)',
-        fontFamily: 'var(--font-lab-mono)',
-        fontSize: 12,
+        gap: 10,
+        padding: 'env(safe-area-inset-bottom, 0) 14px 10px',
+        paddingTop: 10,
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        borderTop: '1px solid var(--p21-border)',
+        fontFamily: 'var(--p21-font-mono)',
+        fontSize: 'var(--p21-text-xs)',
         flexWrap: 'wrap',
+        zIndex: 10,
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ color: '#0F1115', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div
+          style={{
+            color: 'var(--p21-ink)',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontFamily: 'var(--p21-font-sans)',
+            fontSize: 'var(--p21-text-sm)',
+          }}
+        >
           {title}
         </div>
-        <div style={{ color: '#555B66' }}>
-          <span style={{ marginRight: 8 }}>status: {status}</span>
-          <span style={{ marginRight: 8 }}>role: {role ?? '?'}</span>
-          <span>{participants} online</span>
+        <div style={{ color: 'var(--p21-ink-3)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <span>status {status}</span>
+          <span>· {participants} online</span>
         </div>
       </div>
       {isMaster ? (
         <>
-          <button onClick={onPrev} disabled={slideIndex === 0} style={btn}>
+          <button onClick={onPrev} disabled={slideIndex === 0} style={hudBtn}>
             ←
           </button>
-          <span>{slideIndex + 1} / {total}</span>
-          <button onClick={onNext} disabled={slideIndex >= total - 1} style={btn}>
+          <span style={{ fontWeight: 600, color: 'var(--p21-ink)' }}>
+            {slideIndex + 1} / {total}
+          </span>
+          <button onClick={onNext} disabled={slideIndex >= total - 1} style={hudBtn}>
             →
           </button>
           <button
             onClick={onShowCode}
             style={{
-              ...btn,
-              minWidth: 0,
-              padding: '0 10px',
-              background: 'var(--color-lab-accent)',
+              ...hudBtn,
+              padding: '0 12px',
+              background: 'var(--p21-blue)',
               color: '#FFF',
-              borderColor: 'var(--color-lab-accent)',
+              borderColor: 'var(--p21-blue-hover)',
+              boxShadow: '0 3px 0 var(--p21-blue-hover)',
             }}
             title="mostrar código + QR pros alunos entrarem"
           >
             {code ? `código ${code}` : 'código'}
           </button>
-          <button onClick={onEnd} style={{ ...btn, color: '#993C1D' }}>
+          <button onClick={onEnd} style={{ ...hudBtn, color: 'var(--p21-coral-ink)' }}>
             encerrar
           </button>
         </>
       ) : (
-        <span>
+        <span style={{ fontWeight: 600, color: 'var(--p21-ink)' }}>
           slide {slideIndex + 1} / {total}
         </span>
       )}
@@ -385,14 +399,16 @@ function SessionHUD({
   )
 }
 
-const btn: React.CSSProperties = {
+const hudBtn: React.CSSProperties = {
   minWidth: 44,
-  height: 36,
-  padding: '0 10px',
-  borderRadius: 8,
-  border: '1px solid var(--color-lab-rule)',
-  background: '#FFF',
+  height: 38,
+  padding: '0 12px',
+  borderRadius: 'var(--p21-radius-sm)',
+  border: '2px solid var(--p21-border-strong)',
+  background: 'var(--p21-surface)',
   fontFamily: 'inherit',
   fontSize: 14,
+  fontWeight: 600,
   cursor: 'pointer',
+  transition: 'background 0.15s',
 }

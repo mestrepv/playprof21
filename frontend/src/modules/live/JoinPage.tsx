@@ -1,17 +1,14 @@
 /**
- * /lab/join?code=NNNNNN — tela de entrada do aluno.
- *
- * Aluno digita (ou chega com `?code=` pré-preenchido via QR) + nome,
- * submete. Backend devolve session_id + anon_id; persistimos o anon_id
- * em localStorage e redirecionamos pra /lab/session/:sid?role=player&name=...
- *
- * Sem autenticação — código + rate-limit do backend são a defesa.
+ * /lab/join — aluno entra em sessão ao vivo por código (fase 5).
  */
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { SlideShell } from '../lab/components/SlideShell'
+import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { Input } from '../../components/ui/Input'
+import { PageShell } from '../../components/ui/PageShell'
 import { apiJson } from '../lab/runtime/apiFetch'
 
 const ANON_KEY = 'labprof21:anon_id'
@@ -37,24 +34,11 @@ export function JoinPage() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  // Auto-submit se código e nome já estão preenchidos — fluxo "volta pra mesma aula".
-  useEffect(() => {
-    if (sp.get('code') && name && !busy) {
-      // não auto-submit — o aluno ainda escolhe; só pré-preenche campos
-    }
-  }, [sp, name, busy])
-
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     const cleanCode = code.replace(/\D/g, '')
-    if (cleanCode.length !== 6) {
-      setErr('código tem 6 dígitos')
-      return
-    }
-    if (!name.trim()) {
-      setErr('digite um nome')
-      return
-    }
+    if (cleanCode.length !== 6) return setErr('código tem 6 dígitos')
+    if (!name.trim()) return setErr('digite um nome')
     setErr(null)
     setBusy(true)
     try {
@@ -66,7 +50,7 @@ export function JoinPage() {
         localStorage.setItem(ANON_KEY, r.anon_id)
         localStorage.setItem(NAME_KEY, r.display_name)
       } catch {
-        /* quota cheia */
+        /* quota */
       }
       navigate(
         `/lab/session/${r.session_id}?role=player&name=${encodeURIComponent(r.display_name)}`,
@@ -80,89 +64,40 @@ export function JoinPage() {
   }
 
   return (
-    <SlideShell>
-      <div style={{ maxWidth: 420, margin: '0 auto', marginTop: 'var(--spacing-lab-6)' }}>
-        <h1 style={{ fontSize: 'var(--text-lab-xl)', margin: 0 }}>Entrar na aula</h1>
-        <p style={{ color: '#555B66', marginTop: 6 }}>Use o código que o professor mostrou.</p>
+    <PageShell variant="narrow">
+      <Card padded>
+        <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: 0 }}>Entrar na aula ao vivo</h1>
+        <p style={{ color: 'var(--p21-ink-3)', marginTop: 6 }}>
+          Use o código que o professor mostrou.
+        </p>
 
-        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14, marginTop: 'var(--spacing-lab-5)' }}>
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: 13, color: '#555B66' }}>código de 6 dígitos</span>
-            <input
-              inputMode="numeric"
-              pattern="\d{6}"
-              maxLength={6}
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-              autoFocus={!code}
-              required
-              style={{
-                padding: '12px 14px',
-                border: '1px solid var(--color-lab-rule)',
-                borderRadius: 10,
-                fontSize: 28,
-                fontFamily: 'var(--font-lab-mono, monospace)',
-                textAlign: 'center',
-                letterSpacing: 6,
-                background: '#FFF',
-              }}
-            />
-          </label>
-
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: 13, color: '#555B66' }}>seu nome</span>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={120}
-              required
-              autoFocus={!!code}
-              style={{
-                padding: '10px 12px',
-                border: '1px solid var(--color-lab-rule)',
-                borderRadius: 8,
-                fontSize: 15,
-                background: '#FFF',
-                fontFamily: 'inherit',
-              }}
-            />
-          </label>
-
-          {err && (
-            <div
-              style={{
-                padding: '10px 12px',
-                background: '#FAECE7',
-                color: '#993C1D',
-                borderRadius: 8,
-                fontFamily: 'var(--font-lab-mono)',
-                fontSize: 13,
-              }}
-            >
-              {err}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={busy}
-            style={{
-              padding: '12px 18px',
-              borderRadius: 10,
-              border: 'none',
-              background: 'var(--color-lab-accent)',
-              color: '#FFF',
-              fontSize: 15,
-              fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
+        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14, marginTop: 'var(--p21-sp-6)' }}>
+          <Input
+            label="código de 6 dígitos"
+            inputMode="numeric"
+            pattern="\d{6}"
+            maxLength={6}
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+            autoFocus={!code}
+            required
+            monospaceValue
+            style={{ fontSize: 28, textAlign: 'center', letterSpacing: 6, height: 56 }}
+          />
+          <Input
+            label="seu nome"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus={!!code}
+            error={err}
+          />
+          <Button type="submit" disabled={busy} block size="lg">
             {busy ? 'entrando…' : 'entrar'}
-          </button>
+          </Button>
         </form>
-      </div>
-    </SlideShell>
+      </Card>
+    </PageShell>
   )
 }

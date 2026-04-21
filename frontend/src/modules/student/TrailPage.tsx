@@ -1,24 +1,15 @@
 /**
- * /student/trail/:id — runner linear da trilha.
- *
- * Dentro da trilha a execução é sequencial: aluno faz atividade 1, depois 2,
- * depois 3. A "árvore Duolingo" dos nós acontece um nível acima, entre
- * trilhas da mesma turma (ver StudentDashboard).
- *
- * Estado:
- *   - `idx` = atividade atual (inicialmente a primeira sem `best_score`).
- *     Se todas têm best_score ao carregar, começa do zero pra revisitar.
- *   - `finished` = true quando o aluno passou pela última e viu o resumo.
- *
- * Grava ActivityResult a cada atividade; refetch do TrailProgress atualiza
- * stars agregadas pra mostrar no resumo.
+ * /student/trail/:id — runner linear da trilha. Dentro da trilha a
+ * execução é sequencial (atividade 1 → 2 → ... → resumo).
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
+import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { PageShell } from '../../components/ui/PageShell'
 import { useAuth } from '../auth/AuthContext'
-import { SlideShell } from '../lab/components/SlideShell'
 import { apiJson } from '../lab/runtime/apiFetch'
 import { ActivityRunner } from './activities/ActivityRunner'
 import type { TrailProgress } from './types'
@@ -26,7 +17,7 @@ import type { TrailProgress } from './types'
 export function TrailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, token, loading } = useAuth()
-  if (loading) return <SlideShell>carregando…</SlideShell>
+  if (loading) return <PageShell>carregando…</PageShell>
   if (!user || !token) return <Navigate to="/student/join" replace />
   if (!id) return <Navigate to="/student" replace />
   return <TrailRunner trailId={id} token={token} />
@@ -45,7 +36,6 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
         const p = await apiJson<TrailProgress>(`/api/student/trails/${trailId}`, { token })
         setData(p)
         if (opts?.resetIdx) {
-          // primeira atividade sem best_score; se todas têm, começa do zero.
           const firstPending = p.nodes.findIndex((n) => n.best_score === null)
           setIdx(firstPending < 0 ? 0 : firstPending)
           setFinished(false)
@@ -80,7 +70,6 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
             max_score: current.activity.max_score,
           },
         })
-        // Refetch pra pegar stars agregadas atualizadas; avança ou termina.
         const fresh = await refetch()
         if (!fresh) {
           setSaving(false)
@@ -98,17 +87,27 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
     [current, data, token, idx, refetch, saving],
   )
 
-  if (err) return <SlideShell>erro: {err}</SlideShell>
-  if (!data) return <SlideShell>carregando trilha…</SlideShell>
+  if (err) {
+    return (
+      <PageShell>
+        <Card>
+          <div style={{ color: 'var(--p21-coral-ink)' }}>erro: {err}</div>
+        </Card>
+      </PageShell>
+    )
+  }
+  if (!data) return <PageShell>carregando trilha…</PageShell>
   if (total === 0) {
     return (
-      <SlideShell>
-        <h1 style={{ fontSize: 'var(--text-lab-xl)' }}>{data.trail.title}</h1>
-        <p style={{ color: '#555B66' }}>Essa trilha ainda não tem atividades.</p>
-        <Link to="/student" style={{ color: 'var(--color-lab-accent)' }}>
-          ← voltar
-        </Link>
-      </SlideShell>
+      <PageShell>
+        <Card>
+          <h1 style={{ fontSize: 'var(--p21-text-xl)' }}>{data.trail.title}</h1>
+          <p style={{ color: 'var(--p21-ink-3)' }}>Essa trilha ainda não tem atividades.</p>
+          <Button as="a" href="/student" variant="outline" size="sm">
+            ← voltar
+          </Button>
+        </Card>
+      </PageShell>
     )
   }
 
@@ -117,7 +116,18 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
   }
 
   return (
-    <SlideShell>
+    <PageShell
+      variant="reading"
+      headerRight={
+        <Link
+          to="/student"
+          style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)' }}
+          title="sair da trilha — progresso preservado"
+        >
+          sair
+        </Link>
+      }
+    >
       <TrailHeader
         title={data.trail.title}
         current={idx + 1}
@@ -125,20 +135,18 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
         stars={data.stars}
       />
       {current && (
-        <div style={{ marginTop: 'var(--spacing-lab-4)' }}>
+        <Card padded style={{ marginTop: 'var(--p21-sp-5)' }}>
           <ActivityRunner
-            key={current.activity.id}  // remount zera estado do runner
+            key={current.activity.id}
             activity={current.activity}
             onComplete={onComplete}
           />
-          {saving && <div style={{ marginTop: 12, color: '#555B66' }}>gravando resultado…</div>}
-        </div>
+          {saving && <div style={{ marginTop: 12, color: 'var(--p21-ink-3)' }}>gravando resultado…</div>}
+        </Card>
       )}
-    </SlideShell>
+    </PageShell>
   )
 }
-
-// ── Header / progress bar ─────────────────────────────────────────────────
 
 function TrailHeader({
   title,
@@ -154,15 +162,20 @@ function TrailHeader({
   const pct = Math.round(((current - 1) / total) * 100)
   return (
     <div>
-      <Link to="/student" style={{ fontSize: 14, color: 'var(--color-lab-accent)' }}>
-        ← sair da trilha
-      </Link>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: 'var(--text-lab-lg)', margin: 0, flex: 1 }}>{title}</h1>
-        <StarBar n={stars} />
-        <span style={counter}>
-          {current} / {total}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+        <h1 style={{ fontSize: 'var(--p21-text-lg)', margin: 0, flex: 1, minWidth: 200 }}>{title}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div aria-label={`${stars} estrelas`} style={{ letterSpacing: 2, fontSize: 20 }}>
+            {[0, 1, 2].map((i) => (
+              <span key={i} style={{ color: i < stars ? 'var(--p21-amber)' : '#d8d5cb' }}>
+                ★
+              </span>
+            ))}
+          </div>
+          <span style={{ fontFamily: 'var(--p21-font-mono)', fontSize: 14, color: 'var(--p21-ink-3)' }}>
+            {current} / {total}
+          </span>
+        </div>
       </div>
       <div style={progressBg}>
         <div style={{ ...progressFill, width: `${pct}%` }} />
@@ -171,20 +184,6 @@ function TrailHeader({
   )
 }
 
-function StarBar({ n }: { n: number }) {
-  return (
-    <div aria-label={`${n} estrela${n === 1 ? '' : 's'}`} style={{ fontSize: 20, letterSpacing: 2 }}>
-      {[0, 1, 2].map((i) => (
-        <span key={i} style={{ color: i < n ? '#E8A53A' : '#D8D5CB' }}>
-          ★
-        </span>
-      ))}
-    </div>
-  )
-}
-
-// ── Tela de resumo ────────────────────────────────────────────────────────
-
 function TrailFinishedScreen({
   progress,
   onRestart,
@@ -192,75 +191,71 @@ function TrailFinishedScreen({
   progress: TrailProgress
   onRestart: () => void
 }) {
-  const acertos = progress.nodes.filter((n) => n.best_score !== null && n.best_max_score !== null && n.best_score >= n.best_max_score).length
+  const acertos = progress.nodes.filter(
+    (n) => n.best_score !== null && n.best_max_score !== null && n.best_score >= n.best_max_score,
+  ).length
   return (
-    <SlideShell>
-      <div style={{ maxWidth: 560, margin: '40px auto 0', textAlign: 'center' }}>
-        <div style={{ fontSize: 60, marginBottom: 20 }} aria-hidden>🎉</div>
-        <h1 style={{ fontSize: 'var(--text-lab-2xl)', margin: 0 }}>Trilha concluída</h1>
-        <p style={{ color: '#555B66', marginTop: 8 }}>{progress.trail.title}</p>
-        <div style={{ fontSize: 56, letterSpacing: 8, margin: '28px 0' }}>
+    <PageShell variant="narrow">
+      <Card padded style={{ textAlign: 'center', padding: 'var(--p21-sp-8)' }}>
+        <div style={{ fontSize: 72, marginBottom: 'var(--p21-sp-3)', lineHeight: 1 }} aria-hidden>
+          🎉
+        </div>
+        <h1 style={{ fontSize: 'var(--p21-text-2xl)', margin: 0 }}>Trilha concluída</h1>
+        <p style={{ color: 'var(--p21-ink-3)', marginTop: 8 }}>{progress.trail.title}</p>
+        <div
+          style={{
+            fontSize: 64,
+            letterSpacing: 8,
+            margin: 'var(--p21-sp-6) 0 var(--p21-sp-4)',
+            lineHeight: 1,
+          }}
+        >
           {[0, 1, 2].map((i) => (
-            <span key={i} style={{ color: i < progress.stars ? '#E8A53A' : '#D8D5CB' }}>
+            <span key={i} style={{ color: i < progress.stars ? 'var(--p21-amber)' : '#d8d5cb' }}>
               ★
             </span>
           ))}
         </div>
-        <div style={{ color: '#555B66', fontFamily: 'var(--font-lab-mono)' }}>
+        <div
+          style={{
+            color: 'var(--p21-ink-3)',
+            fontFamily: 'var(--p21-font-mono)',
+            fontSize: 'var(--p21-text-sm)',
+          }}
+        >
           {acertos} de {progress.nodes.length} atividade{progress.nodes.length === 1 ? '' : 's'} com acerto pleno
         </div>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 28, flexWrap: 'wrap' }}>
-          <Link
-            to="/student"
-            style={{
-              padding: '12px 18px',
-              borderRadius: 10,
-              border: 'none',
-              background: 'var(--color-lab-accent)',
-              color: '#FFF',
-              fontSize: 15,
-              fontWeight: 500,
-              textDecoration: 'none',
-            }}
-          >
+        <div
+          style={{
+            display: 'flex',
+            gap: 10,
+            justifyContent: 'center',
+            marginTop: 'var(--p21-sp-7)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Button as="a" href="/student" variant="primary" size="lg">
             voltar pras trilhas
-          </Link>
-          <button
-            onClick={onRestart}
-            style={{
-              padding: '12px 18px',
-              borderRadius: 10,
-              border: '1px solid var(--color-lab-rule)',
-              background: '#FFF',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: 15,
-            }}
-          >
+          </Button>
+          <Button onClick={onRestart} variant="outline" size="lg">
             refazer trilha
-          </button>
+          </Button>
         </div>
-      </div>
-    </SlideShell>
+      </Card>
+    </PageShell>
   )
 }
 
-// ── Estilos ───────────────────────────────────────────────────────────────
-
-const counter: React.CSSProperties = {
-  fontFamily: 'var(--font-lab-mono)',
-  fontSize: 14,
-  color: '#555B66',
-}
 const progressBg: React.CSSProperties = {
-  height: 8,
-  borderRadius: 4,
-  background: '#F1EFE8',
-  marginTop: 12,
+  height: 10,
+  borderRadius: 'var(--p21-radius-pill)',
+  background: 'var(--p21-surface-2)',
+  marginTop: 'var(--p21-sp-3)',
   overflow: 'hidden',
 }
 const progressFill: React.CSSProperties = {
   height: '100%',
-  background: 'var(--color-lab-accent)',
+  background: 'var(--p21-primary)',
   transition: 'width 0.3s ease',
+  borderRadius: 'inherit',
 }

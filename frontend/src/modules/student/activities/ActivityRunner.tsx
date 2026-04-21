@@ -1,12 +1,9 @@
 /**
  * ActivityRunner — despacha pro renderer certo por `Activity.kind`.
- *
- * Fase 7 implementa `quiz` de verdade. `external-link` abre a URL numa aba
- * nova e marca como completo manualmente. `simulator`/`animation` ficam com
- * placeholder até o registry TSX entrar numa fase seguinte.
  */
 
 import { useState } from 'react'
+import { Button } from '../../../components/ui/Button'
 import type { Activity } from '../../teacher/types'
 import { QuizRenderer } from './QuizRenderer'
 
@@ -41,47 +38,22 @@ function ExternalLinkRunner({ activity, onComplete }: Props) {
   const [opened, setOpened] = useState(false)
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      <h2 style={{ fontSize: 'var(--text-lab-lg)', margin: 0 }}>{activity.title}</h2>
-      <p style={{ color: '#555B66' }}>Atividade externa — abre em nova aba.</p>
+    <div>
+      <h2 style={{ fontSize: 'var(--p21-text-lg)', margin: 0 }}>{activity.title}</h2>
+      <p style={{ color: 'var(--p21-ink-3)', marginTop: 8 }}>
+        Essa atividade abre em uma nova aba — volta aqui pra marcar como concluída.
+      </p>
       {url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => setOpened(true)}
-          style={{
-            display: 'inline-block',
-            padding: '12px 18px',
-            borderRadius: 10,
-            background: 'var(--color-lab-accent)',
-            color: '#FFF',
-            textDecoration: 'none',
-            marginTop: 14,
-          }}
-        >
+        <Button as="a" href={url} target="_blank" rel="noopener noreferrer" onClick={() => setOpened(true)} size="lg">
           abrir atividade →
-        </a>
+        </Button>
       ) : (
-        <div style={{ color: '#993C1D' }}>URL não configurada.</div>
+        <div style={{ color: 'var(--p21-coral-ink)' }}>URL não configurada.</div>
       )}
-      <div style={{ marginTop: 26 }}>
-        <button
-          type="button"
-          onClick={() => onComplete(activity.max_score)}
-          disabled={!opened}
-          style={{
-            padding: '10px 18px',
-            borderRadius: 10,
-            border: '1px solid var(--color-lab-rule)',
-            background: '#FFF',
-            cursor: opened ? 'pointer' : 'not-allowed',
-            opacity: opened ? 1 : 0.5,
-            fontFamily: 'inherit',
-          }}
-        >
+      <div style={{ marginTop: 'var(--p21-sp-5)' }}>
+        <Button onClick={() => onComplete(activity.max_score)} disabled={!opened} variant="outline" size="lg">
           marcar como concluída
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -89,39 +61,26 @@ function ExternalLinkRunner({ activity, onComplete }: Props) {
 
 function Stub({ activity, onComplete }: Props) {
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      <h2 style={{ fontSize: 'var(--text-lab-lg)', margin: 0 }}>{activity.title}</h2>
+    <div>
+      <h2 style={{ fontSize: 'var(--p21-text-lg)', margin: 0 }}>{activity.title}</h2>
       <div
         style={{
-          padding: '14px 16px',
-          marginTop: 16,
-          border: '1px dashed var(--color-lab-rule)',
-          borderRadius: 10,
-          color: '#555B66',
-          fontFamily: 'var(--font-lab-mono)',
-          fontSize: 14,
+          padding: 'var(--p21-sp-4)',
+          marginTop: 'var(--p21-sp-4)',
+          border: '1px dashed var(--p21-border-strong)',
+          borderRadius: 'var(--p21-radius-md)',
+          color: 'var(--p21-ink-3)',
+          fontFamily: 'var(--p21-font-mono)',
+          fontSize: 'var(--p21-text-sm)',
           lineHeight: 1.6,
         }}
       >
         kind <code>{activity.kind}</code> ainda não tem renderer — precisa registrar um
-        componente TSX para este <code>activityId</code>. Por enquanto, marca como
-        concluído sem score pra desbloquear o próximo nó.
+        componente TSX para este <code>activityId</code>.
       </div>
-      <button
-        type="button"
-        onClick={() => onComplete(0)}
-        style={{
-          marginTop: 18,
-          padding: '10px 18px',
-          borderRadius: 10,
-          border: '1px solid var(--color-lab-rule)',
-          background: '#FFF',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-        }}
-      >
+      <Button onClick={() => onComplete(0)} variant="outline" style={{ marginTop: 'var(--p21-sp-4)' }}>
         pular atividade
-      </button>
+      </Button>
     </div>
   )
 }

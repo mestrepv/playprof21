@@ -1,0 +1,199 @@
+/*
+ * theme.css — design tokens globais do prof21 (UI do app).
+ *
+ * Espaço separado dos tokens do `module_lab` (que são escopados pros
+ * slides de conteúdo via [data-lab-root]). Esses aqui aplicam em todo
+ * o app — telas de auth, dashboards, runner, etc.
+ *
+ * Princípios:
+ *   - minimalismo Google com pegada "escolar profissional"
+ *   - mobile-first: paddings/typografia escalam com clamp()
+ *   - tap targets ≥ 44px, shadow 3D sutil (estilo Duolingo)
+ *
+ * Cores espelham o legado play.prof21:
+ *   verde lime  — ações primárias, progresso, trilha disponível
+ *   azul        — navegação, links, acento institucional
+ *   cinzas      — texto e superfícies
+ */
+
+:root {
+  /* ─ Cores base ─────────────────────────────────────────────────────── */
+  --p21-bg: #f7f7f5;
+  --p21-surface: #ffffff;
+  --p21-surface-2: #f2f2ed;
+  --p21-border: #e4e1da;
+  --p21-border-strong: #d0cec5;
+
+  --p21-ink: #1a1a1a;
+  --p21-ink-2: #424955;
+  --p21-ink-3: #6b7280;
+  --p21-ink-4: #9ca3af;
+
+  /* ─ Acentos ─────────────────────────────────────────────────────────── */
+  --p21-primary: #58cc02;         /* verde lime — ações/progresso */
+  --p21-primary-hover: #46a302;
+  --p21-primary-soft: #eaf9d8;
+  --p21-primary-ink: #2f6e00;
+
+  --p21-blue: #185FA5;            /* azul corporativo — marca/links */
+  --p21-blue-hover: #124a82;
+  --p21-blue-soft: #e6f1fb;
+  --p21-blue-ink: #0c447c;
+
+  --p21-purple: #534ab7;          /* roxo — uso pontual */
+  --p21-purple-soft: #eeedfe;
+  --p21-purple-ink: #3c3489;
+
+  --p21-amber: #e8a53a;           /* estrelas */
+  --p21-teal: #0f6e56;            /* acerto/completed */
+  --p21-teal-soft: #e1f5ee;
+  --p21-coral: #d4474a;           /* erro / destrutivo */
+  --p21-coral-soft: #faece7;
+  --p21-coral-ink: #993c1d;
+
+  /* ─ Tipografia ─────────────────────────────────────────────────────── */
+  --p21-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --p21-font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --p21-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --p21-text-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.82rem);
+  --p21-text-sm: clamp(0.875rem, 0.82rem + 0.2vw, 0.95rem);
+  --p21-text-base: clamp(1rem, 0.95rem + 0.25vw, 1.05rem);
+  --p21-text-md: clamp(1.125rem, 1.05rem + 0.4vw, 1.25rem);
+  --p21-text-lg: clamp(1.25rem, 1.1rem + 0.7vw, 1.6rem);
+  --p21-text-xl: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem);
+  --p21-text-2xl: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
+  --p21-text-3xl: clamp(2.25rem, 1.6rem + 3vw, 3.5rem);
+
+  --p21-lh-body: 1.55;
+  --p21-lh-heading: 1.2;
+
+  /* ─ Espaçamento fluido ─────────────────────────────────────────────── */
+  --p21-sp-1: 4px;
+  --p21-sp-2: 8px;
+  --p21-sp-3: 12px;
+  --p21-sp-4: 16px;
+  --p21-sp-5: 20px;
+  --p21-sp-6: 24px;
+  --p21-sp-7: 32px;
+  --p21-sp-8: 40px;
+  --p21-sp-9: 56px;
+  --p21-sp-10: 72px;
+
+  /* ─ Raios ─────────────────────────────────────────────────────────── */
+  --p21-radius-sm: 8px;
+  --p21-radius-md: 12px;
+  --p21-radius-lg: 16px;
+  --p21-radius-xl: 24px;
+  --p21-radius-pill: 999px;
+
+  /* ─ Sombras ─ Duolingo-like 3D low-contrast ─────────────────────── */
+  --p21-shadow-sm: 0 1px 2px rgba(15, 17, 21, 0.06);
+  --p21-shadow-3d: 0 4px 0 rgba(15, 17, 21, 0.08);
+  --p21-shadow-hover: 0 6px 0 rgba(15, 17, 21, 0.08);
+  --p21-shadow-lg: 0 12px 32px rgba(15, 17, 21, 0.12);
+
+  /* ─ Tap target mínimo ─────────────────────────────────────────────── */
+  --p21-tap: 44px;
+
+  /* ─ Container widths ─────────────────────────────────────────────── */
+  --p21-container-sm: 560px;   /* formulários */
+  --p21-container-md: 760px;   /* conteúdo de leitura */
+  --p21-container-lg: 960px;   /* dashboards */
+
+  --p21-pad-x: clamp(1rem, 0.5rem + 2vw, 2rem);   /* padding horizontal da página */
+  --p21-pad-y: clamp(1rem, 0.75rem + 1vw, 1.75rem);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* Reset leve + base do app                                                 */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--p21-bg);
+  color: var(--p21-ink);
+  font-family: var(--p21-font-sans);
+  font-size: var(--p21-text-base);
+  line-height: var(--p21-lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--p21-font-display);
+  line-height: var(--p21-lh-heading);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--p21-blue);
+  outline-offset: 2px;
+}
+
+/* Links inline — cor de marca */
+a {
+  color: var(--p21-blue);
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--p21-blue-hover);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* Layout helpers                                                            */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+.p21-app-root {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.p21-page {
+  width: 100%;
+  max-width: var(--p21-container-lg);
+  margin: 0 auto;
+  padding: var(--p21-pad-y) var(--p21-pad-x);
+  flex: 1;
+}
+
+.p21-page--narrow {
+  max-width: var(--p21-container-sm);
+}
+
+.p21-page--reading {
+  max-width: var(--p21-container-md);
+}

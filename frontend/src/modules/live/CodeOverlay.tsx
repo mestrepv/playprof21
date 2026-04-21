@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 
+import { Button } from '../../components/ui/Button'
 import { apiJson } from '../lab/runtime/apiFetch'
 
 interface Props {
@@ -61,82 +62,82 @@ export function CodeOverlay({
         display: 'grid',
         placeItems: 'center',
         zIndex: 100,
+        padding: 'var(--p21-sp-4)',
       }}
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#FAFAF7',
-          color: '#0F1115',
-          padding: 'var(--spacing-lab-6, 3rem)',
-          borderRadius: 16,
+          background: 'var(--p21-surface)',
+          color: 'var(--p21-ink)',
+          padding: 'var(--p21-sp-7)',
+          borderRadius: 'var(--p21-radius-xl)',
           maxWidth: 520,
-          width: '92vw',
+          width: '100%',
           textAlign: 'center',
-          fontFamily: 'var(--font-lab-sans)',
+          fontFamily: 'var(--p21-font-sans)',
+          boxShadow: 'var(--p21-shadow-lg)',
         }}
       >
-        <div style={{ fontSize: 13, color: '#555B66', letterSpacing: 1, textTransform: 'uppercase' }}>
+        <div
+          style={{
+            fontSize: 'var(--p21-text-xs)',
+            color: 'var(--p21-ink-3)',
+            letterSpacing: 1,
+            textTransform: 'uppercase',
+            fontFamily: 'var(--p21-font-mono)',
+            fontWeight: 600,
+          }}
+        >
           {caption}
         </div>
         <div
           style={{
-            fontFamily: 'var(--font-lab-mono, monospace)',
-            fontSize: 'clamp(3.5rem, 10vw, 6rem)',
-            fontWeight: 600,
-            letterSpacing: 'clamp(8px, 2vw, 18px)',
-            margin: '12px 0',
-            color: 'var(--color-lab-accent)',
+            fontFamily: 'var(--p21-font-mono)',
+            fontSize: 'clamp(3rem, 14vw, 5.5rem)',
+            fontWeight: 700,
+            letterSpacing: 'clamp(6px, 2vw, 14px)',
+            margin: 'var(--p21-sp-3) 0 var(--p21-sp-4)',
+            color: 'var(--p21-blue)',
+            lineHeight: 1,
           }}
         >
           {code ?? '—'}
         </div>
         {code && (
-          <div style={{ display: 'grid', placeItems: 'center', marginTop: 12 }}>
-            <div style={{ background: '#FFF', padding: 12, borderRadius: 12, border: '1px solid var(--color-lab-rule)' }}>
-              <QRCodeSVG value={joinUrl} size={200} includeMargin={false} />
+          <div style={{ display: 'grid', placeItems: 'center', marginTop: 'var(--p21-sp-2)' }}>
+            <div
+              style={{
+                background: '#FFF',
+                padding: 'var(--p21-sp-3)',
+                borderRadius: 'var(--p21-radius-md)',
+                border: '1px solid var(--p21-border)',
+              }}
+            >
+              <QRCodeSVG value={joinUrl} size={180} includeMargin={false} />
             </div>
-            <div style={{ marginTop: 10, fontSize: 12, color: '#555B66', fontFamily: 'var(--font-lab-mono)' }}>
+            <div
+              style={{
+                marginTop: 10,
+                fontSize: 'var(--p21-text-xs)',
+                color: 'var(--p21-ink-4)',
+                fontFamily: 'var(--p21-font-mono)',
+                wordBreak: 'break-all',
+              }}
+            >
               {joinUrl}
             </div>
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 'var(--spacing-lab-5)', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding: '10px 18px',
-              borderRadius: 10,
-              border: '1px solid var(--color-lab-rule)',
-              background: '#FFF',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: 14,
-            }}
-          >
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 'var(--p21-sp-6)', flexWrap: 'wrap' }}>
+          <Button onClick={onClose} variant="outline" size="md">
             fechar
-          </button>
-          <button
-            type="button"
-            onClick={rotate}
-            disabled={busy || !token}
-            style={{
-              padding: '10px 18px',
-              borderRadius: 10,
-              border: 'none',
-              background: 'var(--color-lab-accent)',
-              color: '#FFF',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: 14,
-            }}
-            title="invalida o código atual e gera outro — use se suspeitar que vazou"
-          >
+          </Button>
+          <Button onClick={rotate} disabled={busy || !token} variant="primary" size="md">
             {busy ? 'girando…' : 'gerar novo código'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

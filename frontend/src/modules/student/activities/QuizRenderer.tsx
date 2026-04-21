@@ -1,13 +1,9 @@
 /**
  * QuizRenderer — renderiza uma Activity.kind='quiz'.
- *
- * Config esperado: `{ stem: string, options: string[], correctIndex: number }`.
- * Valida local: aluno clica opção, renderer revela correta + devolve `score`
- * (max_score se acertou, 0 se errou) via `onComplete`. Sem auto-envio — o
- * aluno vê o feedback antes de avançar.
  */
 
 import { useState } from 'react'
+import { Button } from '../../../components/ui/Button'
 
 interface Config {
   stem: string
@@ -40,33 +36,44 @@ export function QuizRenderer({ title, maxScore, config, onComplete }: Props) {
 
   const cfg = parseConfig(config)
   if (!cfg) {
-    return (
-      <div style={errorBox}>config inválido: quiz precisa de `stem`, `options`, `correctIndex`.</div>
-    )
+    return <div style={errBox}>config inválido: quiz precisa de `stem`, `options`, `correctIndex`.</div>
   }
 
+  const correct = selected !== null && selected === cfg.correctIndex
   const submit = () => {
     if (selected === null) return
     setRevealed(true)
   }
-
   const finish = () => {
     if (selected === null) return
-    const correct = selected === cfg.correctIndex
     onComplete(correct ? maxScore : 0)
   }
 
-  const correct = selected !== null && selected === cfg.correctIndex
-
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      <h2 style={{ fontSize: 'var(--text-lab-lg)', margin: 0 }}>{title}</h2>
-      <p style={{ fontSize: 'var(--text-lab-base)', marginTop: 16 }}>{cfg.stem}</p>
-      <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0', display: 'grid', gap: 10 }}>
+    <div>
+      <h2 style={{ fontSize: 'var(--p21-text-lg)', margin: 0 }}>{title}</h2>
+      <p style={{ fontSize: 'var(--p21-text-md)', marginTop: 'var(--p21-sp-4)', lineHeight: 1.5 }}>
+        {cfg.stem}
+      </p>
+      <ul style={list}>
         {cfg.options.map((opt, i) => {
           const isSel = selected === i
           const isRight = revealed && i === cfg.correctIndex
           const isWrong = revealed && isSel && i !== cfg.correctIndex
+          const border = isRight
+            ? 'var(--p21-teal)'
+            : isWrong
+              ? 'var(--p21-coral)'
+              : isSel
+                ? 'var(--p21-blue)'
+                : 'var(--p21-border-strong)'
+          const bg = isRight
+            ? 'var(--p21-teal-soft)'
+            : isWrong
+              ? 'var(--p21-coral-soft)'
+              : isSel
+                ? 'var(--p21-blue-soft)'
+                : 'var(--p21-surface)'
           return (
             <li key={i}>
               <button
@@ -76,27 +83,42 @@ export function QuizRenderer({ title, maxScore, config, onComplete }: Props) {
                 style={{
                   width: '100%',
                   textAlign: 'left',
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  border: '2px solid',
-                  borderColor: isRight
-                    ? '#0F6E56'
-                    : isWrong
-                      ? '#993C1D'
-                      : isSel
-                        ? 'var(--color-lab-accent)'
-                        : 'var(--color-lab-rule)',
-                  background: isRight ? '#E1F5EE' : isWrong ? '#FAECE7' : isSel ? '#EEEDFE' : '#FFF',
-                  color: 'inherit',
-                  fontSize: 15,
+                  padding: '14px 16px',
+                  borderRadius: 'var(--p21-radius-md)',
+                  border: `2px solid ${border}`,
+                  background: bg,
+                  color: 'var(--p21-ink)',
+                  fontSize: 'var(--p21-text-base)',
                   cursor: revealed ? 'default' : 'pointer',
                   fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  minHeight: 'var(--p21-tap)',
+                  transition: 'background 0.1s, border-color 0.1s',
                 }}
               >
-                <span style={{ marginRight: 10, opacity: 0.6 }}>{String.fromCharCode(65 + i)}.</span>
-                {opt}
-                {isRight && <span style={{ marginLeft: 8, color: '#0F6E56' }}>✓</span>}
-                {isWrong && <span style={{ marginLeft: 8, color: '#993C1D' }}>✗</span>}
+                <span
+                  style={{
+                    width: 28,
+                    height: 28,
+                    flexShrink: 0,
+                    borderRadius: '50%',
+                    background: isSel || isRight || isWrong ? border : 'var(--p21-surface-2)',
+                    color: isSel || isRight || isWrong ? '#FFF' : 'var(--p21-ink-3)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontFamily: 'var(--p21-font-mono)',
+                    fontWeight: 600,
+                    fontSize: 13,
+                  }}
+                  aria-hidden
+                >
+                  {String.fromCharCode(65 + i)}
+                </span>
+                <span style={{ flex: 1 }}>{opt}</span>
+                {isRight && <span style={{ color: 'var(--p21-teal)', fontSize: 20 }}>✓</span>}
+                {isWrong && <span style={{ color: 'var(--p21-coral)', fontSize: 20 }}>✗</span>}
               </button>
             </li>
           )
@@ -104,50 +126,47 @@ export function QuizRenderer({ title, maxScore, config, onComplete }: Props) {
       </ul>
 
       {!revealed && (
-        <button type="button" onClick={submit} disabled={selected === null} style={primaryBtn}>
+        <Button onClick={submit} disabled={selected === null} block size="lg" style={{ marginTop: 'var(--p21-sp-5)' }}>
           confirmar resposta
-        </button>
+        </Button>
       )}
       {revealed && (
-        <div style={{ display: 'grid', gap: 12, marginTop: 18 }}>
+        <div style={{ display: 'grid', gap: 'var(--p21-sp-4)', marginTop: 'var(--p21-sp-5)' }}>
           <div
             style={{
-              padding: '10px 14px',
-              background: correct ? '#E1F5EE' : '#FAECE7',
-              color: correct ? '#085041' : '#712B13',
-              borderRadius: 8,
-              fontFamily: 'var(--font-lab-mono)',
-              fontSize: 14,
+              padding: 'var(--p21-sp-4)',
+              background: correct ? 'var(--p21-teal-soft)' : 'var(--p21-coral-soft)',
+              color: correct ? 'var(--p21-teal)' : 'var(--p21-coral-ink)',
+              borderRadius: 'var(--p21-radius-md)',
+              fontFamily: 'var(--p21-font-mono)',
+              fontSize: 'var(--p21-text-sm)',
+              fontWeight: 500,
             }}
           >
             {correct
               ? `acertou! ${maxScore}/${maxScore} pontos.`
-              : `errou — a resposta certa é ${String.fromCharCode(65 + cfg.correctIndex)}. 0/${maxScore} pontos.`}
+              : `errou — a correta é ${String.fromCharCode(65 + cfg.correctIndex)}. 0/${maxScore} pontos.`}
           </div>
-          <button type="button" onClick={finish} style={primaryBtn}>
+          <Button onClick={finish} block size="lg">
             continuar
-          </button>
+          </Button>
         </div>
       )}
     </div>
   )
 }
 
-const primaryBtn: React.CSSProperties = {
-  padding: '12px 18px',
-  borderRadius: 10,
-  border: 'none',
-  background: 'var(--color-lab-accent)',
-  color: '#FFF',
-  fontSize: 15,
-  fontWeight: 500,
-  cursor: 'pointer',
-  fontFamily: 'inherit',
+const list: React.CSSProperties = {
+  listStyle: 'none',
+  padding: 0,
+  margin: 'var(--p21-sp-5) 0 0',
+  display: 'grid',
+  gap: 'var(--p21-sp-2)',
 }
-const errorBox: React.CSSProperties = {
-  padding: '10px 12px',
-  background: '#FAECE7',
-  color: '#993C1D',
-  borderRadius: 8,
-  fontFamily: 'var(--font-lab-mono)',
+const errBox: React.CSSProperties = {
+  padding: 'var(--p21-sp-3)',
+  background: 'var(--p21-coral-soft)',
+  color: 'var(--p21-coral-ink)',
+  borderRadius: 'var(--p21-radius-md)',
+  fontFamily: 'var(--p21-font-mono)',
 }

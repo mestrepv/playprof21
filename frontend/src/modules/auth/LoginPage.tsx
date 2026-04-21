@@ -1,11 +1,14 @@
 /**
- * LoginPage — email + senha. Sucesso redireciona pra /teacher (ou `?next`).
+ * LoginPage — email + senha pro professor.
  */
 
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
-import { SlideShell } from '../lab/components/SlideShell'
+import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { Input } from '../../components/ui/Input'
+import { PageShell } from '../../components/ui/PageShell'
 import { useAuth } from './AuthContext'
 
 export function LoginPage() {
@@ -33,90 +36,45 @@ export function LoginPage() {
   }
 
   return (
-    <SlideShell>
-      <div style={{ maxWidth: 420, margin: '0 auto' }}>
-        <h1 style={{ fontSize: 'var(--text-lab-xl)', marginTop: 'var(--spacing-lab-6)' }}>Entrar</h1>
-        <p style={{ color: '#555B66', marginTop: 4 }}>Acesso de professor.</p>
+    <PageShell variant="narrow">
+      <Card padded>
+        <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: 0 }}>Entrar como professor</h1>
+        <p style={{ color: 'var(--p21-ink-3)', marginTop: 6 }}>
+          Conta do painel do labprof21.
+        </p>
 
-        <form onSubmit={onSubmit} style={formStyle}>
-          <Field label="Email">
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
-            />
-          </Field>
-          <Field label="Senha">
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
-            />
-          </Field>
-          {err && <div style={errStyle}>{err}</div>}
-          <button type="submit" disabled={busy} style={primaryBtn}>
+        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14, marginTop: 'var(--p21-sp-6)' }}>
+          <Input
+            label="Email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            label="Senha"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={err}
+          />
+          <Button type="submit" disabled={busy} block size="lg">
             {busy ? 'entrando…' : 'Entrar'}
-          </button>
+          </Button>
         </form>
 
-        <div style={{ marginTop: 'var(--spacing-lab-5)', fontSize: 14, color: '#555B66' }}>
-          Ainda não tem conta?{' '}
-          <Link to="/register" style={{ color: 'var(--color-lab-accent)' }}>
-            Criar conta de professor
-          </Link>
+        <div style={{ marginTop: 'var(--p21-sp-5)', fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)' }}>
+          Novo por aqui?{' '}
+          <Link to="/register">criar conta de professor</Link>
         </div>
-      </div>
-    </SlideShell>
+        <div style={{ marginTop: 'var(--p21-sp-3)', fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)' }}>
+          É aluno?{' '}
+          <Link to="/student/join">entrar com código da turma</Link>
+        </div>
+      </Card>
+    </PageShell>
   )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'grid', gap: 6 }}>
-      <span style={{ fontSize: 13, color: '#555B66' }}>{label}</span>
-      {children}
-    </label>
-  )
-}
-
-const formStyle: React.CSSProperties = {
-  display: 'grid',
-  gap: 14,
-  marginTop: 'var(--spacing-lab-5)',
-}
-
-const inputStyle: React.CSSProperties = {
-  padding: '10px 12px',
-  border: '1px solid var(--color-lab-rule, #D8D5CB)',
-  borderRadius: 8,
-  fontSize: 15,
-  fontFamily: 'inherit',
-  background: '#FFF',
-}
-
-const primaryBtn: React.CSSProperties = {
-  padding: '12px 18px',
-  borderRadius: 10,
-  border: 'none',
-  background: 'var(--color-lab-accent, #5B2DB8)',
-  color: '#FFF',
-  fontSize: 15,
-  fontWeight: 500,
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-}
-
-const errStyle: React.CSSProperties = {
-  padding: '10px 12px',
-  background: '#FAECE7',
-  color: '#993C1D',
-  borderRadius: 8,
-  fontSize: 14,
-  fontFamily: 'var(--font-lab-mono, monospace)',
 }
