@@ -8,7 +8,7 @@ import { Link, Navigate } from 'react-router-dom'
 
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { PageShell } from '../../components/ui/PageShell'
+import { AppShell } from '../../components/ui/AppShell'
 import { useAuth } from '../auth/AuthContext'
 import { apiJson } from '../lab/runtime/apiFetch'
 import type { StudentInteractiveLessonItem, TrailStatus, TrailSummary } from './types'
@@ -17,7 +17,7 @@ type Tab = 'trails' | 'lessons'
 
 export function StudentDashboard() {
   const { user, token, logout, loading } = useAuth()
-  if (loading) return <PageShell>carregando…</PageShell>
+  if (loading) return <AppShell>carregando…</AppShell>
   if (!user || !token) return <Navigate to="/student/join" replace />
   if (user.role !== 'student') return <Navigate to="/teacher" replace />
   return <Dashboard token={token} displayName={user.display_name} onLogout={logout} />
@@ -46,19 +46,10 @@ function Dashboard({
       .catch(() => setLessons([]))
   }, [token])
 
-  const right = (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      <span style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-2)' }}>
-        {displayName}
-      </span>
-      <Button variant="ghost" size="sm" onClick={onLogout}>
-        sair
-      </Button>
-    </div>
-  )
+  void onLogout
 
   return (
-    <PageShell headerRight={right}>
+    <AppShell>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 'var(--p21-sp-5)' }}>
         <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: 0 }}>Oi, {displayName.split(' ')[0]}</h1>
         <Button as="a" href="/student/join" variant="outline" size="sm">
@@ -83,7 +74,7 @@ function Dashboard({
 
       {tab === 'trails' && <TrailsTab trails={trails} />}
       {tab === 'lessons' && <LessonsTab lessons={lessons} />}
-    </PageShell>
+    </AppShell>
   )
 }
 

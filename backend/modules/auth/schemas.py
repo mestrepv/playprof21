@@ -21,6 +21,13 @@ class LoginIn(BaseModel):
     password: str
 
 
+class MePatch(BaseModel):
+    """Edição do próprio usuário — apenas display_name no dev-mode.
+    Email não é editável por ora (Paulo pode adicionar no futuro);
+    password change fica pra quando tiver tela de troca dedicada."""
+    display_name: str | None = Field(default=None, min_length=1, max_length=120)
+
+
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"

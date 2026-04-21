@@ -268,7 +268,23 @@ Inspirada na turma-detail do legado play.prof21. Substitui o expand inline por p
 
 **Smoke validado:** stats backend retorna números corretos (3 alunos, 1 assignment, 16.7% tentativas quando 1 de 6 possíveis cumprida); feed CRUD completo; isolamento cross-turma 404; typecheck limpo; navegação `/teacher` → `/teacher/classroom/:id` funciona.
 
-**Smoke validado:** aluno join → tab Trilhas mostra trilhas disponíveis com 1ª available, resto locked → clica → runner linear → responde 5 quizzes em sequência → tela-resumo com 3★ → volta → trilha vira completed, próxima desbloqueia. Visual consistente entre páginas com paleta prof21.
+### 7.4 — Chrome de navegação: sidebar + perfil + settings (concluída 2026-04-21)
+
+Portado o layout lateral do play.prof21 (sidebar fixa 240px/72px com tooltips, hamburger mobile) + dropdown do avatar no header. Cria também perfil mínimo e placeholder de configurações.
+
+**Backend:**
+- [x] `PATCH /api/auth/me {display_name}` — edição do próprio nome
+
+**Frontend:**
+- [x] `components/ui/Sidebar.tsx` — itens filtrados por role; 240px desktop ≥1024, 72px tablet 640-1023 (sempre colapsado), drawer mobile <640 com overlay + X; toggle recolher persistido em `localStorage`
+- [x] `components/ui/HeaderDropdown.tsx` — avatar 36px com initials; popup com nome/email/role badge + 3 itens (perfil/config/sair); fecha em click fora ou Esc
+- [x] `components/ui/AppShell.tsx` — novo layout (sidebar + header sticky com hamburger + main); variantes narrow/reading/default
+- [x] `AuthContext.refresh()` — re-busca `/auth/me` após edições
+- [x] `/profile` — avatar XL em initials + card de edição do display_name + card placeholder "conta"
+- [x] `/settings` — placeholder com linhas "tema / idioma / notificações" — dark mode e opções reais ficam pra Fase 9
+- [x] Páginas autenticadas (`TeacherPage`, `ClassroomPage`, `LibraryPage`, `StudentDashboard`, `TrailPage`) migram pra `AppShell`; públicas (Index/Login/Register/StudentJoin/JoinPage) mantêm `PageShell`
+
+**Decisões Paulo:** sidebar nova (não header fino); perfil básico; dark mode pós-validação.
 
 ---
 

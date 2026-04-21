@@ -8,7 +8,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { PageShell } from '../../components/ui/PageShell'
+import { AppShell } from '../../components/ui/AppShell'
 import { useAuth } from '../auth/AuthContext'
 import { apiJson } from '../lab/runtime/apiFetch'
 import { ActivityRunner } from './activities/ActivityRunner'
@@ -17,7 +17,7 @@ import type { TrailProgress } from './types'
 export function TrailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, token, loading } = useAuth()
-  if (loading) return <PageShell>carregando…</PageShell>
+  if (loading) return <AppShell>carregando…</AppShell>
   if (!user || !token) return <Navigate to="/student/join" replace />
   if (!id) return <Navigate to="/student" replace />
   return <TrailRunner trailId={id} token={token} />
@@ -89,17 +89,17 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
 
   if (err) {
     return (
-      <PageShell>
+      <AppShell>
         <Card>
           <div style={{ color: 'var(--p21-coral-ink)' }}>erro: {err}</div>
         </Card>
-      </PageShell>
+      </AppShell>
     )
   }
-  if (!data) return <PageShell>carregando trilha…</PageShell>
+  if (!data) return <AppShell>carregando trilha…</AppShell>
   if (total === 0) {
     return (
-      <PageShell>
+      <AppShell>
         <Card>
           <h1 style={{ fontSize: 'var(--p21-text-xl)' }}>{data.trail.title}</h1>
           <p style={{ color: 'var(--p21-ink-3)' }}>Essa trilha ainda não tem atividades.</p>
@@ -107,7 +107,7 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
             ← voltar
           </Button>
         </Card>
-      </PageShell>
+      </AppShell>
     )
   }
 
@@ -116,18 +116,7 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
   }
 
   return (
-    <PageShell
-      variant="reading"
-      headerRight={
-        <Link
-          to="/student"
-          style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)' }}
-          title="sair da trilha — progresso preservado"
-        >
-          sair
-        </Link>
-      }
-    >
+    <AppShell variant="reading">
       <TrailHeader
         title={data.trail.title}
         current={idx + 1}
@@ -144,7 +133,7 @@ function TrailRunner({ trailId, token }: { trailId: string; token: string }) {
           {saving && <div style={{ marginTop: 12, color: 'var(--p21-ink-3)' }}>gravando resultado…</div>}
         </Card>
       )}
-    </PageShell>
+    </AppShell>
   )
 }
 
@@ -195,7 +184,7 @@ function TrailFinishedScreen({
     (n) => n.best_score !== null && n.best_max_score !== null && n.best_score >= n.best_max_score,
   ).length
   return (
-    <PageShell variant="narrow">
+    <AppShell variant="narrow">
       <Card padded style={{ textAlign: 'center', padding: 'var(--p21-sp-8)' }}>
         <div style={{ fontSize: 72, marginBottom: 'var(--p21-sp-3)', lineHeight: 1 }} aria-hidden>
           🎉
@@ -242,7 +231,7 @@ function TrailFinishedScreen({
           </Button>
         </div>
       </Card>
-    </PageShell>
+    </AppShell>
   )
 }
 

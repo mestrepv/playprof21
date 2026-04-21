@@ -18,7 +18,7 @@ from database import get_db
 
 from .deps import get_current_user
 from .models import User
-from .schemas import LoginIn, RegisterIn, TokenOut, UserOut
+from .schemas import LoginIn, MePatch, RegisterIn, TokenOut, UserOut
 from .security import create_access_token, hash_password, verify_password
 
 
@@ -59,4 +59,17 @@ def login(payload: LoginIn, db: Session = Depends(get_db)) -> TokenOut:
 
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)) -> UserOut:
+    return UserOut.model_validate(user)
+
+
+@router.patch("/me", response_model=UserOut)
+def update_me(
+    payload: MePatch,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserOut:
+    if payload.display_name is not None:
+        user.display_name = payload.display_name.strip()
+    db.commit()
+    db.refresh(user)
     return UserOut.model_validate(user)

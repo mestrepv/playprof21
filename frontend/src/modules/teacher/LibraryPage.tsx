@@ -12,7 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
 import { Button } from '../../components/ui/Button'
-import { PageShell } from '../../components/ui/PageShell'
+import { AppShell } from '../../components/ui/AppShell'
 import { useAuth } from '../auth/AuthContext'
 import { apiJson } from '../lab/runtime/apiFetch'
 import {
@@ -106,7 +106,7 @@ type Tab = 'activities' | 'trails' | 'lessons'
 
 export function LibraryPage() {
   const { user, token, logout, loading } = useAuth()
-  if (loading) return <PageShell>carregando…</PageShell>
+  if (loading) return <AppShell>carregando…</AppShell>
   if (!user || !token) return <Navigate to="/login?next=/teacher/library" replace />
   return <Library token={token} displayName={user.display_name} onLogout={logout} />
 }
@@ -115,20 +115,11 @@ function Library({ token, displayName, onLogout }: { token: string; displayName:
   const [tab, setTab] = useState<Tab>('activities')
   const [err, setErr] = useState<string | null>(null)
 
-  const right = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-2)' }}>{displayName}</span>
-      <Button as="a" href="/teacher" variant="outline" size="sm">
-        turmas
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onLogout}>
-        sair
-      </Button>
-    </div>
-  )
+  void displayName
+  void onLogout
 
   return (
-    <PageShell headerRight={right}>
+    <AppShell>
       <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: '0 0 var(--p21-sp-5)' }}>Banco de conteúdos</h1>
 
       {err && <ErrorBanner msg={err} onClose={() => setErr(null)} />}
@@ -148,7 +139,7 @@ function Library({ token, displayName, onLogout }: { token: string; displayName:
       {tab === 'activities' && <ActivitiesTab token={token} onError={setErr} />}
       {tab === 'trails' && <TrailsTab token={token} onError={setErr} />}
       {tab === 'lessons' && <LessonsTab token={token} onError={setErr} />}
-    </PageShell>
+    </AppShell>
   )
 }
 

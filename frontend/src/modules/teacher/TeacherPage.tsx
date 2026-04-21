@@ -11,7 +11,7 @@ import { Link, Navigate } from 'react-router-dom'
 
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { PageShell } from '../../components/ui/PageShell'
+import { AppShell } from '../../components/ui/AppShell'
 import { PlusIcon } from '../../components/ui/icons'
 import { useAuth } from '../auth/AuthContext'
 import { apiJson } from '../lab/runtime/apiFetch'
@@ -19,7 +19,7 @@ import type { Classroom } from './types'
 
 export function TeacherPage() {
   const { user, token, logout, loading } = useAuth()
-  if (loading) return <PageShell>carregando…</PageShell>
+  if (loading) return <AppShell>carregando…</AppShell>
   if (!user || !token) return <Navigate to="/login?next=/teacher" replace />
   return <Dashboard token={token} displayName={user.display_name} onLogout={logout} />
 }
@@ -65,20 +65,12 @@ function Dashboard({
     }
   }
 
-  const right = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-2)' }}>{displayName}</span>
-      <Button as="a" href="/teacher/library" variant="outline" size="sm">
-        banco de conteúdos
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onLogout}>
-        sair
-      </Button>
-    </div>
-  )
+  // Navegação e logout agora moram na sidebar + dropdown do avatar (AppShell).
+  void displayName
+  void onLogout
 
   return (
-    <PageShell headerRight={right}>
+    <AppShell>
       <div
         style={{
           display: 'flex',
@@ -178,7 +170,7 @@ function Dashboard({
           ))}
         </ul>
       )}
-    </PageShell>
+    </AppShell>
   )
 }
 

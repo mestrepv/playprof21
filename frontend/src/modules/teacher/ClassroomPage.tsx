@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 
 import { Button } from '../../components/ui/Button'
-import { PageShell } from '../../components/ui/PageShell'
+import { AppShell } from '../../components/ui/AppShell'
 import { useAuth } from '../auth/AuthContext'
 import { apiJson } from '../lab/runtime/apiFetch'
 import { AssignmentsTab } from './classroom/AssignmentsTab'
@@ -22,7 +22,7 @@ import type { Classroom, ClassroomStats } from './types'
 export function ClassroomPage() {
   const { id } = useParams<{ id: string }>()
   const { user, token, logout, loading } = useAuth()
-  if (loading) return <PageShell>carregando…</PageShell>
+  if (loading) return <AppShell>carregando…</AppShell>
   if (!user || !token) return <Navigate to={`/login?next=/teacher/classroom/${id ?? ''}`} replace />
   if (!id) return <Navigate to="/teacher" replace />
   return <View classroomId={id} user={user} token={token} onLogout={logout} />
@@ -61,28 +61,18 @@ function View({
 
   const isOwner = Boolean(classroom && classroom.owner_id === user.id)
 
-  const right = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-2)' }}>{user.display_name}</span>
-      <Button as="a" href="/teacher/library" variant="outline" size="sm">
-        banco
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onLogout}>
-        sair
-      </Button>
-    </div>
-  )
+  void onLogout
 
   if (err) {
     return (
-      <PageShell headerRight={right}>
+      <AppShell>
         <div style={errBox}>{err}</div>
-      </PageShell>
+      </AppShell>
     )
   }
 
   return (
-    <PageShell headerRight={right}>
+    <AppShell>
       {classroom && (
         <ClassroomHero name={classroom.name} code={classroom.code} />
       )}
@@ -113,7 +103,7 @@ function View({
           onClose={() => setDrawer(null)}
         />
       )}
-    </PageShell>
+    </AppShell>
   )
 }
 

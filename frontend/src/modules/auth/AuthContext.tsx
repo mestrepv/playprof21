@@ -37,6 +37,7 @@ interface AuthContextShape extends AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, displayName: string) => Promise<void>
   logout: () => void
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextShape | null>(null)
@@ -139,6 +140,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ user: null, token: null, loading: false })
   }, [])
 
+  const refresh = useCallback(async () => {
+    // Re-busca o user no backend (útil após PATCH /me). Não renova o token.
+    const current = readStored()
+    if (!current.token) return
+    try {
+      const r = await fetch(`${API_URL}/api/auth/me`, {
+        headers: { authorization: `Bearer ${current.token}` },
+      })
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      const user = (await r.json()) as AuthUser
+      writeStored(user, current.token)
+      setState({ user, token: current.token, loading: false })
+    } catch {
+      /* silencioso — quem chamou já trata o erro do PATCH */
+    }
+  }, [])
+
   // Reage a 401 vindo do apiFetch (token expirado).
   useEffect(() => {
     const onForced = () => logout()
@@ -147,8 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [logout])
 
   const value = useMemo<AuthContextShape>(
-    () => ({ ...state, login, register, logout }),
-    [state, login, register, logout],
+    () => ({ ...state, login, register, logout, refresh }),
+    [state, login, register, logout, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
