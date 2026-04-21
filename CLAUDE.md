@@ -39,7 +39,8 @@ Veja [docs/ROADMAP.md](docs/ROADMAP.md) como fonte de verdade. Resumo rápido:
 
 - **Fase 1** ✅ concluída (setup Docker + smoke test) — commit `7c5e95f`
 - **Fase 2** ✅ concluída (pipeline `.md`, preview em `/lab/preview/:slug`)
-- **Fase 3** ⬜ próximo passo: schema de domínio + auth
+- **Fase 3** ✅ concluída (schema de domínio, JWT, dashboard `/teacher`)
+- **Fase 4** ⬜ próximo passo: runtime de aula ao vivo (WebSocket mestre↔alunos)
 - Demais fases documentadas em `docs/ROADMAP.md`
 
 **Para retomar:** leia `docs/ROADMAP.md`, identifique a Fase ⬜ mais próxima,

@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { useAuth } from '../../auth/AuthContext'
 import { SlideShell } from '../components/SlideShell'
 import { apiUrl } from '../runtime/apiUrl'
 
@@ -28,6 +29,7 @@ interface Health {
 }
 
 export function IndexPage() {
+  const { user } = useAuth()
   const [games, setGames] = useState<GameSummary[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [health, setHealth] = useState<Health | null>(null)
@@ -49,11 +51,38 @@ export function IndexPage() {
 
   return (
     <SlideShell>
-      <header style={{ marginBottom: 'var(--spacing-lab-5, 2rem)' }}>
-        <h1 style={{ fontSize: 'var(--text-lab-2xl)', margin: 0 }}>labprof21</h1>
-        <p style={{ color: '#555B66', marginTop: 4 }}>
-          Aulas interativas síncronas · Fase 2 · preview de conteúdo
-        </p>
+      <header
+        style={{
+          marginBottom: 'var(--spacing-lab-5, 2rem)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: 'var(--text-lab-2xl)', margin: 0 }}>labprof21</h1>
+          <p style={{ color: '#555B66', marginTop: 4 }}>
+            Aulas interativas síncronas · preview de conteúdo
+          </p>
+        </div>
+        <nav style={{ display: 'flex', gap: 14, fontSize: 14 }}>
+          {user ? (
+            <Link to="/teacher" style={{ color: 'var(--color-lab-accent)' }}>
+              painel ({user.display_name})
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" style={{ color: 'var(--color-lab-accent)' }}>
+                entrar
+              </Link>
+              <Link to="/register" style={{ color: 'var(--color-lab-accent)' }}>
+                criar conta
+              </Link>
+            </>
+          )}
+        </nav>
       </header>
 
       <h2 style={{ fontSize: 'var(--text-lab-lg)' }}>Aulas disponíveis</h2>

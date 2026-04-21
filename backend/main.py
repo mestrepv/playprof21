@@ -13,6 +13,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from database import Base, engine
+
+# Importa os modelos pro Base.metadata conhecer as tabelas antes de create_all.
+# noqa: F401 — side-effect-only imports
+from modules.auth import models as _auth_models  # noqa: F401
+from modules.auth.routes import router as auth_router
+from modules.domain import models as _domain_models  # noqa: F401
+from modules.domain.routes import router as domain_router
 from modules.lab.routes import router as lab_router
 
 
@@ -41,6 +48,8 @@ app.add_middleware(
 )
 
 app.include_router(lab_router)
+app.include_router(auth_router)
+app.include_router(domain_router)
 
 
 @app.get("/health")

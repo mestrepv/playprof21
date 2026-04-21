@@ -67,35 +67,39 @@ banco ainda — só leitura de arquivos e render markdown.
 
 ## Fase 3 — Schema de domínio + auth
 
-**Status:** ⬜ pendente
+**Status:** ✅ concluída em 2026-04-21
 
 Objetivo: modelar como aulas se organizam pedagogicamente (turmas,
 trilhas, coleções) e quem é quem (professor, aluno).
 
 ### Modelagem
 
-- [ ] Tabelas: `user`, `class` (turma), `track` (trilha), `collection`, `lesson`, `enrollment`
-- [ ] Relações: professor dona turma; turma tem trilhas; trilha tem coleções; coleção tem aulas; aluno enrollment em turma
-- [ ] Schema migrations via `create_all` inicial + schema sync automático (espelha rpgia)
+- [x] Tabelas: `users`, `classrooms` (turma), `tracks` (trilha), `collections`, `lessons`, `enrollments`
+- [x] Relações: professor `owner_id` em classroom; classroom→tracks→collections→lessons via FK `ON DELETE CASCADE`; `enrollments` N:N entre `users` e `classrooms`
+- [x] Schema via `create_all` no lifespan (mesma abordagem da Fase 1). Sync de colunas novas fica pra quando aparecer necessidade.
 
 ### Auth
 
-- [ ] JWT com `fastapi-users` ou implementação própria minimal
-- [ ] Login professor (email + senha)
-- [ ] Registro de aluno com UUID anônimo (sem email) — fluxo via código de sessão
-- [ ] Dependency `get_current_user` pra proteger rotas
+- [x] JWT próprio minimal (HS256, TTL 7 dias); hash com `bcrypt` direto (sha256 prehash pra passar de 72 bytes); sem `fastapi-users`/`passlib` — 1.7 quebrou com bcrypt 5
+- [x] Login professor (email + senha) — `POST /api/auth/login`
+- [x] Registro de professor — `POST /api/auth/register`; aluno anônimo fica pra Fase 5 (só o modelo User com role=student e campos nullable)
+- [x] Dependency `get_current_user` + `require_teacher`
 
-### CRUD mínimo (só admin / professor)
+### CRUD mínimo (só professor)
 
-- [ ] CRUD turma
-- [ ] CRUD trilha, coleção, aula (referência ao slug do conteúdo em disco)
-- [ ] UI mínima no frontend (formulários simples, sem polimento visual)
+- [x] `/api/classrooms` GET/POST + `/api/classrooms/{id}` GET/PATCH/DELETE
+- [x] `/api/tracks` com query `?classroom_id`, CRUD igual
+- [x] `/api/collections` com `?track_id`
+- [x] `/api/lessons` com `?collection_id`; `slug` referencia `games_content/<slug>` do disco
+- [x] Isolamento por `owner_id` (teacher só vê/mexe no que criou); acesso cross-user devolve 404 pra não vazar existência
+- [x] UI mínima no frontend: `/login`, `/register`, `/teacher` (dashboard cascata turma→trilha→coleção→aula com link pro preview)
 
-**Estimativa:** 2-3 dias.
+**Decisões fechadas:**
+- Multi-tenancy: **isolamento por `owner_id`** (refactor pra "todo mundo vê tudo" é filter change trivial)
+- Aluno em múltiplas turmas: **sim** (`enrollments` é N:N com `UniqueConstraint(user_id, classroom_id)`)
+- Auth lib: **bcrypt direto + python-jose**, sem `fastapi-users`
 
-**Decisões pendentes:**
-- Multi-tenancy: todo professor vê tudo, ou isolamento por `owner_id`?
-- Aluno pode entrar em múltiplas turmas? (assumir sim até confirmação)
+**Critério de aceite atingido:** register + login + CRUD completo smoke-testado via curl; isolamento confirmado (segundo user vê 0 turmas, GET em turma alheia → 404). Typecheck passa. Rotas frontend respondem em 200.
 
 ---
 
