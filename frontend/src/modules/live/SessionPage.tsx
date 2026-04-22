@@ -22,6 +22,7 @@ import { apiJson } from '../lab/runtime/apiFetch'
 import type { Slide } from '../lab/types/manifest'
 import { SessionAdapter, type InternalState } from './adapter'
 import { CodeOverlay } from './CodeOverlay'
+import { InteractionModeBadge } from './InteractionModeBadge'
 import { MasterActivityControls } from './MasterActivityControls'
 import { ScoreBoard } from './ScoreBoard'
 import { SessionContext } from './SessionContext'
@@ -266,7 +267,9 @@ function SessionLive({
         ) : (
           <div style={{ color: '#555B66' }}>aula sem slides ou índice inválido.</div>
         )}
-        {/* Controles de missão (toggle free/master-led) */}
+        {/* Faixa de modo de interação (visível a todos em slides mission) */}
+        {isMission && <InteractionModeBadge />}
+        {/* Botão toggle master-led (só pro master) */}
         {isMission && <MasterActivityControls />}
         {/* Placar */}
         <ScoreBoard />

@@ -21,7 +21,7 @@ export function MasterActivityControls() {
       }
       style={{
         position: 'fixed',
-        top: 12,
+        top: 44,
         right: 12,
         zIndex: 50,
         display: 'flex',
