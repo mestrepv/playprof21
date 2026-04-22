@@ -27,7 +27,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
@@ -101,6 +101,71 @@ class SessionMembership(Base):
     role: Mapped[str] = mapped_column(String(16), nullable=False)  # 'master' | 'player'
     display_name: Mapped[str] = mapped_column(String(120), nullable=False)
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+
+class QuizState(Base):
+    """Estado de um quiz dentro de uma sessão ao vivo.
+    Um quiz por (session_id, question_id) — UNIQUE. Reset deleta e recria."""
+
+    __tablename__ = "live_quiz_states"
+    __table_args__ = (
+        UniqueConstraint("session_id", "question_id", name="uq_quiz_state_session_question"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("live_sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    question_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    # 'idle' | 'open' | 'closed'
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="idle")
+    # Contagem de respostas por opção. Ex: [0, 5, 2, 1] = opção 0: 0 votos, opção 1: 5 votos...
+    distribution: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    responses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Guardado no servidor; só revelado ao fechar o quiz no broadcast
+    correct_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    options_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class QuizAnswer(Base):
+    """Resposta de um participante. UNIQUE por (quiz_state_id, membership_id)
+    — segundo voto é rejeitado silenciosamente no handler."""
+
+    __tablename__ = "live_quiz_answers"
+    __table_args__ = (
+        UniqueConstraint("quiz_state_id", "membership_id", name="uq_quiz_answer_state_member"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    quiz_state_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("live_quiz_states.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    membership_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("live_memberships.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    answer_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+
+class Score(Base):
+    """Append-only. Total = SUM(delta) por membership_id na sessão.
+    source='auto' = quiz correto; source='master_override' = ajuste manual."""
+
+    __tablename__ = "live_scores"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("live_sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    membership_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("live_memberships.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source: Mapped[str] = mapped_column(String(32), nullable=False)  # 'auto' | 'master_override'
+    reason: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    delta: Mapped[int] = mapped_column(Integer, nullable=False)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
 
 
 class SessionEvent(Base):

@@ -16,6 +16,9 @@ import remarkGfm from 'remark-gfm'
 
 import type { TextSlide as TextSlideModel } from '../types/manifest'
 import { Math } from './MathInline'
+import { apiUrl } from '../runtime/apiUrl'
+
+const API_URL = apiUrl()
 
 interface Props {
   slide: TextSlideModel
@@ -212,7 +215,7 @@ export function TextSlide({ slide }: Props) {
       }}
     >
       <img
-        src={slide.sideImage}
+        src={slide.sideImage ? API_URL + slide.sideImage : undefined}
         alt={slide.sideImageAlt ?? ''}
         loading="lazy"
         style={{

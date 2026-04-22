@@ -35,6 +35,17 @@ export interface SessionSnapshot {
   my_role: Role
 }
 
+// ── Estado de quiz ─────────────────────────────────────────────────────────
+
+export interface QuizStateLocal {
+  questionId: string
+  status: 'idle' | 'open' | 'closed'
+  distribution: number[]
+  responses: number
+  correctIndex: number | null
+  myAnswer: number | null   // Resposta deste cliente (null = não respondeu)
+}
+
 // ── Mensagens WebSocket (server → client) ──────────────────────────────────
 
 export interface SnapshotMessage {
@@ -50,6 +61,14 @@ export interface SnapshotMessage {
   my_membership: Participant
   my_role: Role
   participants: Participant[]
+  quizzes: Array<{
+    questionId: string
+    status: 'idle' | 'open' | 'closed'
+    distribution: number[]
+    responses: number
+    correctIndex: number | null
+  }>
+  scores: Array<{ membershipId: string; total: number }>
   ts: string
 }
 
@@ -65,6 +84,35 @@ export interface SlideChangeMessage {
 export interface InteractionModeChangeMessage {
   type: 'interactionModeChange'
   mode: InteractionMode
+  ts: string
+}
+
+export interface ActivityChangeMessage {
+  type: 'activityChange'
+  activityId: string | null
+  ts: string
+}
+
+export interface QuizStateMessage {
+  type: 'quizState'
+  questionId: string
+  status: 'idle' | 'open' | 'closed'
+  distribution: number[]
+  responses: number
+  correctIndex: number | null
+  ts: string
+}
+
+export interface ScoreDelta {
+  membershipId: string
+  delta: number
+  reason?: string
+  source?: 'auto' | 'master_override'
+}
+
+export interface ScoreUpdateMessage {
+  type: 'scoreUpdate'
+  deltas: ScoreDelta[]
   ts: string
 }
 
@@ -96,6 +144,9 @@ export type ServerMessage =
   | SnapshotMessage
   | SlideChangeMessage
   | InteractionModeChangeMessage
+  | ActivityChangeMessage
+  | QuizStateMessage
+  | ScoreUpdateMessage
   | ParticipantUpdateMessage
   | SessionEndedMessage
   | PongMessage

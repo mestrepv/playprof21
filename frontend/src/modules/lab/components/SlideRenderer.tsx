@@ -1,11 +1,6 @@
-/**
- * SlideRenderer — despacha por tipo de slide.
- *
- * Fase 2: suporta text e video. Mission, quiz e custom ainda não — placeholder
- * com aviso. Fases 3+ plugam os tipos restantes.
- */
-
 import type { Slide } from '../types/manifest'
+import { MissionSlide } from './MissionSlide'
+import { QuizSlide } from './QuizSlide'
 import { TextSlide } from './TextSlide'
 import { VideoSlide } from './VideoSlide'
 
@@ -19,8 +14,10 @@ export function SlideRenderer({ slide }: Props) {
       return <TextSlide slide={slide} />
     case 'video':
       return <VideoSlide slide={slide} />
-    case 'quiz':
     case 'mission':
+      return <MissionSlide slide={slide} />
+    case 'quiz':
+      return <QuizSlide slide={slide} />
     case 'custom':
       return <UnsupportedSlide kind={slide.type} label={slide.label} />
     default: {
@@ -44,7 +41,7 @@ function UnsupportedSlide({ kind, label }: { kind: string; label: string }) {
       }}
     >
       <strong style={{ display: 'block', marginBottom: 6 }}>
-        slide tipo `{kind}` — ainda não portado (Fase 2 cobre só text e video)
+        slide tipo `{kind}` — não suportado
       </strong>
       label: {label}
     </div>

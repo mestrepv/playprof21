@@ -5,9 +5,11 @@
  *
  * Master (teacher dono): abre logado; token JWT autentica + garante role.
  * Player (qualquer um): abre com ?role=player; usa anon_id persistido no
- * localStorage e pede nome. Quando a Fase 5 chegar, o aluno entrará por
- * código + QR — aqui vai continuar funcionando porque o backend aceita
- * tanto JWT quanto anon_id.
+ * localStorage e pede nome. Fase 5 provê o fluxo de join por código + QR.
+ *
+ * Fase 4.1: SessionContext passa adapter+state pra SlideRenderer;
+ * MissionSlide e QuizSlide são session-aware; MasterActivityControls
+ * e ScoreBoard aparecem nas sessões ao vivo.
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -20,6 +22,9 @@ import { apiJson } from '../lab/runtime/apiFetch'
 import type { Slide } from '../lab/types/manifest'
 import { SessionAdapter, type InternalState } from './adapter'
 import { CodeOverlay } from './CodeOverlay'
+import { MasterActivityControls } from './MasterActivityControls'
+import { ScoreBoard } from './ScoreBoard'
+import { SessionContext } from './SessionContext'
 import type { SessionSnapshot } from './types'
 import { getAnonymousId } from './useAnonymousId'
 
@@ -61,7 +66,6 @@ function SessionResolver({
   const { user, token } = useAuth()
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
 
-  // 1) Busca snapshot REST (público). Se master, exige login.
   useEffect(() => {
     if (desiredRole === 'master' && !token) return
     let cancelled = false
@@ -94,7 +98,6 @@ function SessionResolver({
     }
   }, [sid, token, desiredRole, initialName, user?.display_name])
 
-  // Master sem token → manda pra login
   if (desiredRole === 'master' && !token) {
     return <Navigate to={`/login?next=${encodeURIComponent(`/lab/session/${sid}?role=master`)}`} replace />
   }
@@ -223,7 +226,7 @@ function SessionLive({
       if (next !== null) {
         e.preventDefault()
         const clamped = Math.min(Math.max(0, next), total - 1)
-        if (clamped !== state.slideIndex) adapter.send({ type: 'setSlide', index: clamped })
+        if (clamped !== state.slideIndex) adapter.setSlide(clamped)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -231,8 +234,6 @@ function SessionLive({
   }, [adapter, state.role, state.slideIndex, state.snapshotReceived, slides.length])
 
   const [showCode, setShowCode] = useState(false)
-  // Auto-abre o overlay do código assim que o master conecta em sessão idle.
-  // Idle = primeiro acesso, alunos ainda entrando; escondendo o overlay inicia a aula.
   useEffect(() => {
     if (state.role === 'master' && state.snapshotReceived && state.status === 'idle') {
       setShowCode(true)
@@ -243,12 +244,11 @@ function SessionLive({
     return <SlideShell>conectando…</SlideShell>
   }
 
-  // Role divergente: URL pedia master mas backend disse player (não é dono).
   if (desiredRole === 'master' && state.role === 'player') {
     return (
       <SlideShell>
         <div style={{ color: '#993C1D', fontFamily: 'var(--font-lab-mono)' }}>
-          você não é o mestre dessa sessão. Peça o link como player ou faça login com a conta dona da aula.
+          você não é o mestre dessa sessão.
         </div>
         <Link to="/" style={{ color: 'var(--color-lab-accent)' }}>voltar</Link>
       </SlideShell>
@@ -256,40 +256,47 @@ function SessionLive({
   }
 
   const slide = slides[state.slideIndex]
+  const isMission = slide?.type === 'mission'
 
   return (
-    <SlideShell>
-      {slide ? (
-        <SlideRenderer slide={slide} />
-      ) : (
-        <div style={{ color: '#555B66' }}>aula sem slides ou índice inválido.</div>
-      )}
-      <SessionHUD
-        role={state.role}
-        status={state.status}
-        slideIndex={state.slideIndex}
-        total={slides.length}
-        participants={state.participants.length}
-        title={snapshot.game_title}
-        code={snapshot.session.code}
-        onPrev={() => adapter.send({ type: 'setSlide', index: state.slideIndex - 1 })}
-        onNext={() => adapter.send({ type: 'setSlide', index: state.slideIndex + 1 })}
-        onEnd={() => {
-          if (confirm('Encerrar sessão pra todos?')) adapter.send({ type: 'endSession' })
-        }}
-        onShowCode={() => setShowCode(true)}
-      />
-      {showCode && state.role === 'master' && (
-        <CodeOverlay
-          caption="código da aula ao vivo"
-          joinPathBase="/lab/join"
-          rotatePath={`/api/lab/sessions/${sid}/code/rotate`}
-          initialCode={snapshot.session.code}
-          token={token}
-          onClose={() => setShowCode(false)}
+    <SessionContext.Provider value={{ adapter, state }}>
+      <SlideShell variant={isMission ? 'fullbleed' : 'default'}>
+        {slide ? (
+          <SlideRenderer slide={slide} />
+        ) : (
+          <div style={{ color: '#555B66' }}>aula sem slides ou índice inválido.</div>
+        )}
+        {/* Controles de missão (toggle free/master-led) */}
+        {isMission && <MasterActivityControls />}
+        {/* Placar */}
+        <ScoreBoard />
+        <SessionHUD
+          role={state.role}
+          status={state.status}
+          slideIndex={state.slideIndex}
+          total={slides.length}
+          participants={state.participants.length}
+          title={snapshot.game_title}
+          code={snapshot.session.code}
+          onPrev={() => adapter.setSlide(state.slideIndex - 1)}
+          onNext={() => adapter.setSlide(state.slideIndex + 1)}
+          onEnd={() => {
+            if (confirm('Encerrar sessão pra todos?')) adapter.send({ type: 'endSession' })
+          }}
+          onShowCode={() => setShowCode(true)}
         />
-      )}
-    </SlideShell>
+        {showCode && state.role === 'master' && (
+          <CodeOverlay
+            caption="código da aula ao vivo"
+            joinPathBase="/lab/join"
+            rotatePath={`/api/lab/sessions/${sid}/code/rotate`}
+            initialCode={snapshot.session.code}
+            token={token}
+            onClose={() => setShowCode(false)}
+          />
+        )}
+      </SlideShell>
+    </SessionContext.Provider>
   )
 }
 
@@ -372,6 +379,7 @@ function SessionHUD({
           <button onClick={onNext} disabled={slideIndex >= total - 1} style={hudBtn}>
             →
           </button>
+          <ScoreBoardInHud />
           <button
             onClick={onShowCode}
             style={{
@@ -396,6 +404,12 @@ function SessionHUD({
       )}
     </nav>
   )
+}
+
+/** Botão de placar embutido no HUD do master (evita componente flutuante). */
+function ScoreBoardInHud() {
+  // Importa apenas o botão/painel — não duplica o badge do player
+  return <ScoreBoard />
 }
 
 const hudBtn: React.CSSProperties = {

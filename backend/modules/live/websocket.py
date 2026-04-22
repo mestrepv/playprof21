@@ -9,22 +9,20 @@ Auth:
   - Senão se `anon_id` (UUID) + `display_name` → player anônimo.
   - Fora disso → fecha com 4401.
 
-Fluxo:
-  1. Accept + resolve membership (upsert).
-  2. Envia sessionSnapshot pro cliente que conectou.
-  3. Broadcast participantUpdate pra todos os outros.
-  4. Loop de mensagens até desconectar.
-
 Handlers Fase 4:
-  setSlide {index}            — master-only; muda current_slide_index +
-                                interaction_mode default do slide no manifest
+  setSlide {index}            — master-only
   setInteractionMode {mode}   — master-only
   event {name, payload}       — qualquer role; persiste em live_events
-  ping {}                     — qualquer role; responde pong (keepalive simples)
+  ping {}                     — qualquer role; responde pong
 
-Fora do escopo da Fase 4 (entram quando missions forem portadas):
-  quizOpen/Close/Reset/Answer, adjustScore, setActivity (infra pronta no DB
-  mas sem handler).
+Handlers Fase 4.1:
+  setActivity {activityId}    — master-only; sincroniza atividade ativa
+  quizOpen {questionId, options, correctIndex}  — master-only
+  quizAnswer {questionId, answerIndex}          — qualquer role
+  quizClose {questionId}      — master-only; revela gabarito + auto-score
+  quizReset {questionId}      — master-only; apaga respostas
+  adjustScore {membershipId, delta, reason?}    — master-only
+  endSession {}               — master-only
 """
 
 from __future__ import annotations
@@ -34,8 +32,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import WebSocket, WebSocketDisconnect, status
-from sqlalchemy import select
+from fastapi import WebSocket, WebSocketDisconnect
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
 
 from database import SessionLocal
@@ -45,8 +44,9 @@ from ..auth.security import decode_access_token
 from ..domain.models import InteractiveLesson
 from ..lab.content_loader import games_content_root, load_game_dir
 from .connection_manager import manager
-from .models import Session, SessionEvent, SessionMembership
+from .models import QuizAnswer, QuizState, Score, Session, SessionEvent, SessionMembership
 
+QUIZ_CORRECT_POINTS = 10
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +91,6 @@ def _upsert_membership(
             )
         )
         if existing is not None:
-            # Atualiza display_name se mudou
             if existing.display_name != display_name:
                 existing.display_name = display_name
                 db.commit()
@@ -154,8 +153,6 @@ def _persist_event(
 
 
 def _load_manifest_slides(slug: str) -> list[dict] | None:
-    """Best-effort: carrega os slides pra poder aplicar interaction_mode
-    default em setSlide. Em erro, devolve None e segue sem aplicar."""
     game_dir = games_content_root() / slug
     if not game_dir.is_dir():
         return None
@@ -163,6 +160,39 @@ def _load_manifest_slides(slug: str) -> list[dict] | None:
     if game is None:
         return None
     return game.get("manifest", {}).get("slides", [])
+
+
+def _quiz_state_dict(qs: QuizState, *, reveal_answer: bool) -> dict:
+    return {
+        "questionId": qs.question_id,
+        "status": qs.status,
+        "distribution": qs.distribution or [],
+        "responses": qs.responses,
+        "correctIndex": qs.correct_index if reveal_answer else None,
+    }
+
+
+def _scores_dict(db: DbSession, session_id: uuid.UUID) -> dict[str, int]:
+    """Retorna {membership_id_str: total} para a sessão."""
+    rows = db.execute(
+        select(Score.membership_id, func.sum(Score.delta).label("total"))
+        .where(Score.session_id == session_id)
+        .group_by(Score.membership_id)
+    ).all()
+    return {str(r.membership_id): int(r.total) for r in rows}
+
+
+def _build_snapshot_extra(db: DbSession, sess: Session) -> tuple[list[dict], list[dict]]:
+    """Retorna (quizzes_list, scores_list) para incluir no sessionSnapshot."""
+    quiz_states = db.scalars(
+        select(QuizState).where(QuizState.session_id == sess.id)
+    ).all()
+    quizzes = [_quiz_state_dict(qs, reveal_answer=(qs.status == "closed")) for qs in quiz_states]
+
+    scores_map = _scores_dict(db, sess.id)
+    scores = [{"membershipId": mid, "total": total} for mid, total in scores_map.items()]
+
+    return quizzes, scores
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -220,7 +250,8 @@ async def session_ws(
             display_name=display,
         )
 
-        # Snapshot inicial pro cliente que entrou.
+        quizzes, scores = _build_snapshot_extra(db, sess)
+
         await manager.send(ws, {
             "type": "sessionSnapshot",
             "session": {
@@ -245,10 +276,11 @@ async def session_ws(
                     .order_by(SessionMembership.joined_at)
                 ).all()
             ],
+            "quizzes": quizzes,
+            "scores": scores,
             "ts": _now_iso(),
         })
 
-        # Broadcast participantUpdate pra outros.
         await manager.broadcast(
             sess.id,
             {
@@ -271,7 +303,7 @@ async def session_ws(
             payload={"role": role, "display_name": display},
         )
 
-        # Loop de mensagens
+        # ── Loop de mensagens ────────────────────────────────────────────
         while True:
             try:
                 msg = await ws.receive_json()
@@ -284,6 +316,8 @@ async def session_ws(
             if not isinstance(msg, dict):
                 continue
             mtype = msg.get("type")
+
+            # ── Handlers qualquer role ──────────────────────────────────
 
             if mtype == "ping":
                 await manager.send(ws, {"type": "pong", "ts": _now_iso()})
@@ -302,7 +336,57 @@ async def session_ws(
                 )
                 continue
 
-            # Daqui pra frente, master-only
+            if mtype == "quizAnswer":
+                question_id = str(msg.get("questionId") or "")
+                try:
+                    answer_index = int(msg.get("answerIndex", -1))
+                except (TypeError, ValueError):
+                    answer_index = -1
+
+                qs = db.scalar(
+                    select(QuizState).where(
+                        QuizState.session_id == sess.id,
+                        QuizState.question_id == question_id,
+                    )
+                )
+                if qs is None or qs.status != "open":
+                    await manager.send(ws, {"type": "error", "code": "quiz_not_open", "message": "quiz não está aberto"})
+                    continue
+                if answer_index < 0 or (qs.options_count is not None and answer_index >= qs.options_count):
+                    await manager.send(ws, {"type": "error", "code": "bad_answer", "message": "answerIndex inválido"})
+                    continue
+
+                try:
+                    ans = QuizAnswer(
+                        quiz_state_id=qs.id,
+                        membership_id=membership.id,
+                        answer_index=answer_index,
+                    )
+                    db.add(ans)
+                    db.flush()
+                    dist = list(qs.distribution or [])
+                    while len(dist) <= answer_index:
+                        dist.append(0)
+                    dist[answer_index] += 1
+                    qs.distribution = dist
+                    qs.responses = (qs.responses or 0) + 1
+                    db.commit()
+                    await manager.broadcast(sess.id, {
+                        "type": "quizState",
+                        "questionId": qs.question_id,
+                        "status": "open",
+                        "distribution": qs.distribution,
+                        "responses": qs.responses,
+                        "correctIndex": None,
+                        "ts": _now_iso(),
+                    })
+                except IntegrityError:
+                    db.rollback()
+                    # Segundo voto — ignora silenciosamente
+                continue
+
+            # ── Master-only abaixo ──────────────────────────────────────
+
             if role != "master":
                 await manager.send(ws, {"type": "error", "code": "forbidden", "message": f"'{mtype}' é master-only"})
                 continue
@@ -316,7 +400,6 @@ async def session_ws(
                 sess.current_slide_index = max(0, idx)
                 sess.current_activity_id = None
 
-                # Aplica interaction_mode default do slide, se manifest carregar
                 il = db.get(InteractiveLesson, sess.interactive_lesson_id)
                 if il is not None:
                     slides = _load_manifest_slides(il.slug) or []
@@ -362,6 +445,200 @@ async def session_ws(
                     type_="interactionMode.changed", payload={"mode": mode},
                     slide_index=sess.current_slide_index,
                 )
+
+            elif mtype == "setActivity":
+                activity_id = msg.get("activityId")
+                if activity_id is not None:
+                    activity_id = str(activity_id)[:120]
+                sess.current_activity_id = activity_id
+                db.commit()
+                await manager.broadcast(sess.id, {
+                    "type": "activityChange",
+                    "activityId": activity_id,
+                    "ts": _now_iso(),
+                })
+                _persist_event(
+                    db, session_id=sess.id, membership_id=membership.id,
+                    type_="activity.changed",
+                    payload={"activityId": activity_id},
+                    slide_index=sess.current_slide_index,
+                    activity_id=activity_id,
+                )
+
+            elif mtype == "quizOpen":
+                question_id = str(msg.get("questionId") or "")[:120]
+                options = msg.get("options") or []
+                try:
+                    correct_index = int(msg.get("correctIndex", 0))
+                except (TypeError, ValueError):
+                    correct_index = 0
+                if not question_id or len(options) < 2 or len(options) > 6:
+                    await manager.send(ws, {"type": "error", "code": "bad_quiz", "message": "questionId obrigatório e 2-6 opções"})
+                    continue
+                if correct_index < 0 or correct_index >= len(options):
+                    await manager.send(ws, {"type": "error", "code": "bad_correct", "message": "correctIndex fora do range"})
+                    continue
+
+                # Upsert: se já existe, limpa respostas e reabre
+                qs = db.scalar(
+                    select(QuizState).where(
+                        QuizState.session_id == sess.id,
+                        QuizState.question_id == question_id,
+                    )
+                )
+                if qs is None:
+                    qs = QuizState(
+                        session_id=sess.id,
+                        question_id=question_id,
+                    )
+                    db.add(qs)
+                else:
+                    # Limpa respostas anteriores
+                    db.query(QuizAnswer).filter(QuizAnswer.quiz_state_id == qs.id).delete()
+                qs.status = "open"
+                qs.distribution = [0] * len(options)
+                qs.responses = 0
+                qs.correct_index = correct_index
+                qs.options_count = len(options)
+                qs.opened_at = datetime.now(timezone.utc)
+                qs.closed_at = None
+                db.commit()
+
+                await manager.broadcast(sess.id, {
+                    "type": "quizState",
+                    "questionId": qs.question_id,
+                    "status": "open",
+                    "distribution": qs.distribution,
+                    "responses": 0,
+                    "correctIndex": None,
+                    "ts": _now_iso(),
+                })
+
+            elif mtype == "quizClose":
+                question_id = str(msg.get("questionId") or "")[:120]
+                qs = db.scalar(
+                    select(QuizState).where(
+                        QuizState.session_id == sess.id,
+                        QuizState.question_id == question_id,
+                    )
+                )
+                if qs is None or qs.status != "open":
+                    await manager.send(ws, {"type": "error", "code": "quiz_not_open", "message": "quiz não está aberto"})
+                    continue
+                qs.status = "closed"
+                qs.closed_at = datetime.now(timezone.utc)
+                db.commit()
+
+                # Auto-scoring: 10 pts pra quem acertou
+                deltas: list[dict] = []
+                if qs.correct_index is not None:
+                    correct_answers = db.scalars(
+                        select(QuizAnswer).where(
+                            QuizAnswer.quiz_state_id == qs.id,
+                            QuizAnswer.answer_index == qs.correct_index,
+                        )
+                    ).all()
+                    reason = f"quiz-{qs.question_id}-correct"
+                    for ans in correct_answers:
+                        s = Score(
+                            session_id=sess.id,
+                            membership_id=ans.membership_id,
+                            source="auto",
+                            reason=reason,
+                            delta=QUIZ_CORRECT_POINTS,
+                        )
+                        db.add(s)
+                        deltas.append({
+                            "membershipId": str(ans.membership_id),
+                            "delta": QUIZ_CORRECT_POINTS,
+                            "reason": reason,
+                            "source": "auto",
+                        })
+                    if deltas:
+                        db.commit()
+
+                # Broadcast: revela gabarito
+                await manager.broadcast(sess.id, {
+                    "type": "quizState",
+                    "questionId": qs.question_id,
+                    "status": "closed",
+                    "distribution": qs.distribution,
+                    "responses": qs.responses,
+                    "correctIndex": qs.correct_index,
+                    "ts": _now_iso(),
+                })
+                if deltas:
+                    await manager.broadcast(sess.id, {
+                        "type": "scoreUpdate",
+                        "deltas": deltas,
+                        "ts": _now_iso(),
+                    })
+
+            elif mtype == "quizReset":
+                question_id = str(msg.get("questionId") or "")[:120]
+                qs = db.scalar(
+                    select(QuizState).where(
+                        QuizState.session_id == sess.id,
+                        QuizState.question_id == question_id,
+                    )
+                )
+                if qs is not None:
+                    db.query(QuizAnswer).filter(QuizAnswer.quiz_state_id == qs.id).delete()
+                    db.delete(qs)
+                    db.commit()
+                await manager.broadcast(sess.id, {
+                    "type": "quizState",
+                    "questionId": question_id,
+                    "status": "idle",
+                    "distribution": [],
+                    "responses": 0,
+                    "correctIndex": None,
+                    "ts": _now_iso(),
+                })
+
+            elif mtype == "adjustScore":
+                target_mid_str = str(msg.get("membershipId") or "")
+                try:
+                    target_mid = uuid.UUID(target_mid_str)
+                except ValueError:
+                    await manager.send(ws, {"type": "error", "code": "bad_membership", "message": "membershipId inválido"})
+                    continue
+                try:
+                    delta = int(msg.get("delta", 0))
+                except (TypeError, ValueError):
+                    delta = 0
+                reason = str(msg.get("reason") or "ajuste manual")[:200]
+
+                # Verifica que membership pertence à sessão
+                target = db.scalar(
+                    select(SessionMembership).where(
+                        SessionMembership.id == target_mid,
+                        SessionMembership.session_id == sess.id,
+                    )
+                )
+                if target is None:
+                    await manager.send(ws, {"type": "error", "code": "not_found", "message": "membership não encontrado"})
+                    continue
+
+                s = Score(
+                    session_id=sess.id,
+                    membership_id=target_mid,
+                    source="master_override",
+                    reason=reason,
+                    delta=delta,
+                )
+                db.add(s)
+                db.commit()
+                await manager.broadcast(sess.id, {
+                    "type": "scoreUpdate",
+                    "deltas": [{
+                        "membershipId": target_mid_str,
+                        "delta": delta,
+                        "reason": reason,
+                        "source": "master_override",
+                    }],
+                    "ts": _now_iso(),
+                })
 
             elif mtype == "endSession":
                 sess.status = "ended"

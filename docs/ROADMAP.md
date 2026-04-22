@@ -156,6 +156,40 @@ Objetivo: aula síncrona mestre↔alunos. Mestre avança slides, todos veem junt
 
 ---
 
+## Fase 4.1 — Quiz live + score + mission TSX em sessão ao vivo
+
+**Status:** ✅ concluída em 2026-04-21
+
+Objetivo: completar o runtime síncrono — slides `quiz` e `mission` funcionam
+na aula ao vivo com sincronização mestre↔alunos.
+
+### Backend
+
+- [x] Modelos: `live_quiz_states`, `live_quiz_answers`, `live_scores`
+- [x] Handler `setActivity {activityId}` — master sincroniza atividade ativa; broadcast `activityChange`
+- [x] Handler `quizOpen {questionId, options, correctIndex}` — abre quiz; `correctIndex` guardado server-side, não enviado ao cliente até fechar
+- [x] Handler `quizAnswer {questionId, answerIndex}` — qualquer role; UNIQUE por (quiz_state_id, membership_id); atualiza distribuição; broadcast quizState
+- [x] Handler `quizClose {questionId}` — fecha quiz; revela `correctIndex`; auto-scoring (+10pts pra quem acertou); broadcast `quizState(closed)` + `scoreUpdate`
+- [x] Handler `quizReset {questionId}` — apaga respostas e quiz_state; broadcast `quizState(idle)`
+- [x] Handler `adjustScore {membershipId, delta, reason}` — master override; broadcast `scoreUpdate`
+- [x] `sessionSnapshot` estendido com `quizzes` e `scores`
+
+### Frontend
+
+- [x] `types.ts` — `ActivityChangeMessage`, `QuizStateMessage`, `ScoreUpdateMessage`, `QuizStateLocal`
+- [x] `SessionAdapter` — handle `activityChange`, `quizState`, `scoreUpdate`; expõe `setActivity`, `openQuiz`, `closeQuiz`, `resetQuiz`, `adjustScore`, `submitAnswer`, `logEvent`; quizzes e scores no `InternalState`
+- [x] `SessionContext` — React context com adapter + state; `useSession()` e `useSessionOptional()`
+- [x] `MissionSlide` — session-aware: em sessão usa adapter (forcedActivityId, readOnly, onLayerFocused→setActivity); em preview funciona sem contexto
+- [x] `MasterActivityControls` — botão toggle `free`/`master-led` fixo top-right; só visível pro master
+- [x] `QuizSlide` — master view (distribuição ao vivo, abrir/fechar/resetar); player view (opções clicáveis quando aberto, resultado ao fechar); preview estático sem sessão
+- [x] `ScoreBoard` — master: painel flutuante com ranking de alunos; player: badge com próprio score
+- [x] `SlideRenderer` — `quiz` deixa de ser `UnsupportedSlide`, renderiza `QuizSlide`
+- [x] `SessionPage` — envolve tudo em `SessionContext.Provider`; missions recebem `fullbleed`; `MasterActivityControls` aparece em mission slides
+
+**Critério de aceite atingido:** smoke test Python com 11 cenários — master+player conectam, setSlide/setInteractionMode/setActivity/quizOpen/quizAnswer/quizClose (com auto-score)/adjustScore/quizReset todos funcionam, forbidden pro player em comandos master. Build Vite sem erros de TypeScript.
+
+---
+
 ## Fase 5 — Entrada de aluno por código + QR
 
 **Status:** ✅ concluída em 2026-04-21
@@ -338,8 +372,8 @@ Candidatos conhecidos:
 | 3 schema + banco de conteúdos | 2-3d | ✅ |
 | 4 runtime ao vivo | 2-3d | ✅ MVP |
 | 5 código + QR | 1-2d | ✅ |
-| 6 onboarding aluno | 1-2d | ⬜ |
-| 7 runtime de trilha | 2-3d | ⬜ |
+| 6 onboarding aluno | 1-2d | ✅ |
+| 7 runtime de trilha | 2-3d | ✅ MVP |
 | 8 deploy | 1-2d | ⬜ |
 | 9 iteração pós-aula real | ~1 semana | ⬜ |
 

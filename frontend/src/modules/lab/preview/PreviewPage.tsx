@@ -143,8 +143,10 @@ export function PreviewPage() {
     )
   }
 
+  const isMission = slide.type === 'mission'
+
   return (
-    <SlideShell>
+    <SlideShell variant={isMission ? 'fullbleed' : 'default'}>
       <SlideRenderer slide={slide} />
       <NavBar
         idx={idx}
