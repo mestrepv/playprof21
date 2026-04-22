@@ -363,6 +363,86 @@ Candidatos conhecidos:
 
 ---
 
+## Fase 10 — Telemetria pedagógica (plano futuro)
+
+**Status:** ⬜ pendente (pós-deploy, pós-primeira-aula-real)
+
+Objetivo: transformar os dados já coletados em informação útil sobre
+aprendizagem, engajamento e habilidades — especificamente para aulas
+no estilo atlas-v1 (missions TSX + quizzes + perguntas abertas).
+
+### Dados a coletar (novos eventos / novos tipos de slide)
+
+**Tempo por slide** — emitir `slide.entered` / `slide.exited` automaticamente
+em `SessionPage` ao mudar de slide. Já existe `ts` nos eventos; basta
+registrar os dois extremos.
+
+**Eventos ricos nas missions** — cada componente TSX deve emitir eventos
+granulares além do `layerFocused` atual:
+
+| Missão | Eventos a emitir |
+|---|---|
+| Reconhecimento | `layerCompleted` (todas camadas visitadas), `layerTimeSpent` |
+| Assinaturas | `particleAssociated` (correto/errado), `attemptCount` |
+| Identificação | `particleIdentified` (qual, acurácia) |
+| Massa invariante | `massCalculated` (valor inserido, valor correto, erro %) |
+| Hypatia | `analysisCompleted`, `decisionMade`, `timeToComplete` |
+
+**Perguntas abertas** — novo tipo de slide `open-question`:
+```yaml
+type: open-question
+id: pergunta-01
+label: "Reflexão final"
+stem: "O que você aprendeu sobre o detector ATLAS?"
+```
+Requer nova tabela `live_open_answers (session_id, membership_id, question_id, text, ts)`
+e componente `OpenQuestionSlide` (player digita, master lê depois).
+
+### Dados a medir por dimensão
+
+**Aprendizagem:**
+- Acerto/erro por questão de quiz (já existe)
+- Qual distrator foi escolhido — padrões de erro sistemático
+- Tempo de resposta no quiz (delta `quizOpen.ts` → `quizAnswer.ts`)
+- Progressão entre tentativas (quizReset + nova rodada)
+- Respostas abertas (qualitativo)
+
+**Engajamento:**
+- Tempo por slide (novo)
+- % de camadas exploradas em free mode (índice de exploração)
+- Ordem de exploração das camadas (sequência de `layerFocused`)
+- Taxa de revisitação de slides
+- Taxa de conclusão da missão
+
+**Habilidades específicas do ATLAS:**
+- Reconhece as 4 camadas do detector? (todas visitadas)
+- Associa partícula → assinatura corretamente?
+- Identifica partículas com qual acurácia?
+- Calcula massa invariante dentro de margem aceitável?
+- Completa análise no Hypatia em tempo razoável?
+
+### O que construir
+
+- [ ] `slide.entered` / `slide.exited` automáticos no `SessionPage`
+- [ ] Eventos granulares em cada componente TSX do atlas
+- [ ] Tipo de slide `open-question` + tabela `live_open_answers`
+- [ ] Componente `OpenQuestionSlide` (player digita, master lê ao vivo)
+- [ ] Endpoint `GET /api/lab/sessions/{sid}/report` — relatório pós-aula:
+      lista de alunos com acertos, tempo médio por slide, habilidades ativadas
+- [ ] Página de relatório no dashboard do professor (pós-sessão)
+
+### Arquitetura
+
+Toda a infraestrutura já existe: `live_events` aceita qualquer payload
+JSONB. O trabalho é emitir os eventos certos nos componentes e construir
+as queries de leitura. Nenhuma mudança de schema crítica.
+
+**Estimativa:** 3-5 dias de desenvolvimento para a camada completa.
+**Pré-requisito:** ter dado pelo menos uma aula real e saber o que o
+professor precisa ver.
+
+---
+
 ## Resumo de prazos
 
 | Fase | Esforço dev | Status |
@@ -374,8 +454,10 @@ Candidatos conhecidos:
 | 5 código + QR | 1-2d | ✅ |
 | 6 onboarding aluno | 1-2d | ✅ |
 | 7 runtime de trilha | 2-3d | ✅ MVP |
+| 4.1 quiz + score + mission ao vivo | 1d | ✅ |
 | 8 deploy | 1-2d | ⬜ |
 | 9 iteração pós-aula real | ~1 semana | ⬜ |
+| 10 telemetria pedagógica | 3-5d | ⬜ |
 
 **Alvo de MVP funcionando em produção: 2-3 semanas calendário** com
 sessões ativas de conversa/decisão frequentes.
