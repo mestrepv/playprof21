@@ -6,7 +6,7 @@
  *           activityChange, quizState, scoreUpdate no handleMessage
  */
 
-import { wsUrl } from '../lab/runtime/wsUrl'
+import { wsUrl } from '../lesson/runtime/wsUrl'
 import type {
   InteractionMode,
   QuizStateLocal,
@@ -176,7 +176,7 @@ export class SessionAdapter {
     if (this.params.token) qp.set('token', this.params.token)
     if (this.params.anonId) qp.set('anon_id', this.params.anonId)
     if (this.params.displayName) qp.set('display_name', this.params.displayName)
-    return `${base}/ws/lab/session/${encodeURIComponent(this.params.sessionId)}?${qp.toString()}`
+    return `${base}/ws/lesson/session/${encodeURIComponent(this.params.sessionId)}?${qp.toString()}`
   }
 
   private notify(msg: ServerMessage | null): void {

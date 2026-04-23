@@ -3,11 +3,11 @@ Content loader — lê aulas (jogos) de pastas com arquivos markdown.
 
 Portado do module_lab do rpgia (commit-fonte: `backend/modules/module_lab/content_loader.py`).
 Mudanças:
-  - URL prefix de assets: /api/lab/assets/<slug>/... (antes: /api/modules/module_lab/assets/).
+  - URL prefix de assets: /api/lesson/assets/<slug>/... (antes: /api/modules/module_lab/assets/).
   - KNOWN_MISSION_IDS começa vazio; vai crescer à medida que missions
     TSX forem registradas na Fase 4.
 
-Estrutura esperada em backend/modules/lab/games_content/:
+Estrutura esperada em backend/modules/lesson/games_content/:
 
     games_content/
     ├── atlas-v1/
@@ -45,7 +45,7 @@ from typing import Any
 import yaml
 
 
-ASSET_URL_PREFIX = "/api/lab/assets"
+ASSET_URL_PREFIX = "/api/lesson/assets"
 
 
 # ===========================================================================
@@ -108,7 +108,8 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
 # Schema validation por tipo de slide
 # ===========================================================================
 
-VALID_SLIDE_TYPES = {"text", "video", "quiz", "mission", "custom"}
+VALID_SLIDE_TYPES = {"text", "video", "quiz", "mission", "custom",
+                     "phet", "geogebra", "quiz-image", "quiz-fill"}
 
 
 def _require(slide: dict, field_name: str, expected_type: type, source: str) -> LoaderError | None:
@@ -217,6 +218,57 @@ def validate_slide(slide: dict[str, Any], source: str) -> list[LoaderError]:
         if "props" in slide and not isinstance(slide["props"], dict):
             errors.append(LoaderError(source, "'props' deve ser dict"))
 
+    elif slide_type == "phet":
+        e = _require(slide, "simUrl", str, source)
+        if e:
+            errors.append(e)
+        if "height" in slide and not isinstance(slide["height"], (int, float)):
+            errors.append(LoaderError(source, "'height' deve ser número"))
+
+    elif slide_type == "geogebra":
+        e = _require(slide, "materialId", str, source)
+        if e:
+            errors.append(e)
+        if "height" in slide and not isinstance(slide["height"], (int, float)):
+            errors.append(LoaderError(source, "'height' deve ser número"))
+        for bool_field in ("showToolbar", "showAlgebraInput"):
+            if bool_field in slide and not isinstance(slide[bool_field], bool):
+                errors.append(LoaderError(source, f"'{bool_field}' deve ser bool"))
+
+    elif slide_type == "quiz-image":
+        for req in ("questionId", "stem", "image"):
+            e = _require(slide, req, str, source)
+            if e:
+                errors.append(e)
+        if "options" not in slide:
+            errors.append(LoaderError(source, "campo 'options' ausente"))
+        else:
+            opts = slide["options"]
+            if not isinstance(opts, list):
+                errors.append(LoaderError(source, "'options' deve ser lista"))
+            elif not (2 <= len(opts) <= 6):
+                errors.append(LoaderError(source, f"'options' tem {len(opts)} itens — mínimo 2, máximo 6"))
+            elif not all(isinstance(o, str) for o in opts):
+                errors.append(LoaderError(source, "todas as 'options' devem ser strings"))
+        if "correctIndex" not in slide:
+            errors.append(LoaderError(source, "campo 'correctIndex' ausente"))
+        elif not isinstance(slide["correctIndex"], int):
+            errors.append(LoaderError(source, "'correctIndex' deve ser inteiro"))
+        if "imageAlt" in slide and not isinstance(slide["imageAlt"], str):
+            errors.append(LoaderError(source, "'imageAlt' deve ser string"))
+
+    elif slide_type == "quiz-fill":
+        for req in ("questionId", "stem", "answer"):
+            e = _require(slide, req, str, source)
+            if e:
+                errors.append(e)
+        if "acceptedAnswers" in slide:
+            aa = slide["acceptedAnswers"]
+            if not isinstance(aa, list) or not all(isinstance(s, str) for s in aa):
+                errors.append(LoaderError(source, "'acceptedAnswers' deve ser lista de strings"))
+        if "hint" in slide and not isinstance(slide["hint"], str):
+            errors.append(LoaderError(source, "'hint' deve ser string"))
+
     return errors
 
 
@@ -249,7 +301,7 @@ def rewrite_asset_urls(body: str, game_slug: str) -> str:
     Re-escreve URLs relativas de imagens no body markdown.
 
     Input:  ![alt](./images/foo.png)
-    Output: ![alt](/api/lab/assets/atlas-v1/images/foo.png)
+    Output: ![alt](/api/lesson/assets/atlas-v1/images/foo.png)
     """
     def replace_md(m: re.Match) -> str:
         prefix, url, suffix = m.group(1), m.group(2), m.group(3)
@@ -335,6 +387,10 @@ def load_game_dir(game_dir: Path) -> tuple[dict[str, Any] | None, list[LoaderErr
             if isinstance(slide.get("sideImage"), str):
                 slide["sideImage"] = _rewrite_relative_image(slide["sideImage"], slug)
 
+        if slide.get("type") == "quiz-image":
+            if isinstance(slide.get("image"), str):
+                slide["image"] = _rewrite_relative_image(slide["image"], slug)
+
         slide_errors = validate_slide(slide, slide_source)
         if slide_errors:
             errors.extend(slide_errors)
@@ -388,7 +444,7 @@ def check_mission_ids(
                 errors.append(LoaderError(
                     f"{slug}:{slide.get('id', '?')}",
                     f"missionId '{mid}' não tem componente TSX registrado. "
-                    f"Esperado em frontend/src/modules/lab/games/<game>/components.ts",
+                    f"Esperado em frontend/src/modules/lesson/games/<game>/components.ts",
                 ))
     return errors
 

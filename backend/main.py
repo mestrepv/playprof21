@@ -3,7 +3,7 @@ labprof21 — entry point do backend.
 
 Em Fase 1 temos apenas /health e um WebSocket echo em /ws/echo — suficiente
 pra validar que uvicorn, Postgres e WS estão falando. Fases seguintes
-plugam o content_loader do module_lab + WebSocket de sessão de aula.
+plugam o content_loader do modules/lesson + WebSocket de sessão de aula.
 """
 
 from contextlib import asynccontextmanager
@@ -23,7 +23,7 @@ from modules.domain.routes import router as domain_router
 from modules.domain.student_routes import router as student_router
 from modules.feed import models as _feed_models  # noqa: F401
 from modules.feed.routes import router as feed_router
-from modules.lab.routes import router as lab_router
+from modules.lesson.routes import router as lesson_router
 from modules.live import models as _live_models  # noqa: F401
 from modules.live.routes import router as live_router
 from modules.live.websocket import session_ws
@@ -53,7 +53,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(lab_router)
+app.include_router(lesson_router)
 app.include_router(auth_router)
 app.include_router(domain_router)
 app.include_router(student_router)
@@ -61,7 +61,7 @@ app.include_router(feed_router)
 app.include_router(live_router)
 
 
-@app.websocket("/ws/lab/session/{sid}")
+@app.websocket("/ws/lesson/session/{sid}")
 async def _ws_session(ws: WebSocket, sid: str, token: str | None = None, anon_id: str | None = None, display_name: str | None = None):
     """Wrapper — FastAPI precisa do decorator aqui; delega pra session_ws."""
     import uuid as _uuid

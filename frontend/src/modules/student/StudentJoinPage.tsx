@@ -10,7 +10,7 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { PageShell } from '../../components/ui/PageShell'
 import { useAuth } from '../auth/AuthContext'
-import { apiJson } from '../lab/runtime/apiFetch'
+import { apiJson } from '../lesson/runtime/apiFetch'
 
 interface JoinResp {
   classroom_id: string

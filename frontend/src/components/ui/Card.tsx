@@ -1,8 +1,3 @@
-/**
- * Card — superfície branca com border 1px arredondada. Variant `interactive`
- * adiciona shadow-3D + hover elevação. `padded` default true.
- */
-
 import type { HTMLAttributes, ReactNode } from 'react'
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
@@ -11,17 +6,17 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
 }
 
-export function Card({ padded = true, interactive = false, style, children, ...rest }: Props) {
+export function Card({ padded = true, interactive = false, className, style, children, ...rest }: Props) {
   return (
     <div
       {...rest}
+      className={[interactive ? 'p21-card-interactive' : '', className].filter(Boolean).join(' ')}
       style={{
         background: 'var(--p21-surface)',
-        border: '1px solid var(--p21-border)',
+        border: '0.5px solid rgba(0,0,0,.1)',
         borderRadius: 'var(--p21-radius-lg)',
         padding: padded ? 'var(--p21-sp-5)' : 0,
-        boxShadow: 'var(--p21-shadow-sm)',
-        transition: interactive ? 'border-color 0.15s ease, box-shadow 0.15s ease' : undefined,
+        boxShadow: '0 1px 3px rgba(0,0,0,.04)',
         cursor: interactive ? 'pointer' : undefined,
         ...style,
       }}

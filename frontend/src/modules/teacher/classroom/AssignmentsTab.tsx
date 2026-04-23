@@ -10,7 +10,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import { Card } from '../../../components/ui/Card'
 import { PlusIcon, TrashIcon } from '../../../components/ui/icons'
-import { apiJson } from '../../lab/runtime/apiFetch'
+import { apiJson } from '../../lesson/runtime/apiFetch'
 import type { AssignmentExpanded, ContentType, InteractiveLesson, Trail } from '../types'
 
 interface Props {
@@ -189,12 +189,12 @@ function LessonRow({
   const navigate = useNavigate()
   const startLive = async () => {
     try {
-      const s = await apiJson<{ id: string }>('/api/lab/sessions', {
+      const s = await apiJson<{ id: string }>('/api/lesson/sessions', {
         token,
         method: 'POST',
         json: { interactive_lesson_id: lesson.id },
       })
-      navigate(`/lab/session/${s.id}?role=master`)
+      navigate(`/lesson/session/${s.id}?role=master`)
     } catch (e) {
       alert(e instanceof Error ? e.message : String(e))
     }
@@ -230,7 +230,7 @@ function LessonRow({
           iniciar ao vivo ▶
         </Button>
         <Link
-          to={`/lab/preview/${encodeURIComponent(lesson.slug)}`}
+          to={`/lesson/preview/${encodeURIComponent(lesson.slug)}`}
           style={{ fontSize: 'var(--p21-text-sm)', textDecoration: 'none' }}
         >
           preview

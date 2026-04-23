@@ -33,13 +33,13 @@ export function Button(props: AsButton | AsAnchor) {
   }
   if ('as' in props && props.as === 'a') {
     return (
-      <a {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)} style={s}>
+      <a className="p21-btn" {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)} style={s}>
         {children}
       </a>
     )
   }
   return (
-    <button type="button" {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)} style={s}>
+    <button type="button" className="p21-btn" {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)} style={s}>
       {children}
     </button>
   )

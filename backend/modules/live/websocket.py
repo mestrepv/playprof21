@@ -1,7 +1,7 @@
 """
 WebSocket endpoint da sessão ao vivo.
 
-  /ws/lab/session/{sid}?token=<jwt>&anon_id=<uuid>&display_name=<nome>
+  /ws/lesson/session/{sid}?token=<jwt>&anon_id=<uuid>&display_name=<nome>
 
 Auth:
   - Se `token` JWT válido → user logado. Role derivada: master se
@@ -42,7 +42,7 @@ from database import SessionLocal
 from ..auth.models import User
 from ..auth.security import decode_access_token
 from ..domain.models import InteractiveLesson
-from ..lab.content_loader import games_content_root, load_game_dir
+from ..lesson.content_loader import games_content_root, load_game_dir
 from .connection_manager import manager
 from .models import QuizAnswer, QuizState, Score, Session, SessionEvent, SessionMembership
 

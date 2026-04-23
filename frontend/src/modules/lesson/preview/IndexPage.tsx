@@ -36,7 +36,7 @@ export function IndexPage() {
   const [health, setHealth] = useState<Health | null>(null)
 
   useEffect(() => {
-    fetch(`${API_URL}/api/lab/games`)
+    fetch(`${API_URL}/api/lesson/games`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json() as Promise<{ games: GameSummary[]; errors: string[] }>
@@ -99,7 +99,7 @@ export function IndexPage() {
       {games && games.length === 0 && (
         <Card>
           <div style={{ color: 'var(--p21-ink-3)' }}>
-            nenhuma aula em <code>backend/modules/lab/games_content/</code>
+            nenhuma aula em <code>backend/modules/lesson/games_content/</code>
           </div>
         </Card>
       )}
@@ -117,7 +117,7 @@ export function IndexPage() {
           {games.map((g) => (
             <li key={g.slug}>
               <Link
-                to={`/lab/preview/${encodeURIComponent(g.slug)}`}
+                to={`/lesson/preview/${encodeURIComponent(g.slug)}`}
                 style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               >
                 <Card interactive>

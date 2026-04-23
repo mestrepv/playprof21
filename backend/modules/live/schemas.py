@@ -44,7 +44,7 @@ class MembershipOut(BaseModel):
 
 class SessionSnapshot(BaseModel):
     """Estado mandado no handshake do WS e também servido pela rota REST
-    GET /api/lab/sessions/{id} (útil pra debug / reconectar)."""
+    GET /api/lesson/sessions/{id} (útil pra debug / reconectar)."""
     session: SessionOut
     # gameSlug + title preenchidos do lado server pra evitar 2 round-trips no client.
     game_slug: str

@@ -9,12 +9,12 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import { Button } from '../../components/ui/Button'
 import { AppShell } from '../../components/ui/AppShell'
 import { useAuth } from '../auth/AuthContext'
-import { apiJson } from '../lab/runtime/apiFetch'
+import { apiJson } from '../lesson/runtime/apiFetch'
 import {
   ACTIVITY_KINDS,
   ACTIVITY_KIND_LABEL,
@@ -111,9 +111,24 @@ export function LibraryPage() {
   return <Library token={token} displayName={user.display_name} onLogout={logout} />
 }
 
+const HASH_TO_TAB: Record<string, Tab> = {
+  '#atividades': 'activities',
+  '#trilhas': 'trails',
+  '#aulas': 'lessons',
+}
+const TAB_TO_HASH: Record<Tab, string> = {
+  activities: '#atividades',
+  trails: '#trilhas',
+  lessons: '#aulas',
+}
+
 function Library({ token, displayName, onLogout }: { token: string; displayName: string; onLogout: () => void }) {
-  const [tab, setTab] = useState<Tab>('activities')
+  const location = useLocation()
+  const navigate = useNavigate()
   const [err, setErr] = useState<string | null>(null)
+
+  const tab: Tab = HASH_TO_TAB[location.hash] ?? 'activities'
+  const setTab = (t: Tab) => navigate({ hash: TAB_TO_HASH[t] }, { replace: true })
 
   void displayName
   void onLogout
@@ -591,7 +606,7 @@ function LessonsTab({ token, onError }: { token: string; onError: (e: string) =>
             +
           </button>
         </div>
-        <div style={small}>slug tem que existir em <code>backend/modules/lab/games_content/</code></div>
+        <div style={small}>slug tem que existir em <code>backend/modules/lesson/games_content/</code></div>
       </form>
 
       <ul style={list}>
@@ -600,8 +615,11 @@ function LessonsTab({ token, onError }: { token: string; onError: (e: string) =>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ ...kindBadge, background: '#EEEDFE', color: '#3C3489' }}>aula interativa</span>
               <span style={{ flex: 1, fontWeight: 500 }}>{il.title}</span>
-              <Link to={`/lab/preview/${encodeURIComponent(il.slug)}`} style={{ ...small, color: 'var(--p21-blue)', textDecoration: 'none' }}>
-                preview →
+              <Link to={`/teacher/editor/${encodeURIComponent(il.slug)}`} style={{ ...small, color: 'var(--p21-blue)', textDecoration: 'none' }}>
+                editar →
+              </Link>
+              <Link to={`/lesson/preview/${encodeURIComponent(il.slug)}`} style={{ ...small, color: 'var(--p21-ink-3)', textDecoration: 'none' }}>
+                preview
               </Link>
               <button onClick={() => del(il.id)} style={dangerBtn}>
                 ×

@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react'
 
 import { XIcon } from '../../../components/ui/icons'
-import { apiJson } from '../../lab/runtime/apiFetch'
+import { apiJson } from '../../lesson/runtime/apiFetch'
 import type { ClassroomStats, EnrollmentMember, StudentStat } from '../types'
 import type { DrawerKind } from './StatsRow'
 

@@ -33,7 +33,7 @@ function useManifest(slug: string | undefined): Fetch<GameEnvelope> {
     if (!slug) return
     let cancelled = false
     setState({ status: 'loading' })
-    fetch(`${API_URL}/api/lab/games/${encodeURIComponent(slug)}`)
+    fetch(`${API_URL}/api/lesson/games/${encodeURIComponent(slug)}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return (await r.json()) as { game: GameEnvelope; errors: string[] }

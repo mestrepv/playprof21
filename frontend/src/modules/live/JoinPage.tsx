@@ -1,5 +1,5 @@
 /**
- * /lab/join — aluno entra em sessão ao vivo por código (fase 5).
+ * /lesson/join — aluno entra em sessão ao vivo por código (fase 5).
  */
 
 import { useState, type FormEvent } from 'react'
@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { PageShell } from '../../components/ui/PageShell'
-import { apiJson } from '../lab/runtime/apiFetch'
+import { apiJson } from '../lesson/runtime/apiFetch'
 
 const ANON_KEY = 'labprof21:anon_id'
 const NAME_KEY = 'labprof21:last_display_name'
@@ -42,7 +42,7 @@ export function JoinPage() {
     setErr(null)
     setBusy(true)
     try {
-      const r = await apiJson<JoinResp>('/api/lab/join', {
+      const r = await apiJson<JoinResp>('/api/lesson/join', {
         method: 'POST',
         json: { code: cleanCode, display_name: name.trim() },
       })
@@ -53,7 +53,7 @@ export function JoinPage() {
         /* quota */
       }
       navigate(
-        `/lab/session/${r.session_id}?role=player&name=${encodeURIComponent(r.display_name)}`,
+        `/lesson/session/${r.session_id}?role=player&name=${encodeURIComponent(r.display_name)}`,
         { replace: true },
       )
     } catch (e) {

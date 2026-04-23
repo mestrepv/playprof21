@@ -1,7 +1,7 @@
 /**
  * Overlay que mostra o código de 6 dígitos + QR pros alunos entrarem.
  *
- * QR aponta pra /lab/join?code=NNNNNN, que pré-preenche o campo. O aluno
+ * QR aponta pra /lesson/join?code=NNNNNN, que pré-preenche o campo. O aluno
  * só precisa digitar o nome.
  *
  * Master pode rotacionar o código se suspeitar que vazou.
@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 
 import { Button } from '../../components/ui/Button'
-import { apiJson } from '../lab/runtime/apiFetch'
+import { apiJson } from '../lesson/runtime/apiFetch'
 
 interface Props {
   /** URL absoluta que o QR aponta — página pública de join correspondente. */

@@ -155,6 +155,25 @@ def _resolve_content(db: Session, content_type: str, content_id: uuid.UUID, user
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Dashboard stats
+# ═══════════════════════════════════════════════════════════════════════════
+
+@router.get("/api/teacher/stats")
+def teacher_stats(user: User = Depends(require_teacher), db: Session = Depends(get_db)) -> dict:
+    classrooms = db.scalar(select(func.count()).select_from(Classroom).where(Classroom.owner_id == user.id)) or 0
+    activities = db.scalar(select(func.count()).select_from(Activity).where(Activity.owner_id == user.id)) or 0
+    trails = db.scalar(select(func.count()).select_from(Trail).where(Trail.owner_id == user.id)) or 0
+    classroom_ids = list(db.scalars(select(Classroom.id).where(Classroom.owner_id == user.id)).all())
+    if classroom_ids:
+        students = db.scalar(
+            select(func.count(func.distinct(Enrollment.user_id))).where(Enrollment.classroom_id.in_(classroom_ids))
+        ) or 0
+    else:
+        students = 0
+    return {"classrooms": classrooms, "activities": activities, "trails": trails, "students": students}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Classrooms
 # ═══════════════════════════════════════════════════════════════════════════
 

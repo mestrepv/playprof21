@@ -10,10 +10,10 @@ chegam numa iteração 4.1 quando mission TSX for portada.
 
 Fluxo:
   1. Professor dono de uma InteractiveLesson atribuída cria Session
-     (POST /api/lab/sessions). Status='idle'.
-  2. Master abre /lab/session/:id?role=master → WS connect, vira live
+     (POST /api/lesson/sessions). Status='idle'.
+  2. Master abre /lesson/session/:id?role=master → WS connect, vira live
      no primeiro setSlide.
-  3. Players (alunos anônimos por enquanto) abrem /lab/session/:id?role=player
+  3. Players (alunos anônimos por enquanto) abrem /lesson/session/:id?role=player
      &anonymous_user_id=<uuid>&display_name=<nome>.
   4. Master avança slide via WS 'setSlide' → broadcast pra todos.
 

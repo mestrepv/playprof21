@@ -10,7 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { AppShell } from '../../components/ui/AppShell'
 import { useAuth } from '../auth/AuthContext'
-import { apiJson } from '../lab/runtime/apiFetch'
+import { apiJson } from '../lesson/runtime/apiFetch'
 import { ActivityRunner } from './activities/ActivityRunner'
 import type { TrailProgress } from './types'
 

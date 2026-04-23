@@ -212,3 +212,27 @@ class ActivityResult(Base):
     max_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_best: Mapped[bool] = mapped_column(nullable=False, default=True)
     attempted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Telemetria de slides — interações fora de sessão ao vivo
+# ═══════════════════════════════════════════════════════════════════════════
+
+class SlideEvent(Base):
+    """Evento de interação com um slide fora de sessão ao vivo.
+
+    Eventos dentro de sessão ficam em live_events (módulo live).
+    Aqui registramos quiz-fill, quiz-image e mission no modo preview/standalone.
+    """
+
+    __tablename__ = "slide_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    lesson_slug: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    slide_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False, index=True)

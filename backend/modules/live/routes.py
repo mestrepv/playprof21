@@ -1,11 +1,11 @@
 """
 Rotas REST da Fase 4.
 
-  POST /api/lab/sessions              — master cria sessão ancorada numa
+  POST /api/lesson/sessions              — master cria sessão ancorada numa
                                         InteractiveLesson própria
-  GET  /api/lab/sessions/{id}         — snapshot (público; player acessa
+  GET  /api/lesson/sessions/{id}         — snapshot (público; player acessa
                                         antes de subir WS)
-  GET  /api/lab/sessions/{id}/manifest — devolve o manifest já com URLs de
+  GET  /api/lesson/sessions/{id}/manifest — devolve o manifest já com URLs de
                                         asset reescritas (usa content_loader)
 
 Join de aluno por código/QR fica pra Fase 5.
@@ -24,7 +24,7 @@ from database import get_db
 from ..auth.deps import require_teacher
 from ..auth.models import User
 from ..domain.models import InteractiveLesson
-from ..lab.content_loader import games_content_root, load_game_dir
+from ..lesson.content_loader import games_content_root, load_game_dir
 from .join import client_ip, generate_code, join_limiter
 from .models import Session, SessionMembership
 from .schemas import (
@@ -38,7 +38,7 @@ from .schemas import (
 )
 
 
-router = APIRouter(prefix="/api/lab", tags=["live"])
+router = APIRouter(prefix="/api/lesson", tags=["live"])
 
 
 def _build_snapshot(db: DbSession, sess: Session, *, my_membership: SessionMembership | None = None) -> SessionSnapshot:

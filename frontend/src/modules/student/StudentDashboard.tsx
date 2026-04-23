@@ -10,7 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { AppShell } from '../../components/ui/AppShell'
 import { useAuth } from '../auth/AuthContext'
-import { apiJson } from '../lab/runtime/apiFetch'
+import { apiJson } from '../lesson/runtime/apiFetch'
 import type { StudentInteractiveLessonItem, TrailStatus, TrailSummary } from './types'
 
 type Tab = 'trails' | 'lessons'
@@ -50,18 +50,27 @@ function Dashboard({
 
   return (
     <AppShell>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 'var(--p21-sp-5)' }}>
-        <h1 style={{ fontSize: 'var(--p21-text-xl)', margin: 0 }}>Oi, {displayName.split(' ')[0]}</h1>
-        <Button as="a" href="/student/join" variant="outline" size="sm">
-          outra turma
-        </Button>
+      {/* Cabeçalho */}
+      <div style={pageHead}>
+        <div>
+          <p style={greetingSub}>bem-vindo de volta</p>
+          <h1 style={greetingTitle}>Oi, {displayName.split(' ')[0]} 👋</h1>
+        </div>
       </div>
 
-      {err && (
-        <div style={errBox}>
-          {err}
+      {err && <div style={errBox}>{err}</div>}
+
+      {/* Entrar em nova turma */}
+      <div style={joinBox}>
+        <span style={joinIcon}>🔑</span>
+        <div style={{ flex: 1 }}>
+          <p style={joinLabel}>Entrar em nova turma</p>
+          <p style={joinHint}>Digite o código que o professor forneceu</p>
         </div>
-      )}
+        <Button as="a" href="/student/join" variant="outline" size="sm">
+          usar código
+        </Button>
+      </div>
 
       <div role="tablist" style={tabRow}>
         <TabBtn active={tab === 'trails'} onClick={() => setTab('trails')} count={trails?.length}>
@@ -235,7 +244,7 @@ function LessonsTab({ lessons }: { lessons: StudentInteractiveLessonItem[] | nul
             {items.map((x) => (
               <li key={x.interactive_lesson.id}>
                 <Link
-                  to={`/lab/preview/${encodeURIComponent(x.interactive_lesson.slug)}`}
+                  to={`/lesson/preview/${encodeURIComponent(x.interactive_lesson.slug)}`}
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
                   <Card interactive style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -265,7 +274,7 @@ function LessonsTab({ lessons }: { lessons: StudentInteractiveLessonItem[] | nul
       <Card>
         <div style={{ fontSize: 'var(--p21-text-sm)', color: 'var(--p21-ink-3)' }}>
           Aula ao vivo em curso? Abra{' '}
-          <Link to="/lab/join">entrar na sala ao vivo</Link> e digite o código que o professor mostrou.
+          <Link to="/lesson/join">entrar na sala ao vivo</Link> e digite o código que o professor mostrou.
         </div>
       </Card>
     </div>
@@ -357,6 +366,53 @@ function Chip({ tone, children }: { tone: 'primary' | 'teal' | 'purple' | 'muted
 }
 
 // ── estilos ───────────────────────────────────────────────────────────────
+
+const pageHead: React.CSSProperties = {
+  marginBottom: 'var(--p21-sp-5)',
+}
+
+const greetingSub: React.CSSProperties = {
+  margin: '0 0 2px',
+  fontSize: 'var(--p21-text-sm)',
+  color: 'var(--p21-ink-3)',
+  fontFamily: 'var(--p21-font-mono)',
+}
+
+const greetingTitle: React.CSSProperties = {
+  fontSize: 'var(--p21-text-xl)',
+  margin: 0,
+  color: 'var(--p21-ink)',
+}
+
+const joinBox: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 16,
+  padding: '16px 20px',
+  background: 'var(--p21-blue-soft)',
+  border: '1px solid var(--brand-100)',
+  borderRadius: 'var(--p21-radius-md)',
+  marginBottom: 'var(--p21-sp-6)',
+  flexWrap: 'wrap',
+}
+
+const joinIcon: React.CSSProperties = {
+  fontSize: 24,
+  flexShrink: 0,
+}
+
+const joinLabel: React.CSSProperties = {
+  margin: '0 0 2px',
+  fontWeight: 600,
+  fontSize: 'var(--p21-text-sm)',
+  color: 'var(--p21-blue-ink)',
+}
+
+const joinHint: React.CSSProperties = {
+  margin: 0,
+  fontSize: 'var(--p21-text-xs)',
+  color: 'var(--p21-ink-3)',
+}
 
 const STATUS_COLORS: Record<TrailStatus, { bg: string; border: string; badgeBg: string }> = {
   completed: { bg: 'var(--p21-primary-soft)', border: 'var(--p21-primary-ink)', badgeBg: 'var(--p21-primary-ink)' },

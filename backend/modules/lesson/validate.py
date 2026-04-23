@@ -8,7 +8,7 @@ Uso (fora do container):
 Dentro do container:
     python -m modules.lab.validate
 
-Default: backend/modules/lab/games_content/.
+Default: backend/modules/lesson/games_content/.
 
 Exit codes:
   0 — todas as aulas válidas

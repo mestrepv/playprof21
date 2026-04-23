@@ -7,7 +7,7 @@
  * o backend rejeitar, limpa tudo (token expirou ou foi revogado).
  *
  * `apiFetch` é um helper que adiciona o Authorization header automaticamente
- * e levanta em 401 (chamando logout). Ver src/modules/lab/runtime/apiFetch.ts.
+ * e levanta em 401 (chamando logout). Ver src/modules/lesson/runtime/apiFetch.ts.
  */
 
 import {
@@ -20,8 +20,8 @@ import {
   type ReactNode,
 } from 'react'
 
-import { LOGOUT_EVENT } from '../lab/runtime/apiFetch'
-import { apiUrl } from '../lab/runtime/apiUrl'
+import { LOGOUT_EVENT } from '../lesson/runtime/apiFetch'
+import { apiUrl } from '../lesson/runtime/apiUrl'
 import type { AuthUser, TokenPayload } from './types'
 
 const API_URL = apiUrl()

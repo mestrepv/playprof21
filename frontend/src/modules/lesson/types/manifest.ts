@@ -2,10 +2,11 @@
  * Schema do manifest de jogo.
  *
  * Portado do module_lab do rpgia. Espelha a validação do
- * backend/modules/lab/content_loader.py.
+ * backend/modules/lesson/content_loader.py.
  */
 
 export type SlideType = 'text' | 'video' | 'quiz' | 'mission' | 'custom'
+                     | 'phet' | 'geogebra' | 'quiz-image' | 'quiz-fill'
 
 export interface SlideBase {
   id: string
@@ -49,7 +50,43 @@ export interface CustomSlide extends SlideBase {
   props?: Record<string, unknown>
 }
 
-export type Slide = TextSlide | VideoSlide | QuizSlide | MissionSlide | CustomSlide
+export interface PhetSlide extends SlideBase {
+  type: 'phet'
+  simUrl: string
+  height?: number
+}
+
+export interface GeogebraSlide extends SlideBase {
+  type: 'geogebra'
+  materialId: string
+  height?: number
+  showToolbar?: boolean
+  showAlgebraInput?: boolean
+}
+
+export interface QuizImageSlide extends SlideBase {
+  type: 'quiz-image'
+  questionId: string
+  stem: string
+  image: string
+  imageAlt?: string
+  options: string[]
+  correctIndex: number
+  scoring?: { correct: number; wrong: number }
+}
+
+export interface QuizFillSlide extends SlideBase {
+  type: 'quiz-fill'
+  questionId: string
+  stem: string
+  answer: string
+  acceptedAnswers?: string[]
+  hint?: string
+}
+
+export type Slide = TextSlide | VideoSlide | QuizSlide | MissionSlide
+                  | PhetSlide | GeogebraSlide | QuizImageSlide | QuizFillSlide
+                  | CustomSlide
 
 export interface Manifest {
   version: 1

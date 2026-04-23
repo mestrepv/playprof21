@@ -1,7 +1,7 @@
 /**
  * SessionPage — runtime da aula síncrona.
  *
- * URL: /lab/session/:sid?role=master|player[&name=<display>]
+ * URL: /lesson/session/:sid?role=master|player[&name=<display>]
  *
  * Master (teacher dono): abre logado; token JWT autentica + garante role.
  * Player (qualquer um): abre com ?role=player; usa anon_id persistido no
@@ -16,10 +16,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { useAuth } from '../auth/AuthContext'
-import { SlideRenderer } from '../lab/components/SlideRenderer'
-import { SlideShell } from '../lab/components/SlideShell'
-import { apiJson } from '../lab/runtime/apiFetch'
-import type { Slide } from '../lab/types/manifest'
+import { SlideRenderer } from '../lesson/components/SlideRenderer'
+import { SlideShell } from '../lesson/components/SlideShell'
+import { apiJson } from '../lesson/runtime/apiFetch'
+import type { Slide } from '../lesson/types/manifest'
 import { SessionAdapter, type InternalState } from './adapter'
 import { CodeOverlay } from './CodeOverlay'
 import { InteractionModeBadge } from './InteractionModeBadge'
@@ -71,8 +71,8 @@ function SessionResolver({
     if (desiredRole === 'master' && !token) return
     let cancelled = false
     Promise.all([
-      apiJson<SessionSnapshot>(`/api/lab/sessions/${sid}`, { token: token ?? undefined }),
-      apiJson<ManifestResp>(`/api/lab/sessions/${sid}/manifest`, { token: token ?? undefined }),
+      apiJson<SessionSnapshot>(`/api/lesson/sessions/${sid}`, { token: token ?? undefined }),
+      apiJson<ManifestResp>(`/api/lesson/sessions/${sid}/manifest`, { token: token ?? undefined }),
     ])
       .then(([snap, manifest]) => {
         if (cancelled) return
@@ -100,7 +100,7 @@ function SessionResolver({
   }, [sid, token, desiredRole, initialName, user?.display_name])
 
   if (desiredRole === 'master' && !token) {
-    return <Navigate to={`/login?next=${encodeURIComponent(`/lab/session/${sid}?role=master`)}`} replace />
+    return <Navigate to={`/login?next=${encodeURIComponent(`/lesson/session/${sid}?role=master`)}`} replace />
   }
 
   if (phase.kind === 'loading') return <SlideShell>carregando sessão…</SlideShell>
@@ -291,8 +291,8 @@ function SessionLive({
         {showCode && state.role === 'master' && (
           <CodeOverlay
             caption="código da aula ao vivo"
-            joinPathBase="/lab/join"
-            rotatePath={`/api/lab/sessions/${sid}/code/rotate`}
+            joinPathBase="/lesson/join"
+            rotatePath={`/api/lesson/sessions/${sid}/code/rotate`}
             initialCode={snapshot.session.code}
             token={token}
             onClose={() => setShowCode(false)}

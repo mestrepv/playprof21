@@ -210,7 +210,7 @@ const sidebarStyle: React.CSSProperties = {
   left: 0,
   width: 240,
   background: 'var(--p21-surface)',
-  borderRight: '1px solid var(--p21-border)',
+  borderRight: '0.5px solid rgba(0,0,0,.1)',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
@@ -230,7 +230,7 @@ const bottomSectionStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 'var(--p21-sp-1)',
-  borderTop: '1px solid var(--p21-border)',
+  borderTop: '0.5px solid rgba(0,0,0,.1)',
   paddingTop: 'var(--p21-sp-3)',
 }
 

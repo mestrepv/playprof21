@@ -13,7 +13,7 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { useAuth } from '../auth/AuthContext'
 import type { AuthUser } from '../auth/types'
-import { apiJson } from '../lab/runtime/apiFetch'
+import { apiJson } from '../lesson/runtime/apiFetch'
 
 export function ProfilePage() {
   const { user, token, loading, refresh } = useAuth()

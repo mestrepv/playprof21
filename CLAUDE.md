@@ -1,136 +1,255 @@
-# labprof21 — guia pro Claude Code
+# labprof21 — guia operacional pro Claude Code
 
-Este arquivo é o primeiro que você lê ao abrir o projeto. Tudo que
-precisa pra continuar o trabalho sem perder contexto está aqui.
+## ⚠️ Ambiente: tudo roda dentro do Docker
+
+`node_modules` **não existe no host** — fica num volume anônimo do container.
+Nunca rode `npm` ou `tsc` diretamente no terminal do host. Sempre use `docker compose exec`.
+
+```bash
+# TypeScript type check
+docker compose exec web npx tsc --noEmit
+
+# Build de produção
+docker compose exec web npm run build
+
+# Instalar nova dependência
+docker compose exec web npm install <pkg>
+
+# Executar qualquer comando Python no backend
+docker compose exec api python -m <modulo>
+```
 
 ---
-
-## O que é o projeto
-
-Plataforma de **aulas interativas síncronas** do prof21 (Paulo Vicente,
-professor de Física). Aula = pasta com `.md` por slide. Mestre (professor)
-avança slides via UI; alunos veem ao vivo via WebSocket. Telemetria
-persistida em Postgres.
-
-**Dono:** Paulo. Ele é o maestro; o Claude Code (você) é o executor.
-Ele decide produto, você escreve código.
-
-## Stack (decidido, inegociável)
-
-- **Backend:** FastAPI + SQLAlchemy + Postgres 16
-- **Frontend:** React 19 + Vite 6 + TypeScript
-- **Realtime:** WebSocket nativo (sem Socket.IO — FastAPI é nativo)
-- **Infra:** Docker Compose (tudo containerizado)
-- **Ports (dev):** `5435` (db), `5105` (api), `5174` (web)
-
-## Paradigma (também inegociável)
-
-**AI-first, file-driven.** Conteúdo em `.md` com frontmatter YAML; animações
-em `.tsx` registradas por `missionId`. Paulo pede à IA pra criar/editar
-arquivos, revisa, commita. Sem editor WYSIWYG — ele testou e concluiu
-que desacelera o fluxo.
-
-Tipos de slide suportados (herdados do `module_lab` do rpgia):
-`text` · `video` · `quiz` · `mission` (componente React plugável) · `custom`.
-
-## Estado atual
-
-Veja [docs/ROADMAP.md](docs/ROADMAP.md) como fonte de verdade. Resumo rápido:
-
-- **Fase 1** ✅ concluída (setup Docker + smoke test) — commit `7c5e95f`
-- **Fase 2** ✅ concluída (pipeline `.md`, preview em `/lab/preview/:slug`)
-- **Fase 3** ✅ concluída (banco de conteúdos + JWT + dashboards `/teacher` e `/teacher/library`)
-- **Fase 4** ✅ concluída (runtime ao vivo mínimo; mission TSX + quiz ficam pra 4.1)
-- **Fase 5** ✅ concluída (código 6 dígitos + QR + /lab/join público com rate-limit)
-- **Fase 6** ✅ concluída (onboarding de aluno por código + `/student/join` + `/student` dashboard)
-- **Fase 7** ✅ MVP (trilha assíncrona com quiz + estrelas; simulator/animation TSX ficam pra 7.1)
-- **Fase 8** ⬜ próximo passo: deploy
-- **PlanckGo** cancelado — trilhas nativas substituem
-- Demais fases documentadas em `docs/ROADMAP.md`
-
-**Para retomar:** leia `docs/ROADMAP.md`, identifique a Fase ⬜ mais próxima,
-execute o primeiro item pendente. Marque `[x]` conforme avança.
 
 ## Como rodar
 
 ```bash
 cd /home/play-prof21/htdocs/labprof21
-docker compose up -d                # sobe db + api + web
-curl -s http://localhost:5105/health
-                                    # esperado: {"status":"ok","db":true}
-open http://localhost:5174          # splash de smoke test
-docker compose logs -f api          # logs backend
-docker compose logs -f web          # logs frontend
-docker compose down                 # para (mantém banco)
-docker compose down -v              # para e apaga banco
+
+docker compose up -d                     # sobe db + api + web
+curl -s http://localhost:5105/health     # esperado: {"status":"ok","db":true}
+
+docker compose logs -f api               # logs backend (uvicorn --reload)
+docker compose logs -f web               # logs frontend (Vite HMR)
+
+docker compose down                      # para (mantém banco)
+docker compose down -v                   # para e apaga banco
 ```
 
-## Relação com outros projetos do Paulo
+**Portas:**
 
-### rpgia (`/home/paulovicente-rpgia/htdocs/rpgia.paulovicente.pro.br/`)
+| Serviço | Host | Container |
+|---------|------|-----------|
+| Postgres 16 | 5435 | 5432 |
+| FastAPI (api) | 5105 | 5105 |
+| Vite dev (web) | 5174 | 5174 |
 
-**Projeto separado** — simulador de RPG de mesa com LLM. Dentro dele
-existe um módulo chamado **`module_lab`** (em
-`backend/modules/module_lab/` e `src/modules/module_lab/`) que é a
-**base arquitetural do labprof21**.
+**Hot-reload:** backend via `uvicorn --reload` (volume `./backend:/app`), frontend via Vite HMR (volume `./frontend:/app`, `node_modules` no volume anônimo).
 
-Quando for portar código pro labprof21, a fonte é o `module_lab`.
-Arquivos-chave a consultar:
+---
 
-- `backend/modules/module_lab/content_loader.py` — parser markdown+YAML
-- `backend/modules/module_lab/validate.py` — CLI de validação
-- `backend/modules/module_lab/websocket.py` — WebSocket handlers
-- `backend/modules/module_lab/runtime/connection_manager.py` — rooms/sessions
-- `backend/modules/module_lab/games_content/atlas-v1/` — aula ATLAS de exemplo
-- `backend/modules/module_lab/games_content/seminario-tese/` — segunda aula (16 slides)
-- `src/modules/module_lab/components/TextSlide.tsx` — renderer markdown + KaTeX
-- `src/modules/module_lab/components/SlideShell.tsx` — wrapper comum
-- `src/modules/module_lab/styles/helpers.css` — classes CSS (cards, tags, grids)
-- `src/modules/module_lab/adapter/` — WebSocket + mock adapter
-- `src/modules/module_lab/session/` — SessionProvider + hooks
-- `src/modules/module_lab/types/manifest.ts` — schemas TypeScript
+## Estado atual
 
-Docs do design original em `docs/module_lab/` do rpgia:
-`README.md`, `CONTEXT.md`, `ARCHITECTURE.md`, `ADAPTER_CONTRACT.md`,
-`DESIGN_TOKENS.md`, `ROADMAP.md`.
+**Foco atual:** portando funcionalidades do play.prof21.com.br para o labprof21.
+O deploy (Fase 8 do ROADMAP) fica para depois da paridade de features.
 
-O rpgia usa FastAPI também — **os padrões e tipos Python portam direto**.
-O frontend React também é igual — **os componentes portam com só adaptar imports**.
+Funcionalidades já portadas do play.prof21:
+- Dashboard do professor (estilo visual: stats, turmas, trilhas — `dashboard.css` + `TeacherPage.tsx`)
 
-### play.prof21.com.br antigo (`/home/play-prof21/htdocs/play.prof21.com.br/`)
+Para ver o histórico de fases concluídas: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
-**Legado.** Projeto anterior em Express + MySQL + Socket.IO + vanilla TS.
-Paulo decidiu não migrar — escreveu do zero aqui no labprof21. Considere
-o legado **arquivado** (não toque). Serve só pra referência de features
-(lista em `/home/paulovicente-rpgia/htdocs/rpgia.paulovicente.pro.br/docs/FEATURES_PLAY_PROF21_PORT_ANALYSIS.md`).
+---
 
-## Decisões fechadas (não revogar sem Paulo)
+## Stack (inegociável)
 
-1. **Stack FastAPI+Postgres+React** — escolhida pela compatibilidade com
-   integração futura de LLMs.
-2. **Sem editor WYSIWYG** — AI-first é mais rápido.
-3. **Sem LTI** — Paulo não vai integrar com Moodle. Plataforma personalizada.
-4. **Docker Compose local** — nada em produção ainda. Deploy vai ser decidido
-   na Fase 7 (subdomínio a definir: `aulas.prof21.com.br`? `lab.prof21.com.br`?).
-5. **WebSocket nativo, não Socket.IO** — FastAPI fala nativamente; module_lab
-   já validou esse caminho; código portável.
-6. **Código de sessão visual + QR** pra entrada do aluno (Fase 5) — UX superior
-   a UUID opaco.
+| Camada | Tecnologia |
+|--------|-----------|
+| Backend | FastAPI + SQLAlchemy + Postgres 16 |
+| Frontend | React 19 + TypeScript + Vite 6 |
+| Realtime | WebSocket nativo (FastAPI) |
+| Infra | Docker Compose |
 
-## Convenções
+---
 
-- **Commits:** lowercase subject (commitlint), ex.: `feat(lab): portar TextSlide`
-- **Co-author:** `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`
-- **Branch default:** `main` (git remote ainda não configurado)
-- **Roadmap como fonte de verdade:** editar `docs/ROADMAP.md` quando decisão muda
-- **Sem emojis em código ou docs técnicos** a menos que Paulo peça
+## Estrutura de pastas
 
-## Onde Paulo encontra você
+```
+labprof21/
+├── backend/
+│   ├── main.py                    # entry point FastAPI + lifespan (create_all)
+│   ├── database.py                # SQLAlchemy engine + Session + Base
+│   ├── modules/
+│   │   ├── auth/                  # JWT (HS256, 7d), bcrypt, /api/auth/*
+│   │   ├── domain/                # turmas, trilhas, atividades, assignments
+│   │   │   ├── routes.py          # professor: CRUD classrooms/trails/activities
+│   │   │   ├── student_routes.py  # aluno: classrooms, trail progress, results
+│   │   │   ├── models.py          # SQLAlchemy ORM
+│   │   │   └── schemas.py         # Pydantic schemas
+│   │   ├── feed/                  # posts, comments, likes por turma
+│   │   └── lesson/                # runtime de lições interativas (slides + WebSocket)
+│   │       ├── routes.py          # /api/lesson/* (games, assets)
+│   │       ├── connection_manager.py
+│   │       └── games_content/     # conteúdo .md das aulas (atlas-v1, etc.)
+│
+└── frontend/src/
+    ├── App.tsx                    # BrowserRouter + rotas
+    ├── styles/
+    │   ├── theme.css              # tokens globais (--p21-*, paleta, tipografia)
+    │   └── dashboard.css          # classes .db-* do dashboard do professor
+    ├── components/ui/             # AppShell, Button, Card, Sidebar, Input…
+    └── modules/
+        ├── auth/                  # AuthContext, LoginPage, RegisterPage
+        ├── teacher/               # TeacherPage (dashboard), ClassroomPage, LibraryPage
+        ├── student/               # StudentDashboard, TrailPage, StudentJoinPage
+        ├── live/                  # SessionPage, JoinPage (aula ao vivo)
+        ├── lesson/                # SlideRenderer, componentes TSX de missão, preview
+        ├── profile/               # ProfilePage
+        └── settings/              # SettingsPage
+```
 
-Paulo trabalha pelo Claude Code (VS Code extension). Quando ele muda o
-diretório raiz (`/home` em vez do projeto), cada projeto tem seu próprio
-contexto. Se ele abrir esse projeto diretamente, você lê este arquivo
-primeiro — ele tem tudo pra continuar sem perguntar.
+---
 
-Se ele abrir a `/home`, você vai ver vários projetos. Navegue para
-`/home/play-prof21/htdocs/labprof21/` e leia este CLAUDE.md.
+## Rotas frontend
+
+| Path | Componente | Auth |
+|------|-----------|------|
+| `/` | IndexPage | pública |
+| `/login`, `/register` | auth | pública |
+| `/teacher` | TeacherPage | professor |
+| `/teacher/classroom/:id` | ClassroomPage | professor |
+| `/teacher/library` | LibraryPage | professor |
+| `/student` | StudentDashboard | aluno |
+| `/student/trail/:id` | TrailPage | aluno |
+| `/student/join` | StudentJoinPage | pública |
+| `/lesson/session/:sid` | SessionPage | qualquer |
+| `/lesson/join` | JoinPage | pública |
+| `/lesson/preview/:slug` | PreviewPage | pública |
+| `/profile`, `/settings` | páginas auth | qualquer autenticado |
+
+---
+
+## API endpoints principais
+
+```
+# Auth
+POST /api/auth/register   {display_name, email, password}
+POST /api/auth/login      {email, password} → {token}
+GET  /api/auth/me
+PATCH /api/auth/me        {display_name}
+
+# Professor — banco de conteúdos
+GET/POST          /api/classrooms
+GET/PATCH/DELETE  /api/classrooms/{id}
+GET               /api/classrooms/{id}/stats
+GET/POST          /api/classrooms/{id}/assignments
+DELETE            /api/assignments/{id}
+
+GET/POST          /api/activities
+GET/DELETE        /api/activities/{id}
+
+GET/POST          /api/trails
+GET/PATCH/DELETE  /api/trails/{id}
+GET/POST          /api/trails/{id}/activities
+DELETE            /api/trails/{id}/activities/{aid}
+PUT               /api/trails/{id}/order            # reordena
+
+GET/POST          /api/interactive-lessons
+DELETE            /api/interactive-lessons/{id}
+
+GET               /api/teacher/stats               # {classrooms, activities, trails, students}
+
+# Aluno
+GET               /api/student/classrooms
+GET               /api/student/classrooms/{id}/assignments
+GET               /api/student/trails/{id}          # TrailProgress com stars
+POST              /api/student/activity-results
+
+# Feed
+GET/POST          /api/classrooms/{id}/posts
+POST              /api/posts/{pid}/like
+
+# Lições interativas (lesson)
+GET               /api/lesson/games
+GET               /api/lesson/games/{slug}
+GET               /api/lesson/assets/{slug}/{path}
+
+# Aula ao vivo (live)
+POST              /api/lesson/sessions
+GET               /api/lesson/sessions/{id}
+POST              /api/lesson/join           {code, display_name} → {session_id, anon_id}
+WS                /ws/lesson/session/{id}?token=&anon_id=&display_name=
+```
+
+---
+
+## Design system — tokens CSS
+
+O código usa **somente** tokens `--p21-*` do `theme.css`. Nunca use cores hardcoded.
+
+```css
+/* Superfícies */
+--p21-bg           /* fundo da página (#f0efed) */
+--p21-surface      /* cards, painéis (#fff) */
+--p21-border       /* borda leve (rgba 0,0,0,.08) */
+--p21-border-strong
+
+/* Texto */
+--p21-ink          /* primário (#1a1a1a) */
+--p21-ink-2        /* secundário (#424955) */
+--p21-ink-3        /* muted (#6b7280) */
+
+/* Ações */
+--p21-primary      /* botão verde (#2f6e00) */
+--p21-blue         /* links/navegação (#185fa5) */
+--p21-purple       /* role teacher (#534ab7) */
+--p21-amber        /* avisos/estrelas (#e8a53a) */
+--p21-coral        /* perigo (#d4474a) */
+
+/* Tipografia */
+--p21-font-sans    /* Inter */
+--p21-font-display /* Space Grotesk (headings) */
+--p21-font-mono    /* JetBrains Mono */
+
+/* Espaçamento */
+--p21-sp-{1..10}   /* 4/8/12/16/20/24/32/40/56/72 px */
+
+/* Raios */
+--p21-radius-sm/md/lg/xl/pill
+```
+
+**Dashboard:** classes `.db-*` definidas em `src/styles/dashboard.css` (portado do play.prof21.com.br).
+
+---
+
+## Convenções de código
+
+| Elemento | Padrão | Exemplo |
+|----------|--------|---------|
+| Arquivos React | PascalCase | `TeacherPage.tsx` |
+| Funções/variáveis | camelCase | `classroomColor()` |
+| Interfaces TS | PascalCase | `Classroom` |
+| Classes CSS | BEM-like ou `.db-*` | `.db-turma-row` |
+| Tabelas DB | snake_case plural | `trail_activities` |
+| Endpoints API | kebab-case REST | `GET /api/classrooms/:id` |
+
+**Frontend sem framework de CSS** — inline styles para componentes isolados, `dashboard.css` para o dashboard, `theme.css` para tokens globais.
+
+**Backend:** SQLAlchemy ORM + Pydantic schemas. `create_all` no lifespan. Sem migrations automáticas — adicionar colunas direto no model e recriar com `docker compose down -v && docker compose up -d`.
+
+---
+
+## Armadilhas conhecidas
+
+1. **`node_modules` no host está vazio** — é um volume anônimo Docker. Qualquer `npm install` ou `tsc` no host vai falhar.
+2. **Recriar banco** apaga tudo: `docker compose down -v && docker compose up -d`
+3. **`npm run build`** roda `tsc && vite build` — sempre checar erros TS antes do build.
+4. **JWT do aluno** é gerado no join (`/api/classrooms/join`), não tem senha — campo `email` e `password_hash` são NULL para alunos.
+5. **`visibility`** em activities/trails: só `private` implementado. `public` reservado para futuro.
+
+---
+
+## Documentação
+
+| Arquivo | Conteúdo |
+|---------|---------|
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Todas as fases, critérios de aceite, decisões fechadas |

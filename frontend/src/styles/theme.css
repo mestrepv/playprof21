@@ -96,11 +96,11 @@
   /* ═══════════════════════════════════════════════════════════════════ */
 
   /* Superfícies */
-  --p21-bg: var(--slate-50);
+  --p21-bg: #f0efed;
   --p21-surface: #ffffff;
   --p21-surface-2: var(--slate-100);
-  --p21-border: var(--slate-200);
-  --p21-border-strong: var(--slate-300);
+  --p21-border: rgba(0, 0, 0, .08);
+  --p21-border-strong: rgba(0, 0, 0, .16);
 
   /* Texto */
   --p21-ink: var(--slate-900);
@@ -290,4 +290,26 @@ a:hover {
 
 .p21-page--reading {
   max-width: var(--p21-container-md);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* Micro-interações globais                                                  */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+/* Card interativo: lift de 2px + sombra suave no hover */
+.p21-card-interactive {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
+}
+.p21-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .08) !important;
+  border-color: rgba(0, 0, 0, .18) !important;
+}
+.p21-card-interactive:active {
+  transform: translateY(0);
+}
+
+/* Botão: afunda levemente ao clicar */
+.p21-btn:active:not([disabled]) {
+  transform: scale(.97);
 }
