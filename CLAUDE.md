@@ -283,7 +283,9 @@ onMissionEvent (componente Mission)
    modificado: teste de integração que renderiza o componente, simula a interação
    e verifica o payload completo (não apenas que a função foi chamada).
 9. **Antes de modificar telemetria, leia o código atual.** Não presuma estrutura
-   de `adapter.ts`, `MissionSlide.tsx` ou dos componentes Mission.
+   de [`adapter.ts`](frontend/src/modules/live/adapter.ts),
+   [`MissionSlide.tsx`](frontend/src/modules/lesson/components/MissionSlide.tsx)
+   ou dos componentes Mission.
 10. **Refatorações fora do escopo do PR são proibidas.** Notar code smell → anotar
     para o humano → seguir. Não refatorar no mesmo PR.
 11. **Trabalhos pós-piloto não devem ser antecipados** sem instrução explícita:
