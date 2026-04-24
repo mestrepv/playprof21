@@ -248,6 +248,51 @@ O código usa **somente** tokens `--p21-*` do `theme.css`. Nunca use cores hardc
 
 ---
 
+## Telemetria — regras invioláveis
+
+[`EVENTOS.md`](EVENTOS.md) é o contrato formal dos eventos implementados no ATLAS.
+As regras abaixo valem para toda sessão de trabalho.
+
+**Canal de telemetria ATLAS:**
+```
+onMissionEvent (componente Mission)
+  → handleMissionEvent (MissionSlide.tsx:50–54)
+  → adapter.logEvent
+  → WS → tabela live_events
+```
+
+1. **`EVENTOS.md` é contrato.** Mudança em payload, nome ou condição de disparo
+   exige atualização sincronizada de `EVENTOS.md` e do código no **mesmo** commit/PR.
+2. **Eventos novos só existem após entrada em `EVENTOS.md`.** Se não há entrada,
+   pare e peça ao humano para adicionar primeiro.
+3. **Não use `useTelemetry` em componentes Mission.** Em sessão ativa retorna `void`
+   — o evento seria silenciosamente perdido. Use exclusivamente
+   `onMissionEvent` → `handleMissionEvent` → `adapter.logEvent`.
+4. **Nomenclatura: `atlas.<missao>.<verbo>` (verbo em camelCase).** HypatiaTutorial
+   usa 4 segmentos (`atlas.hypatia.tutorial.<verbo>`) — motivo documentado em
+   `EVENTOS.md`; não normalizar.
+5. **Zero PII nos payloads.** Proibido: email, nome, displayName, studentName, cpf,
+   telefone, data de nascimento, IP, user-agent, ou qualquer texto livre digitado
+   pelo aluno em campo de identificação. Identificar aluno-na-sessão apenas por
+   `membership_id` (injetado server-side).
+6. **Não modifique eventos legados (`atlas.*.layerFocused`).** Coexistem com os
+   eventos novos em paralelo.
+7. **Não suprima emissão por causa de `readOnly`.** Quando a interação acontece,
+   o evento é emitido — `source: 'self'` ou `'master-propagation'` indica a origem.
+8. **Testes de instrumentação são obrigatórios.** Para cada evento novo ou
+   modificado: teste de integração que renderiza o componente, simula a interação
+   e verifica o payload completo (não apenas que a função foi chamada).
+9. **Antes de modificar telemetria, leia o código atual.** Não presuma estrutura
+   de `adapter.ts`, `MissionSlide.tsx` ou dos componentes Mission.
+10. **Refatorações fora do escopo do PR são proibidas.** Notar code smell → anotar
+    para o humano → seguir. Não refatorar no mesmo PR.
+11. **Trabalhos pós-piloto não devem ser antecipados** sem instrução explícita:
+    migração para Alembic, discriminated union Pydantic, `event_id` cliente,
+    idempotência, `clientTs + serverTs`, `event_version`, tabela de quarentena,
+    pseudonimização além de `membership_id`.
+
+---
+
 ## Documentação
 
 | Arquivo | Conteúdo |
